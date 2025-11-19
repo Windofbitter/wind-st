@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Workspace - WindST</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="sidebar">
+        <div class="logo">WindST</div>
+        <div class="nav-links">
+            <a href="chat.html" class="nav-link active">Chat</a>
+            <a href="characters.html" class="nav-link">Characters</a>
+            <a href="presets.html" class="nav-link">Presets</a>
+            <a href="lorebooks.html" class="nav-link">Lorebooks</a>
+            <a href="llm-connections.html" class="nav-link">LLM Connections</a>
+            <a href="mcp-servers.html" class="nav-link">MCP Servers</a>
+            <a href="runs.html" class="nav-link">Runs</a>
+        </div>
+        <div class="secondary-links">
+            <a href="settings.html" class="nav-link">Settings</a>
+            <a href="health.html" class="nav-link">Health</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="chat-layout">
+            <!-- Left Column: Character & Chat Selector -->
+            <aside class="chat-sidebar">
+                <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                    <select class="input-group" style="width: 100%; margin-bottom: 1rem;">
+                        <option>Seraphina (Assistant)</option>
+                        <option>Marcus (Warrior)</option>
+                        <option>Elara (Mage)</option>
+                    </select>
+                    <button class="btn btn-primary" style="width: 100%;">New Chat</button>
+                </div>
+                <div style="overflow-y: auto; flex: 1;">
+                    <div class="nav-link active" style="margin: 0.5rem; cursor: pointer;">
+                        <div style="font-weight: bold;">Exploring the Ruins</div>
+                        <div style="font-size: 0.8rem; color: #888;">Just now</div>
+                    </div>
+                    <div class="nav-link" style="margin: 0.5rem; cursor: pointer;">
+                        <div style="font-weight: bold;">Magic Theory</div>
+                        <div style="font-size: 0.8rem; color: #888;">2 hours ago</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Column: Conversation -->
+            <section class="chat-main">
+                <header class="header">
+                    <div class="flex-row">
+                        <div style="width: 32px; height: 32px; background: #444; border-radius: 50%;"></div>
+                        <div>
+                            <div style="font-weight: bold;">Seraphina</div>
+                            <div style="font-size: 0.8rem; color: #888;">Exploring the Ruins</div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="message-list">
+                    <div class="message user">
+                        What do you see in the distance?
+                    </div>
+                    <div class="message assistant">
+                        I see crumbling stone pillars rising from the mist. It looks like an ancient temple, long
+                        forgotten by time. The air hums with faint magical residue.
+                    </div>
+                    <div class="message user">
+                        Let's approach it cautiously.
+                    </div>
+                    <div class="message assistant">
+                        Agreed. I'll keep my sensors attuned to any magical traps. *She steps forward lightly, her eyes
+                        scanning the perimeter.*
+                    </div>
+                </div>
+
+                <div class="composer">
+                    <textarea placeholder="Type a message..."></textarea>
+                    <button class="btn btn-primary">Send</button>
+                </div>
+            </section>
+
+            <!-- Right Sidebar: Settings & Context -->
+            <aside class="chat-right-sidebar">
+                <h3>LLM Configuration</h3>
+                <div class="input-group">
+                    <label>Connection</label>
+                    <select>
+                        <option>OpenAI (GPT-4)</option>
+                        <option>Local (Llama 3)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Model</label>
+                    <input type="text" value="gpt-4-turbo">
+                </div>
+                <div class="input-group">
+                    <label>Temperature: 0.7</label>
+                    <input type="range" min="0" max="2" step="0.1" value="0.7">
+                </div>
+                <div class="input-group">
+                    <label>Max Tokens</label>
+                    <input type="number" value="2048">
+                </div>
+                <button class="btn btn-primary" style="width: 100%;">Save Config</button>
+
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+                <h3>Prompt Stack</h3>
+                <div style="font-size: 0.9rem; color: #888; margin-bottom: 1rem;">
+                    Effective prompt components for Seraphina.
+                </div>
+                <div class="card" style="padding: 0.5rem; margin-bottom: 0.5rem;">
+                    <strong>System Core</strong> <span class="badge">Static</span>
+                </div>
+                <div class="card" style="padding: 0.5rem; margin-bottom: 0.5rem;">
+                    <strong>Fantasy Lore</strong> <span class="badge">Lorebook</span>
+                </div>
+                <div class="card" style="padding: 0.5rem; margin-bottom: 0.5rem;">
+                    <strong>Chat History</strong> <span class="badge">History</span>
+                </div>
+                <a href="character-detail.html"
+                    style="color: var(--accent-color); text-decoration: none; font-size: 0.9rem;">Edit Prompt Stack</a>
+            </aside>
+        </div>
+    </main>
+</body>
+
+</html>

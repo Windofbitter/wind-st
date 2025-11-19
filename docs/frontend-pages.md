@@ -10,7 +10,7 @@
 At a high level, the app has:
 
 - A **Chat Workspace** where users actually talk to characters.
-- A **Character & Prompt Stack editor** to configure personas and prompt blocks.
+- A **Character Prompt Builder** to configure personas and prompt stacks per character.
 - **Resource management pages** for presets, lorebooks, LLM connections, MCP servers.
 - Optional **debug/ops views** for chat runs and system health.
 
@@ -122,7 +122,7 @@ Primary working surface where the user:
   - Read-only in the Chat Workspace.
   - Each entry:
     - Title, kind (static_text / lorebook / history / mcp_tools), role, sort order.
-  - Link "Edit prompt stack" → `/characters/:characterId#prompt-stack` (Character detail page).
+  - Link "Edit prompt" → `/characters/:characterId#prompt-builder` (Character detail page).
 
 - **Lore and tools summary (optional)**
   - For the current chat, show which lorebooks and MCP servers might be active based on the prompt stack:
@@ -160,7 +160,7 @@ Tabbed view, reusing the global shell header:
 - Tabs:
   - `Overview`
   - `Persona`
-  - `Prompt Stack`
+  - `Prompt Builder`
 
 #### 4.2.1 Overview tab
 
@@ -179,11 +179,11 @@ Tabbed view, reusing the global shell header:
 - Save button:
   - Calls `PATCH /characters/:id` with `{ persona }`.
 
-#### 4.2.3 Prompt Stack tab
+#### 4.2.3 Prompt Builder tab
 
 Purpose:
 
-- Visual drag-and-drop editor for `PromptPreset` stack per character.
+- Single place to build the full character prompt: persona + ordered prompt presets.
 
 Data:
 
@@ -191,25 +191,48 @@ Data:
   - `GET /characters/:characterId/prompt-stack` to list `PromptPreset` entries with their sort order, role, and linked `Preset`.
 - Preset library:
   - `GET /presets` to choose from existing presets.
+- (Optional) Lorebooks and MCP servers for structured config in new presets:
+  - `GET /lorebooks`
+  - `GET /mcp-servers`
 
 UI:
 
-- Left: **Available Presets**
+- Top: **Quick persona editor**
+  - Small textarea for `persona` (full-screen editing still available in the `Persona` tab).
+  - Save button calling `PATCH /characters/:id` with `{ persona }`.
+
+- Left column: **Available Presets + Quick Create**
   - Filterable list by kind (`kind` query via `GET /presets?kind=...`).
   - Drag handle to drag a preset into the stack.
+  - Buttons to create + attach in one step:
+    - "Add text block":
+      - Shows inline form for title/description/content.
+      - On save:
+        - `POST /presets` with `kind = static_text`.
+        - `POST /characters/:characterId/prompt-stack` to attach it.
+    - "Add lorebook block":
+      - Dropdown of lorebooks, creates `kind = lorebook` preset with `config = { lorebookId }`, then attaches.
+    - "Add tools block":
+      - Multi-select of MCP servers, creates `kind = mcp_tools` preset with `config = { mcpServerIds }`, then attaches.
 
-- Right: **Prompt Stack for Character**
-  - Vertical list of attached prompt presets sorted by `sortOrder`.
-  - Each row:
-    - Preset title + kind.
-    - Role selector (`system`, `assistant`, `user`).
-    - Drag handle.
-    - Remove button.
+- Right column: **Prompt Stack + Preview**
+  - "Current Stack" panel:
+    - Vertical list of attached prompt presets sorted by `sortOrder`.
+    - Each row:
+      - Preset title + kind badge.
+      - Role selector (`system`, `assistant`, `user`).
+      - Drag handle.
+      - Remove button.
+  - "Prompt Preview" panel:
+    - Read-only textual preview of the messages the backend will see, composed from:
+      - Persona.
+      - Static text presets.
+      - Lorebook/history/tool presets as markers/sections.
 
 Interactions:
 
 - Attach preset:
-  - Drag from left list onto stack or use "Add" button.
+  - Drag from left list onto stack or use "Add" buttons that create+attach.
   - Calls `POST /characters/:characterId/prompt-stack` with `{ presetId, role, position? }`.
 - Reorder stack:
   - Drag-and-drop within stack.
@@ -218,6 +241,8 @@ Interactions:
 - Remove entry:
   - Click "Remove" on stack item.
   - Calls `DELETE /prompt-presets/:id`.
+- Edit preset:
+  - Inline edit fields for text presets (title/description/content) and save via `PATCH /presets/:id`.
 
 Validation:
 
@@ -392,4 +417,3 @@ Operational view of chat runs for debugging orchestration.
   - `ChatRun` data from `GET /chats/:id/runs`.
 - Prefer simple "fetch on view enter" + minimal caching instead of complex global stores initially.
 - Surface backend `AppError.code` and `message` directly in UI banners/snackbars to avoid inventing new error semantics.
-

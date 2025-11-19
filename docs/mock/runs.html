@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runs - WindST</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="sidebar">
+        <div class="logo">WindST</div>
+        <div class="nav-links">
+            <a href="chat.html" class="nav-link">Chat</a>
+            <a href="characters.html" class="nav-link">Characters</a>
+            <a href="presets.html" class="nav-link">Presets</a>
+            <a href="lorebooks.html" class="nav-link">Lorebooks</a>
+            <a href="llm-connections.html" class="nav-link">LLM Connections</a>
+            <a href="mcp-servers.html" class="nav-link">MCP Servers</a>
+            <a href="runs.html" class="nav-link active">Runs</a>
+        </div>
+        <div class="secondary-links">
+            <a href="settings.html" class="nav-link">Settings</a>
+            <a href="health.html" class="nav-link">Health</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="page-title">Chat Runs (Debug)</div>
+        </header>
+
+        <div class="content-body">
+            <div class="input-group flex-row">
+                <select style="width: 200px;">
+                    <option value="">All Chats</option>
+                    <option value="chat1">Exploring the Ruins</option>
+                </select>
+                <select style="width: 200px;">
+                    <option value="">All Statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Started At</th>
+                        <th>Finished At</th>
+                        <th>Status</th>
+                        <th>Tokens</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2023-10-27 10:00:00</td>
+                        <td>2023-10-27 10:00:05</td>
+                        <td><span class="badge" style="background-color: #28a745; color: white;">Completed</span></td>
+                        <td>150</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>2023-10-27 09:55:00</td>
+                        <td>2023-10-27 09:55:02</td>
+                        <td><span class="badge" style="background-color: #dc3545; color: white;">Failed</span></td>
+                        <td>0</td>
+                        <td>Connection refused</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+
+</html>

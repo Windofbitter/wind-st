@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Character - WindST</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+
+        .tab-link {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-color);
+        }
+
+        .tab-link:hover {
+            color: #ffffff;
+        }
+
+        .tab-link.active {
+            border-bottom: 2px solid var(--accent-color);
+            color: #ffffff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .preset-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: var(--sidebar-bg);
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="sidebar">
+        <div class="logo">WindST</div>
+        <div class="nav-links">
+            <a href="chat.html" class="nav-link">Chat</a>
+            <a href="characters.html" class="nav-link active">Characters</a>
+            <a href="presets.html" class="nav-link">Presets</a>
+            <a href="lorebooks.html" class="nav-link">Lorebooks</a>
+            <a href="llm-connections.html" class="nav-link">LLM Connections</a>
+            <a href="mcp-servers.html" class="nav-link">MCP Servers</a>
+            <a href="runs.html" class="nav-link">Runs</a>
+        </div>
+        <div class="secondary-links">
+            <a href="settings.html" class="nav-link">Settings</a>
+            <a href="health.html" class="nav-link">Health</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="flex-row">
+                <a href="characters.html"
+                    style="color: var(--text-color); text-decoration: none; margin-right: 1rem;">&larr; Back</a>
+                <div class="page-title">Edit Seraphina</div>
+            </div>
+            <button class="btn btn-primary">Save Changes</button>
+        </header>
+
+        <div class="content-body">
+            <div class="tabs">
+                <div class="tab-link active" onclick="openTab(event, 'overview')">Overview</div>
+                <div class="tab-link" onclick="openTab(event, 'persona')">Persona</div>
+                <div class="tab-link" onclick="openTab(event, 'prompt-builder')">Prompt Builder</div>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="input-group">
+                    <label>Name</label>
+                    <input type="text" value="Seraphina">
+                </div>
+                <div class="input-group">
+                    <label>Description</label>
+                    <input type="text" value="A helpful AI assistant with a penchant for magic.">
+                </div>
+                <div class="input-group">
+                    <label>Creator Notes</label>
+                    <textarea style="height: 100px;">Created for the fantasy roleplay scenario.</textarea>
+                </div>
+                <div class="input-group">
+                    <label>Avatar</label>
+                    <div
+                        style="width: 100px; height: 100px; background: #444; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        Upload
+                    </div>
+                </div>
+            </div>
+
+            <!-- Persona Tab -->
+            <div id="persona" class="tab-content">
+                <div class="input-group">
+                    <label>Persona Definition</label>
+                    <textarea style="height: 400px; font-family: monospace;">You are Seraphina, a skilled mage and scholar.
+You are helpful, polite, but slightly arrogant about your magical knowledge.
+You speak in a formal tone.
+...</textarea>
+                </div>
+                <div style="color: #888; font-size: 0.9rem;">
+                    Approx. 150 tokens
+                </div>
+                <div style="font-size: 0.8rem; color: #888;">Static Text</div>
+            </div>
+
+            <!-- Prompt Builder Tab -->
+            <div id="prompt-builder" class="tab-content">
+                <div class="input-group">
+                    <label>Quick Persona Snippet</label>
+                    <textarea style="height: 120px; font-family: monospace;">You are Seraphina, a skilled mage and scholar...
+                    </textarea>
+                </div>
+
+                <div class="flex-row" style="align-items: flex-start;">
+                    <!-- Available presets + quick create -->
+                    <div style="flex: 1;">
+                        <h4>Available Presets</h4>
+                        <div class="card" draggable="true">
+                            <strong>Standard System</strong>
+                            <div style="font-size: 0.8rem; color: #888;">Static Text</div>
+                        </div>
+                        <div class="card" draggable="true">
+                            <strong>Fantasy Lore</strong>
+                            <div style="font-size: 0.8rem; color: #888;">Lorebook</div>
+                        </div>
+                        <div class="card" draggable="true">
+                            <strong>Chat History (Default)</strong>
+                            <div style="font-size: 0.8rem; color: #888;">History</div>
+                        </div>
+                        <div class="card" draggable="true">
+                            <strong>Web Search</strong>
+                            <div style="font-size: 0.8rem; color: #888;">MCP Tools</div>
+                        </div>
+
+                        <div class="card" style="margin-top: 1rem;">
+                            <h4 style="margin-top: 0;">Quick Create</h4>
+                            <div class="input-group">
+                                <label>New text block</label>
+                                <input type="text" placeholder="Title (e.g. 'Extra safety rules')" />
+                            </div>
+                            <div class="input-group">
+                                <textarea style="height: 80px; font-family: monospace;"
+                                    placeholder="Static instructions..."></textarea>
+                            </div>
+                            <button class="btn btn-primary">Create &amp; Attach</button>
+                        </div>
+                    </div>
+
+                    <!-- Current stack + preview -->
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <h4>Current Stack</h4>
+                            <div
+                                style="background-color: #111; border: 1px solid var(--border-color); max-height: 260px; padding: 1rem; border-radius: 8px; overflow-y: auto;">
+
+                                <div class="preset-list-item">
+                                    <div>
+                                        <strong>Standard System</strong> <span class="badge">Static</span>
+                                    </div>
+                                    <div class="flex-row">
+                                        <select style="padding: 0.2rem;">
+                                            <option>System</option>
+                                            <option>Assistant</option>
+                                            <option>User</option>
+                                        </select>
+                                        <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
+                                    </div>
+                                </div>
+
+                                <div class="preset-list-item">
+                                    <div>
+                                        <strong>Fantasy Lore</strong> <span class="badge">Lorebook</span>
+                                    </div>
+                                    <div class="flex-row">
+                                        <select style="padding: 0.2rem;">
+                                            <option>System</option>
+                                            <option>Assistant</option>
+                                            <option>User</option>
+                                        </select>
+                                        <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
+                                    </div>
+                                </div>
+
+                                <div class="preset-list-item">
+                                    <div>
+                                        <strong>Chat History (Default)</strong> <span class="badge">History</span>
+                                    </div>
+                                    <div class="flex-row">
+                                        <select style="padding: 0.2rem;">
+                                            <option>System</option>
+                                            <option>Assistant</option>
+                                            <option>User</option>
+                                        </select>
+                                        <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4>Prompt Preview</h4>
+                            <div
+                                style="background-color: #111; border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; max-height: 200px; overflow-y: auto;">
+                                <pre style="margin: 0; font-size: 0.85rem; white-space: pre-wrap;">
+&gt; Persona (system)
+You are Seraphina, a skilled mage and scholar...
+
+&gt; Standard System (system)
+Follow the user's instructions carefully, ask clarifying questions...
+
+&gt; Fantasy Lore (system, lorebook)
+Lore entries will be injected when keywords match.
+
+&gt; Chat History (system, history)
+The last N messages of the conversation will be included.
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
+</body>
+
+</html>

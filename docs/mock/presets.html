@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presets - WindST</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="sidebar">
+        <div class="logo">WindST</div>
+        <div class="nav-links">
+            <a href="chat.html" class="nav-link">Chat</a>
+            <a href="characters.html" class="nav-link">Characters</a>
+            <a href="presets.html" class="nav-link active">Presets</a>
+            <a href="lorebooks.html" class="nav-link">Lorebooks</a>
+            <a href="llm-connections.html" class="nav-link">LLM Connections</a>
+            <a href="mcp-servers.html" class="nav-link">MCP Servers</a>
+            <a href="runs.html" class="nav-link">Runs</a>
+        </div>
+        <div class="secondary-links">
+            <a href="settings.html" class="nav-link">Settings</a>
+            <a href="health.html" class="nav-link">Health</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="page-title">Presets</div>
+            <button class="btn btn-primary">New Preset</button>
+        </header>
+
+        <div class="content-body">
+            <div class="input-group flex-row">
+                <input type="text" placeholder="Search presets..." style="flex: 1;">
+                <select style="width: 200px;">
+                    <option value="">All Kinds</option>
+                    <option value="static_text">Static Text</option>
+                    <option value="lorebook">Lorebook</option>
+                    <option value="history">History</option>
+                    <option value="mcp_tools">MCP Tools</option>
+                </select>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Kind</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Standard System</td>
+                        <td><span class="badge">Static Text</span></td>
+                        <td>Basic system prompt for roleplay.</td>
+                        <td>
+                            <button class="btn btn-primary" style="font-size: 0.8rem;">Edit</button>
+                            <span class="badge" style="margin-left: 0.5rem;">Built-in</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Chat History (Default)</td>
+                        <td><span class="badge">History</span></td>
+                        <td>Last 20 messages.</td>
+                        <td>
+                            <button class="btn btn-primary" style="font-size: 0.8rem;">Edit</button>
+                            <span class="badge" style="margin-left: 0.5rem;">Built-in</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Fantasy Lore</td>
+                        <td><span class="badge">Lorebook</span></td>
+                        <td>Injects entries from the Fantasy lorebook.</td>
+                        <td>
+                            <button class="btn btn-primary" style="font-size: 0.8rem;">Edit</button>
+                            <button class="btn btn-danger" style="font-size: 0.8rem;">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Connections - WindST</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="sidebar">
+        <div class="logo">WindST</div>
+        <div class="nav-links">
+            <a href="chat.html" class="nav-link">Chat</a>
+            <a href="characters.html" class="nav-link">Characters</a>
+            <a href="presets.html" class="nav-link">Presets</a>
+            <a href="lorebooks.html" class="nav-link">Lorebooks</a>
+            <a href="llm-connections.html" class="nav-link active">LLM Connections</a>
+            <a href="mcp-servers.html" class="nav-link">MCP Servers</a>
+            <a href="runs.html" class="nav-link">Runs</a>
+        </div>
+        <div class="secondary-links">
+            <a href="settings.html" class="nav-link">Settings</a>
+            <a href="health.html" class="nav-link">Health</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="page-title">LLM Connections</div>
+            <button class="btn btn-primary">New Connection</button>
+        </header>
+
+        <div class="content-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Provider</th>
+                        <th>Base URL</th>
+                        <th>Default Model</th>
+                        <th>Enabled</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>OpenAI Main</td>
+                        <td>OpenAI</td>
+                        <td>https://api.openai.com/v1</td>
+                        <td>gpt-4-turbo</td>
+                        <td>Yes</td>
+                        <td>
+                            <button class="btn btn-primary" style="font-size: 0.8rem;">Edit</button>
+                            <button class="btn btn-danger" style="font-size: 0.8rem;">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Local Llama</td>
+                        <td>OpenAI Compatible</td>
+                        <td>http://localhost:11434/v1</td>
+                        <td>llama3</td>
+                        <td>Yes</td>
+                        <td>
+                            <button class="btn btn-primary" style="font-size: 0.8rem;">Edit</button>
+                            <button class="btn btn-danger" style="font-size: 0.8rem;">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+
+</html>
