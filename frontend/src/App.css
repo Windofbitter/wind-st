@@ -93,6 +93,70 @@
   color: var(--text-color);
 }
 
+.btn.tab-button {
+  appearance: none;
+  background-color: var(--sidebar-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn.tab-button:hover {
+  background-color: #2f2f2f;
+}
+
+.btn.tab-button.is-active {
+  background-color: var(--border-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+}
+
+.btn.tab-button:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 1px;
+}
+
+.list-button {
+  width: 100%;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  color: var(--text-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.list-button:hover {
+  background-color: #2a2a2a;
+}
+
+.list-button:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 1px;
+}
+
+.list-button-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-button-title {
+  font-weight: 500;
+}
+
+.list-button-subtitle {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin-top: 0.15rem;
+}
+
 .btn-primary {
   background-color: var(--accent-color);
   color: white;

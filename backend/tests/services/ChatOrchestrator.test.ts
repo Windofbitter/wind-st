@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LLMChatCompletionResponse, LLMClient } from "../../src/core/ports/LLMClient";
+import type { PromptBuilder } from "../../src/core/ports/PromptBuilder";
 import { ChatOrchestrator } from "../../src/application/orchestrators/ChatOrchestrator";
 import { ChatService } from "../../src/application/services/ChatService";
 import { MessageService } from "../../src/application/services/MessageService";
@@ -15,6 +16,32 @@ import {
   FakeChatRunRepository,
   FakeLLMClient,
 } from "./fakeOrchestration";
+
+class SimplePromptBuilder implements PromptBuilder {
+  constructor(
+    private readonly historyConfigService: HistoryConfigService,
+    private readonly messageService: MessageService,
+  ) {}
+
+  async buildPromptForChat(chatId: string) {
+    const historyConfig =
+      await this.historyConfigService.getHistoryConfig(chatId);
+    const history =
+      await this.messageService.listMessages(chatId);
+
+    const effectiveHistory = historyConfig.historyEnabled
+      ? history.slice(-historyConfig.messageLimit)
+      : history.slice(-1);
+
+    return {
+      messages: effectiveHistory.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      tools: [],
+    };
+  }
+}
 
 function createEnvironment(customClient?: LLMClient) {
   const chatRepo = new FakeChatRepository();
@@ -48,14 +75,18 @@ function createEnvironment(customClient?: LLMClient) {
     customClient ?? new FakeLLMClient({
       message: { role: "assistant", content: "default-response" },
     });
+  const promptBuilder = new SimplePromptBuilder(
+    historyConfigService,
+    messageService,
+  );
 
   const orchestrator = new ChatOrchestrator(
     chatService,
     messageService,
     llmConnectionService,
     chatRunRepo,
-    historyConfigService,
     llmClient,
+    promptBuilder,
   );
 
   return {

@@ -18,6 +18,27 @@ export interface ChatLLMConfig {
   maxOutputTokens: number;
 }
 
+export type PromptPreviewRole =
+  | "system"
+  | "user"
+  | "assistant"
+  | "tool";
+
+export interface PromptPreviewMessage {
+  role: PromptPreviewRole;
+  content: string;
+}
+
+export interface PromptPreviewTool {
+  serverId: string;
+  serverName: string;
+}
+
+export interface PromptPreview {
+  messages: PromptPreviewMessage[];
+  tools: PromptPreviewTool[];
+}
+
 export interface ListChatsParams {
   characterId?: string;
 }
@@ -86,5 +107,13 @@ export async function createTurn(
   payload: CreateTurnRequest,
 ): Promise<Message> {
   return unwrap(http.post<Message>(`/chats/${chatId}/turns`, payload));
+}
+
+export async function getPromptPreview(
+  chatId: string,
+): Promise<PromptPreview> {
+  return unwrap(
+    http.get<PromptPreview>(`/chats/${chatId}/prompt-preview`),
+  );
 }
 

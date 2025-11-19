@@ -80,28 +80,19 @@ export function LorebookStackSection({
                 <button
                   key={lb.id}
                   type="button"
-                  className="nav-link"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
+                  className="list-button"
                   onClick={() => onAttach(lb.id)}
                 >
-                  <span>
-                    <div style={{ fontWeight: 500 }}>
+                  <div className="list-button-text">
+                    <div className="list-button-title">
                       {lb.name}
                     </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        opacity: 0.8,
-                        marginTop: "0.1rem",
-                      }}
-                    >
-                      {lb.description}
-                    </div>
-                  </span>
+                    {lb.description && (
+                      <div className="list-button-subtitle">
+                        {lb.description}
+                      </div>
+                    )}
+                  </div>
                   <span className="badge">
                     {t("promptBuilder.paletteAddBadge")}
                   </span>
@@ -192,4 +183,3 @@ export function LorebookStackSection({
     </div>
   );
 }
-

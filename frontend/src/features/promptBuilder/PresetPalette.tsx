@@ -48,26 +48,19 @@ export function PresetPalette({
             <button
               key={preset.id}
               type="button"
-              className="nav-link"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+              className="list-button"
               onClick={() => onAddPreset(preset.id)}
             >
-              <span>
-                <div style={{ fontWeight: 500 }}>{preset.title}</div>
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    opacity: 0.8,
-                    marginTop: "0.1rem",
-                  }}
-                >
-                  {preset.description}
+              <div className="list-button-text">
+                <div className="list-button-title">
+                  {preset.title}
                 </div>
-              </span>
+                {preset.description && (
+                  <div className="list-button-subtitle">
+                    {preset.description}
+                  </div>
+                )}
+              </div>
               <span className="badge">
                 {t("promptBuilder.paletteAddBadge")}
               </span>

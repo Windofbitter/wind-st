@@ -80,28 +80,17 @@ export function MCPStackSection({
                 <button
                   key={server.id}
                   type="button"
-                  className="nav-link"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
+                  className="list-button"
                   onClick={() => onAttach(server.id)}
                 >
-                  <span>
-                    <div style={{ fontWeight: 500 }}>
+                  <div className="list-button-text">
+                    <div className="list-button-title">
                       {server.name}
                     </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        opacity: 0.8,
-                        marginTop: "0.1rem",
-                      }}
-                    >
+                    <div className="list-button-subtitle">
                       {server.command} {server.args.join(" ")}
                     </div>
-                  </span>
+                  </div>
                   <span className="badge">
                     {t("promptBuilder.paletteAddBadge")}
                   </span>
@@ -193,4 +182,3 @@ export function MCPStackSection({
     </div>
   );
 }
-

@@ -123,6 +123,15 @@ export function CharacterDetailPage() {
     return <div>{t("characters.detailMissingId")}</div>;
   }
 
+  const tabConfig: Array<{ key: TabKey; label: string }> = [
+    { key: "overview", label: t("characters.detailTabsOverview") },
+    { key: "persona", label: t("characters.detailTabsPersona") },
+    {
+      key: "prompt",
+      label: t("characters.detailTabsPromptBuilder"),
+    },
+  ];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
@@ -132,46 +141,20 @@ export function CharacterDetailPage() {
             gap: "1rem",
             marginBottom: "0.5rem",
           }}
+          role="tablist"
         >
-          <button
-            type="button"
-            className="btn"
-            style={{
-              backgroundColor:
-                tab === "overview"
-                  ? "var(--border-color)"
-                  : "transparent",
-            }}
-            onClick={() => handleTabChange("overview")}
-          >
-            {t("characters.detailTabsOverview")}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            style={{
-              backgroundColor:
-                tab === "persona"
-                  ? "var(--border-color)"
-                  : "transparent",
-            }}
-            onClick={() => handleTabChange("persona")}
-          >
-            {t("characters.detailTabsPersona")}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            style={{
-              backgroundColor:
-                tab === "prompt"
-                  ? "var(--border-color)"
-                  : "transparent",
-            }}
-            onClick={() => handleTabChange("prompt")}
-          >
-            {t("characters.detailTabsPromptBuilder")}
-          </button>
+          {tabConfig.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              className={`btn tab-button${tab === key ? " is-active" : ""}`}
+              onClick={() => handleTabChange(key)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
         {state.loading && (
           <div>{t("characters.detailLoading")}</div>

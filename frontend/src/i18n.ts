@@ -78,6 +78,13 @@ const resources = {
         deleteChatConfirm:
           "Delete this chat? This cannot be undone.",
         selectChatToConfigure: "Select a chat to configure.",
+        promptPreviewTitle: "Prompt Preview",
+        promptPreviewLoading: "Loading prompt preview…",
+        promptPreviewNoChat: "Select a chat to see prompt preview.",
+        promptPreviewMessagesLabel: "Messages",
+        promptPreviewNoMessages: "<no prompt messages>",
+        promptPreviewToolsLabel: "Tools",
+        promptPreviewNoTools: "<no tools attached>",
       },
       common: {
         errorPrefix: "Error:",
@@ -429,6 +436,13 @@ const resources = {
         createChatPromptDefault: "新会话",
         deleteChatConfirm: "删除此会话？该操作不可撤销。",
         selectChatToConfigure: "选择一个会话进行配置。",
+        promptPreviewTitle: "提示预览",
+        promptPreviewLoading: "正在加载提示预览…",
+        promptPreviewNoChat: "选择一个会话查看提示预览。",
+        promptPreviewMessagesLabel: "消息",
+        promptPreviewNoMessages: "<暂无提示消息>",
+        promptPreviewToolsLabel: "工具",
+        promptPreviewNoTools: "<未附加工具>",
       },
       common: {
         errorPrefix: "错误：",

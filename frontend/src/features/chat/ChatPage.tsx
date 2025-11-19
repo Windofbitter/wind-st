@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Character } from "../../api/characters";
 import { listCharacters } from "../../api/characters";
-import type { Chat, ChatLLMConfig } from "../../api/chats";
+import type { Chat, ChatLLMConfig, PromptPreview } from "../../api/chats";
 import {
   createChat,
   createTurn,
   deleteChat,
   getChatConfig,
+  getPromptPreview,
   listChats,
   updateChatConfig,
 } from "../../api/chats";
@@ -86,6 +87,14 @@ export function ChatPage() {
     error: null,
   });
 
+  const [promptPreview, setPromptPreview] =
+    useState<PromptPreview | null>(null);
+  const [promptPreviewState, setPromptPreviewState] =
+    useState<LoadState>({
+      loading: false,
+      error: null,
+    });
+
   const [globalError, setGlobalError] = useState<string | null>(null);
 
   const selectedCharacter = useMemo(
@@ -115,11 +124,14 @@ export function ChatPage() {
       setMessages([]);
       setChatConfig(null);
       setChatHistoryConfig(null);
+      setPromptPreview(null);
+      setPromptPreviewState({ loading: false, error: null });
       return;
     }
     void loadMessages(selectedChatId);
     void loadChatConfig(selectedChatId);
     void loadChatHistoryConfig(selectedChatId);
+    void loadPromptPreview(selectedChatId);
   }, [selectedChatId]);
 
   async function loadCharacters() {
@@ -257,6 +269,24 @@ export function ChatPage() {
     setPromptStackState({ loading: false, error: null });
   }
 
+  async function loadPromptPreview(chatId: string) {
+    setPromptPreviewState({ loading: true, error: null });
+    try {
+      const data = await getPromptPreview(chatId);
+      setPromptPreview(data);
+    } catch (err) {
+      setPromptPreviewState({
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to load prompt preview",
+      });
+      return;
+    }
+    setPromptPreviewState({ loading: false, error: null });
+  }
+
   async function handleCreateChat() {
     if (!selectedCharacterId) return;
     const title = window.prompt(
@@ -313,6 +343,7 @@ export function ChatPage() {
       await createTurn(activeChat.id, { content });
       setComposerText("");
       await loadMessages(activeChat.id);
+      await loadPromptPreview(activeChat.id);
     } catch (err) {
       setGlobalError(
         err instanceof ApiError ? err.message : "Failed to send message",
@@ -364,6 +395,7 @@ export function ChatPage() {
         );
         setChatHistoryConfig(updatedHistory);
       }
+      await loadPromptPreview(activeChat.id);
     } catch (err) {
       setChatConfigState((s) => ({
         ...s,
@@ -772,6 +804,75 @@ export function ChatPage() {
               </div>
             </>
           )}
+        </div>
+
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>
+            {t("chat.promptPreviewTitle")}
+          </h3>
+          {!activeChat && (
+            <div>
+              {t("chat.promptPreviewNoChat")}
+            </div>
+          )}
+          {activeChat && promptPreviewState.loading && (
+            <div>{t("chat.promptPreviewLoading")}</div>
+          )}
+          {activeChat && promptPreviewState.error && (
+            <div className="badge">
+              {t("common.errorPrefix")}{" "}
+              {promptPreviewState.error}
+            </div>
+          )}
+          {activeChat &&
+            !promptPreviewState.loading &&
+            promptPreview && (
+              <div
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "0.8rem",
+                  maxHeight: "12rem",
+                  overflowY: "auto",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                <div style={{ marginBottom: "0.25rem" }}>
+                  <strong>
+                    {t("chat.promptPreviewMessagesLabel")}
+                  </strong>
+                </div>
+                {promptPreview.messages.length === 0 && (
+                  <div style={{ opacity: 0.7 }}>
+                    {t("chat.promptPreviewNoMessages")}
+                  </div>
+                )}
+                {promptPreview.messages.length > 0 &&
+                  promptPreview.messages.map((m, idx) => (
+                    <div key={idx}>
+                      [{m.role.toUpperCase()}] {m.content}
+                    </div>
+                  ))}
+
+                <div
+                  style={{ marginTop: "0.5rem", marginBottom: "0.25rem" }}
+                >
+                  <strong>
+                    {t("chat.promptPreviewToolsLabel")}
+                  </strong>
+                </div>
+                {promptPreview.tools.length === 0 && (
+                  <div style={{ opacity: 0.7 }}>
+                    {t("chat.promptPreviewNoTools")}
+                  </div>
+                )}
+                {promptPreview.tools.length > 0 &&
+                  promptPreview.tools.map((tool) => (
+                    <div key={tool.serverId}>
+                      - {tool.serverName}
+                    </div>
+                  ))}
+              </div>
+            )}
         </div>
       </aside>
     </div>

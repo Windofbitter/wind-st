@@ -295,6 +295,12 @@ export function registerChatRoutes(app: FastifyInstance): void {
     return runs;
   });
 
+  app.get("/chats/:id/prompt-preview", async (request) => {
+    const { id } = request.params as { id: string };
+    const preview = await app.promptBuilder.buildPromptForChat(id);
+    return preview;
+  });
+
   app.post("/chats/:id/turns", async (request, reply) => {
     const { id } = request.params as { id: string };
     const { content } = ensureCreateTurnPayload(request.body);

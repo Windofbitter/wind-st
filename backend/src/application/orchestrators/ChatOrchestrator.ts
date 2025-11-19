@@ -1,14 +1,11 @@
 import type { Message } from "../../core/entities/Message";
 import type { ChatRun } from "../../core/entities/ChatRun";
 import type { ChatRunRepository } from "../../core/ports/ChatRunRepository";
-import type {
-  LLMChatMessage,
-  LLMClient,
-} from "../../core/ports/LLMClient";
+import type { LLMClient } from "../../core/ports/LLMClient";
+import type { PromptBuilder } from "../../core/ports/PromptBuilder";
 import { ChatService } from "../services/ChatService";
 import { MessageService } from "../services/MessageService";
 import { LLMConnectionService } from "../services/LLMConnectionService";
-import { HistoryConfigService } from "../services/HistoryConfigService";
 import { AppError } from "../errors/AppError";
 
 function nowIso(): string {
@@ -23,8 +20,8 @@ export class ChatOrchestrator {
     private readonly messageService: MessageService,
     private readonly llmConnectionService: LLMConnectionService,
     private readonly chatRunRepo: ChatRunRepository,
-    private readonly historyConfigService: HistoryConfigService,
     private readonly llmClient: LLMClient,
+    private readonly promptBuilder: PromptBuilder,
   ) {}
 
   async handleUserMessage(
@@ -101,18 +98,8 @@ export class ChatOrchestrator {
       );
     }
 
-    const historyConfig =
-      await this.historyConfigService.getHistoryConfig(chatId);
-
-    const history = await this.messageService.listMessages(chatId);
-    const effectiveHistory = historyConfig.historyEnabled
-      ? history.slice(-historyConfig.messageLimit)
-      : history.slice(-1);
-
-    const llmMessages: LLMChatMessage[] = effectiveHistory.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    const { messages: llmMessages } =
+      await this.promptBuilder.buildPromptForChat(chatId);
 
     const completion = await this.llmClient.completeChat({
       connection,

@@ -21,6 +21,7 @@ import { registerLLMConnectionRoutes } from "../../src/infrastructure/http/route
 import { registerMCPServerRoutes } from "../../src/infrastructure/http/routes/mcpServers";
 import type { ChatRunRepository } from "../../src/core/ports/ChatRunRepository";
 import type { LLMClient } from "../../src/core/ports/LLMClient";
+import type { PromptBuilder } from "../../src/core/ports/PromptBuilder";
 import {
   FakeCharacterRepository,
   FakeChatRepository,
@@ -42,6 +43,32 @@ export interface TestAppContext {
   app: FastifyInstance;
   chatRunRepository: ChatRunRepository;
   llmClient: LLMClient;
+}
+
+class SimplePromptBuilder implements PromptBuilder {
+  constructor(
+    private readonly historyConfigService: HistoryConfigService,
+    private readonly messageService: MessageService,
+  ) {}
+
+  async buildPromptForChat(chatId: string) {
+    const historyConfig =
+      await this.historyConfigService.getHistoryConfig(chatId);
+    const history =
+      await this.messageService.listMessages(chatId);
+
+    const effectiveHistory = historyConfig.historyEnabled
+      ? history.slice(-historyConfig.messageLimit)
+      : history.slice(-1);
+
+    return {
+      messages: effectiveHistory.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      tools: [],
+    };
+  }
 }
 
 export async function createTestApp(
@@ -107,14 +134,18 @@ export async function createTestApp(
   );
 
   const llmClient = overrides.llmClient ?? new FakeLLMClient();
+  const promptBuilder = new SimplePromptBuilder(
+    historyConfigService,
+    messageService,
+  );
 
   const chatOrchestrator = new ChatOrchestrator(
     chatService,
     messageService,
     llmConnectionService,
     chatRunRepository,
-    historyConfigService,
     llmClient,
+    promptBuilder,
   );
 
   const app = Fastify({ logger: false });
@@ -130,6 +161,7 @@ export async function createTestApp(
   app.decorate("chatOrchestrator", chatOrchestrator);
   app.decorate("chatRunRepository", chatRunRepository);
   app.decorate("historyConfigService", historyConfigService);
+  app.decorate("promptBuilder", promptBuilder);
 
   registerHealthRoutes(app);
   registerCharacterRoutes(app);

@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import type { ChatRunRepository } from "../../core/ports/ChatRunRepository";
+import type { PromptBuilder } from "../../core/ports/PromptBuilder";
 import { CharacterService } from "../../application/services/CharacterService";
 import { ChatService } from "../../application/services/ChatService";
 import { MessageService } from "../../application/services/MessageService";
@@ -12,6 +13,7 @@ import { PresetService } from "../../application/services/PresetService";
 import { PromptStackService } from "../../application/services/PromptStackService";
 import { ChatOrchestrator } from "../../application/orchestrators/ChatOrchestrator";
 import { HistoryConfigService } from "../../application/services/HistoryConfigService";
+import { DefaultPromptBuilder } from "../../application/services/PromptBuilder";
 import { openDatabase } from "../sqlite/db";
 import { CharacterRepositorySqlite } from "../sqlite/CharacterRepositorySqlite";
 import { ChatRepositorySqlite } from "../sqlite/ChatRepositorySqlite";
@@ -56,6 +58,7 @@ declare module "fastify" {
     chatOrchestrator: ChatOrchestrator;
     chatRunRepository: ChatRunRepository;
     historyConfigService: HistoryConfigService;
+    promptBuilder: PromptBuilder;
   }
 }
 
@@ -111,13 +114,25 @@ export async function buildApp() {
     promptPresetRepository,
   );
   const llmClient = new OpenAILLMClient();
+  const promptBuilder = new DefaultPromptBuilder(
+    chatService,
+    characterService,
+    promptStackService,
+    presetService,
+    lorebookService,
+    characterLorebookService,
+    mcpServerService,
+    characterMcpServerService,
+    historyConfigService,
+    messageService,
+  );
   const chatOrchestrator = new ChatOrchestrator(
     chatService,
     messageService,
     llmConnectionService,
     chatRunRepository,
-    historyConfigService,
     llmClient,
+    promptBuilder,
   );
 
   const app = Fastify({
@@ -146,6 +161,7 @@ export async function buildApp() {
   app.decorate("chatOrchestrator", chatOrchestrator);
   app.decorate("chatRunRepository", chatRunRepository);
   app.decorate("historyConfigService", historyConfigService);
+  app.decorate("promptBuilder", promptBuilder);
 
   registerHealthRoutes(app);
   registerCharacterRoutes(app);
