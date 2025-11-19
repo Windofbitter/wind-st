@@ -11,6 +11,7 @@ import type {
   LorebookEntryRepository,
   UpdateLorebookEntryInput,
 } from "../../core/ports/LorebookEntryRepository";
+import { AppError } from "../errors/AppError";
 
 export class LorebookService {
   constructor(
@@ -47,7 +48,7 @@ export class LorebookService {
   ): Promise<LorebookEntry> {
     const lorebook = await this.lorebookRepo.getById(lorebookId);
     if (!lorebook) {
-      throw new Error("Lorebook not found");
+      throw new AppError("LOREBOOK_NOT_FOUND", "Lorebook not found");
     }
 
     return this.entryRepo.create({
@@ -71,4 +72,3 @@ export class LorebookService {
     await this.entryRepo.delete(entryId);
   }
 }
-

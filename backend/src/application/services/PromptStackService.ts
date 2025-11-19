@@ -5,6 +5,7 @@ import type {
   PromptPresetRepository,
 } from "../../core/ports/PromptPresetRepository";
 import type { PresetRepository } from "../../core/ports/PresetRepository";
+import { AppError } from "../errors/AppError";
 
 export class PromptStackService {
   constructor(
@@ -27,12 +28,12 @@ export class PromptStackService {
   ): Promise<PromptPreset> {
     const character = await this.characterRepo.getById(characterId);
     if (!character) {
-      throw new Error("Character not found");
+      throw new AppError("CHARACTER_NOT_FOUND", "Character not found");
     }
 
     const preset = await this.presetRepo.getById(presetId);
     if (!preset) {
-      throw new Error("Preset not found");
+      throw new AppError("PRESET_NOT_FOUND", "Preset not found");
     }
 
     const existing = await this.promptPresetRepo.listByCharacter(characterId);
@@ -95,13 +96,19 @@ export class PromptStackService {
     const byId = new Map(existing.map((pp) => [pp.id, pp]));
 
     if (orderedPromptPresetIds.length !== existing.length) {
-      throw new Error("Reorder list must include all prompt presets");
+      throw new AppError(
+        "PROMPT_PRESET_REORDER_INCOMPLETE",
+        "Reorder list must include all prompt presets",
+      );
     }
 
     const updates: Promise<PromptPreset | null>[] = [];
     orderedPromptPresetIds.forEach((id, index) => {
       if (!byId.has(id)) {
-        throw new Error("Prompt preset does not belong to character");
+        throw new AppError(
+          "PROMPT_PRESET_CHARACTER_MISMATCH",
+          "Prompt preset does not belong to character",
+        );
       }
       updates.push(
         this.promptPresetRepo.update(id, {
@@ -113,4 +120,3 @@ export class PromptStackService {
     await Promise.all(updates);
   }
 }
-

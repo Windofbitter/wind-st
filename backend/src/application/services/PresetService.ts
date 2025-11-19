@@ -5,6 +5,7 @@ import type {
   PresetRepository,
   UpdatePresetInput,
 } from "../../core/ports/PresetRepository";
+import { AppError } from "../errors/AppError";
 
 export class PresetService {
   constructor(private readonly repo: PresetRepository) {}
@@ -32,9 +33,11 @@ export class PresetService {
     const preset = await this.repo.getById(id);
     if (!preset) return;
     if (preset.builtIn) {
-      throw new Error("Cannot delete built-in preset");
+      throw new AppError(
+        "CANNOT_DELETE_BUILT_IN_PRESET",
+        "Cannot delete built-in preset",
+      );
     }
     await this.repo.delete(id);
   }
 }
-

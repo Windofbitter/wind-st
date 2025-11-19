@@ -1,11 +1,15 @@
 import crypto from "crypto";
-import type { LLMConnection, LLMProvider } from "../../core/entities/LLMConnection";
+import type {
+  LLMConnection,
+  LLMProvider,
+} from "../../core/entities/LLMConnection";
 import type {
   CreateLLMConnectionInput,
   LLMConnectionRepository,
   UpdateLLMConnectionInput,
 } from "../../core/ports/LLMConnectionRepository";
 import type { SqliteDatabase } from "./db";
+import { AppError } from "../../application/errors/AppError";
 
 function mapRowToLLMConnection(row: any): LLMConnection {
   return {
@@ -160,7 +164,8 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
         err instanceof Error &&
         err.message.includes("FOREIGN KEY constraint failed")
       ) {
-        throw new Error(
+        throw new AppError(
+          "CANNOT_DELETE_LLM_CONNECTION_IN_USE",
           "Cannot delete LLM connection: it is used by one or more chats. Disable it or move those chats to another connection first.",
         );
       }

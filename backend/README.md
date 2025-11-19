@@ -50,11 +50,15 @@ The config is normalized in `src/config.ts` and exposed as:
 - `src/core/ports/*` – Repository interfaces (ports) for each domain.
 - `src/application/services/*` – Application services, built on the ports.
 - `src/application/orchestrators/*` – Higher-level orchestration (e.g., chat turns).
+- `src/application/errors/AppError.ts` – Small error type with stable error codes used across the application.
 - `src/infrastructure/sqlite/*` – SQLite implementations:
   - `db.ts` – `openDatabase()` + `runMigrations` call.
   - `migrations.ts` – Creates tables + indexes idempotently.
   - `*RepositorySqlite.ts` – One file per repository implementation.
-- `src/server.ts` – Fastify server, wiring up the DB and services.
+- `src/infrastructure/http/app.ts` – Fastify app factory: wires DB, repositories, services, routes and error handling.
+- `src/infrastructure/http/routes/*` – HTTP route modules (e.g. health, characters).
+- `src/infrastructure/http/errorHandler.ts` – Global Fastify error + not-found handler mapping `AppError` to HTTP responses.
+- `src/server.ts` – Process entrypoint that calls `buildApp()` and starts listening.
 
 ## Database and migrations
 
@@ -114,8 +118,9 @@ Patterns:
 - Behavior:
   - If a connection is referenced by any `chat_llm_configs` row:
     - The DB raises a foreign key error.
-    - The repository catches it and throws a clear domain error:
-      - `"Cannot delete LLM connection: it is used by one or more chats. Disable it or move those chats to another connection first."`
+    - The repository catches it and throws an `AppError` with a clear message:
+      - `CANNOT_DELETE_LLM_CONNECTION_IN_USE` /
+        `"Cannot delete LLM connection: it is used by one or more chats. Disable it or move those chats to another connection first."`
   - Result:
     - No dangling configs.
     - Normal way to retire a connection is `updateConnection(id, { isEnabled: false })`.
@@ -176,7 +181,7 @@ Key rules:
 
 - `LorebookService`:
   - `createLorebookEntry(lorebookId, data)`:
-    - Throws `"Lorebook not found"` if the lorebook does not exist.
+    - Throws `AppError("LOREBOOK_NOT_FOUND", "Lorebook not found")` if the lorebook does not exist.
 
 - `ChatService`:
   - `createChat(data, initialConfig?)`:
@@ -187,6 +192,39 @@ Key rules:
     - Deletes the associated `ChatLLMConfig` via `deleteByChatId`.
 
 Most other services (`CharacterService`, `MessageService`, `MCPServerService`, `LLMConnectionService`) are straightforward pass-through layers over their repositories.
+
+## HTTP API and error handling
+
+The HTTP API is a thin adapter over the application layer:
+
+- `buildApp()` (`src/infrastructure/http/app.ts`):
+  - Opens the SQLite DB.
+  - Wires repositories and application services.
+  - Registers routes and the global error handler on a Fastify instance.
+- Routes in `src/infrastructure/http/routes/*`:
+  - Expose domain operations over HTTP (e.g. `/health`, `/characters`).
+  - Stay small and focused: parse/validate input, call a service, return JSON.
+
+Errors are handled centrally via `AppError`:
+
+- Domain and infrastructure code throw `AppError` with a stable `code` and default HTTP status.
+- The global Fastify `setErrorHandler` (`src/infrastructure/http/errorHandler.ts`):
+  - Detects `AppError` and returns a JSON body:
+
+    ```jsonc
+    {
+      "error": {
+        "code": "CHARACTER_NOT_FOUND",
+        "message": "Character not found",
+        "details": { /* optional */ }
+      }
+    }
+    ```
+
+  - Maps Fastify validation errors to `code: "VALIDATION_ERROR"`.
+  - Maps unknown errors to `code: "INTERNAL_ERROR"` with HTTP 500.
+
+Route handlers should not catch and rewrap `AppError`; they just throw and let the global handler map to HTTP. This keeps the HTTP layer simple, consistent, and easy to extend as new endpoints are added.
 
 ## Testing
 
@@ -267,6 +305,6 @@ The typical path for a new domain is:
 5. Add:
    - Integration tests for the SQLite repository.
    - Service tests with a fake repository.
-6. Wire the service into `src/server.ts` and expose HTTP endpoints.
+6. Wire the service into `src/infrastructure/http/app.ts` and expose HTTP endpoints via a new route module in `src/infrastructure/http/routes`.
 
 Follow the existing repositories and services as templates, and keep the data structures and control flow as simple as possible. When you feel tempted to add another abstraction layer, add a test instead.***

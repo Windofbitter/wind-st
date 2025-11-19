@@ -1,31 +1,4 @@
-import Fastify from "fastify";
-import { openDatabase } from "./infrastructure/sqlite/db";
-import { CharacterRepositorySqlite } from "./infrastructure/sqlite/CharacterRepositorySqlite";
-import { CharacterService } from "./application/services/CharacterService";
-
-declare module "fastify" {
-  interface FastifyInstance {
-    characterService: CharacterService;
-  }
-}
-
-async function buildApp() {
-  const db = openDatabase();
-  const characterRepository = new CharacterRepositorySqlite(db);
-  const characterService = new CharacterService(characterRepository);
-
-  const app = Fastify({
-    logger: true,
-  });
-
-  app.decorate("characterService", characterService);
-
-  app.get("/health", async () => {
-    return { status: "ok" };
-  });
-
-  return app;
-}
+import { buildApp } from "./infrastructure/http/app";
 
 async function start() {
   const app = await buildApp();

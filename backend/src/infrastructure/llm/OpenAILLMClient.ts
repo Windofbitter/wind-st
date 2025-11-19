@@ -5,6 +5,7 @@ import type {
   LLMChatCompletionUsage,
   LLMClient,
 } from "../../core/ports/LLMClient";
+import { AppError } from "../../application/errors/AppError";
 
 export class OpenAILLMClient implements LLMClient {
   private async createClient(
@@ -12,7 +13,10 @@ export class OpenAILLMClient implements LLMClient {
     apiKeyFromConnection?: string,
   ): Promise<any> {
     if (!apiKeyFromConnection) {
-      throw new Error("LLMConnection.apiKey is required for this provider");
+      throw new AppError(
+        "EXTERNAL_LLM_ERROR",
+        "LLMConnection.apiKey is required for this provider",
+      );
     }
 
     const mod = await import("openai");
@@ -31,7 +35,10 @@ export class OpenAILLMClient implements LLMClient {
       request;
 
     if (connection.provider !== "openai_compatible") {
-      throw new Error(`Unsupported LLM provider: ${connection.provider}`);
+      throw new AppError(
+        "EXTERNAL_LLM_ERROR",
+        `Unsupported LLM provider: ${connection.provider}`,
+      );
     }
 
     const client = await this.createClient(connection.baseUrl, connection.apiKey);
@@ -50,7 +57,10 @@ export class OpenAILLMClient implements LLMClient {
     const content: string | null | undefined = choice?.message?.content;
 
     if (!content) {
-      throw new Error("OpenAI did not return a completion message");
+      throw new AppError(
+        "EXTERNAL_LLM_ERROR",
+        "OpenAI did not return a completion message",
+      );
     }
 
     const message: LLMChatMessage = {

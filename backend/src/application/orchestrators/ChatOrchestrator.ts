@@ -8,6 +8,7 @@ import type {
 import { ChatService } from "../services/ChatService";
 import { MessageService } from "../services/MessageService";
 import { LLMConnectionService } from "../services/LLMConnectionService";
+import { AppError } from "../errors/AppError";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -29,7 +30,7 @@ export class ChatOrchestrator {
     userContent: string,
   ): Promise<Message> {
     if (this.locks.has(chatId)) {
-      throw new Error("Chat is busy");
+      throw new AppError("CHAT_BUSY", "Chat is busy");
     }
 
     this.locks.add(chatId);
@@ -76,17 +77,26 @@ export class ChatOrchestrator {
   ): Promise<Message> {
     const config = await this.chatService.getChatLLMConfig(chatId);
     if (!config) {
-      throw new Error("Chat LLM config not found");
+      throw new AppError(
+        "CHAT_LLM_CONFIG_NOT_FOUND",
+        "Chat LLM config not found",
+      );
     }
 
     const connection = await this.llmConnectionService.getConnection(
       config.llmConnectionId,
     );
     if (!connection) {
-      throw new Error("LLM connection not found");
+      throw new AppError(
+        "LLM_CONNECTION_NOT_FOUND",
+        "LLM connection not found",
+      );
     }
     if (!connection.isEnabled) {
-      throw new Error("LLM connection is disabled");
+      throw new AppError(
+        "LLM_CONNECTION_DISABLED",
+        "LLM connection is disabled",
+      );
     }
 
     const history = await this.messageService.listMessages(chatId);
@@ -129,4 +139,3 @@ export class ChatOrchestrator {
     return assistantMessage;
   }
 }
-
