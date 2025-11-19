@@ -84,7 +84,7 @@ export function runMigrations(db: SqliteDatabase): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_messages_chat
-      ON messages(chat_id, rowid);
+      ON messages(chat_id);
 
     CREATE TABLE IF NOT EXISTS mcp_servers (
       id TEXT PRIMARY KEY,

@@ -71,10 +71,19 @@ export class MessageRepositorySqlite implements MessageRepository {
     chatId: string,
     options?: ListMessagesOptions,
   ): Promise<Message[]> {
-    const limitClause =
-      options?.limit && options.limit > 0 ? ` LIMIT ${options.limit}` : "";
-    const offsetClause =
-      options?.offset && options.offset > 0 ? ` OFFSET ${options.offset}` : "";
+    let limitOffsetClause = "";
+    const hasLimit = options?.limit !== undefined && options.limit > 0;
+    const hasOffset = options?.offset !== undefined && options.offset > 0;
+
+    if (hasLimit) {
+      limitOffsetClause += ` LIMIT ${options!.limit}`;
+      if (hasOffset) {
+        limitOffsetClause += ` OFFSET ${options!.offset}`;
+      }
+    } else if (hasOffset) {
+      // SQLite requires LIMIT when OFFSET is used; LIMIT -1 means "no limit".
+      limitOffsetClause += ` LIMIT -1 OFFSET ${options!.offset}`;
+    }
 
     const sql =
       `
@@ -89,13 +98,10 @@ export class MessageRepositorySqlite implements MessageRepository {
       FROM messages
       WHERE chat_id = ?
       ORDER BY rowid ASC
-    `.trim() +
-      limitClause +
-      offsetClause;
+    `.trim() + limitOffsetClause;
 
     const stmt = this.db.prepare(sql);
     const rows = stmt.all(chatId);
     return rows.map(mapRowToMessage);
   }
 }
-

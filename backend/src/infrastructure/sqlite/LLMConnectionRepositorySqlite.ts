@@ -142,7 +142,18 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
 
   async delete(id: string): Promise<void> {
     const stmt = this.db.prepare("DELETE FROM llm_connections WHERE id = ?");
-    stmt.run(id);
+    try {
+      stmt.run(id);
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message.includes("FOREIGN KEY constraint failed")
+      ) {
+        throw new Error(
+          "Cannot delete LLM connection: it is used by one or more chats. Disable it or move those chats to another connection first.",
+        );
+      }
+      throw err;
+    }
   }
 }
-
