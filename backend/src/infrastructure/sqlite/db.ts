@@ -16,6 +16,13 @@ export function openDatabase(): SqliteDatabase {
   }
 
   const db = new Database(dbPath);
+  // Improve concurrency and durability trade-offs for dev/typical usage.
+  // - WAL allows readers during writes and reduces full-db locking.
+  // - busy_timeout helps avoid immediate failures under brief contention.
+  // - synchronous=NORMAL is a common pairing with WAL for performance.
+  db.pragma("journal_mode = WAL");
+  db.pragma("busy_timeout = 5000");
+  db.pragma("synchronous = NORMAL");
   db.pragma("foreign_keys = ON");
 
   runMigrations(db);

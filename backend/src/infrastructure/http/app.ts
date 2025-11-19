@@ -90,6 +90,15 @@ export async function buildApp() {
     logger: true,
   });
 
+  // Ensure we close the DB when Fastify shuts down.
+  app.addHook("onClose", async () => {
+    try {
+      db.close();
+    } catch {
+      // ignore close errors
+    }
+  });
+
   app.decorate("characterService", characterService);
    app.decorate("chatService", chatService);
    app.decorate("messageService", messageService);
