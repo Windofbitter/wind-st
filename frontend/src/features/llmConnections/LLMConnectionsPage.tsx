@@ -397,21 +397,6 @@ export function LLMConnectionsPage() {
                 }
               />
             </div>
-            <div className="input-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={editForm.isEnabled ?? true}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      isEnabled: e.target.checked,
-                    })
-                  }
-                />{" "}
-                {t("llmConnections.editEnabledLabel")}
-              </label>
-            </div>
             <button
               type="button"
               className="btn btn-primary"
