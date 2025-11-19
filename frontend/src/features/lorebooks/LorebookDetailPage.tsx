@@ -497,14 +497,14 @@ export function LorebookDetailPage() {
                       className="btn btn-primary"
                       onClick={() => startEdit(entry)}
                     >
-                      Edit
+                      {t("lorebooks.entriesEditButton")}
                     </button>
                     <button
                       type="button"
                       className="btn btn-danger"
                       onClick={() => void deleteEntry(entry.id)}
                     >
-                      Delete
+                      {t("lorebooks.entriesDeleteButton")}
                     </button>
                   </div>
                 </td>
