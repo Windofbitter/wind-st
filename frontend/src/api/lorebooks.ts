@@ -4,7 +4,6 @@ export interface Lorebook {
   id: string;
   name: string;
   description: string;
-  isGlobal: boolean;
 }
 
 export interface LorebookEntry {
@@ -17,14 +16,12 @@ export interface LorebookEntry {
 }
 
 export interface ListLorebooksParams {
-  isGlobal?: boolean;
   nameContains?: string;
 }
 
 export interface CreateLorebookRequest {
   name: string;
   description: string;
-  isGlobal?: boolean;
 }
 
 export type UpdateLorebookRequest = Partial<CreateLorebookRequest>;

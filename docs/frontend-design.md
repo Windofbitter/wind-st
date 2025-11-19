@@ -180,16 +180,16 @@ API functions:
 
 DTOs:
 
-- `Lorebook` – `{ id, name, description, isGlobal }`.
+- `Lorebook` – `{ id, name, description }`.
 - `LorebookEntry` – `{ id, lorebookId, keywords, content, insertionOrder, isEnabled }`.
-- `CreateLorebookRequest` – `{ name, description, isGlobal? }`.
+- `CreateLorebookRequest` – `{ name, description }`.
 - `UpdateLorebookRequest` – partial of `CreateLorebookRequest`.
 - `CreateLorebookEntryRequest` – `{ keywords: string[]; content: string; insertionOrder: number; isEnabled?: boolean }`.
 - `UpdateLorebookEntryRequest` – partial of `CreateLorebookEntryRequest`.
 
 API functions:
 
-- `listLorebooks(params?: { isGlobal?: boolean; nameContains?: string })` → `Promise<Lorebook[]>`.
+- `listLorebooks(params?: { nameContains?: string })` → `Promise<Lorebook[]>`.
 - `getLorebook(id: string)` → `Promise<Lorebook>`.
 - `createLorebook(payload: CreateLorebookRequest)` → `Promise<Lorebook>`.
 - `updateLorebook(id: string, payload: UpdateLorebookRequest)` → `Promise<Lorebook>`.

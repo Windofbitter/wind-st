@@ -313,18 +313,17 @@ Manage reusable prompt blocks used in character stacks.
 - Columns:
   - Name.
   - Description.
-  - `isGlobal` flag.
 - Actions:
   - "New Lorebook" → `POST /lorebooks`.
   - Row actions:
-    - "Edit" (name, description, global flag) via `PATCH /lorebooks/:id`.
+    - "Edit" (name, description) via `PATCH /lorebooks/:id`.
     - "Delete" via `DELETE /lorebooks/:id` (cascades entries).
 
 ### 6.2 Lorebook Detail and Entries
 
 Detail view for a single lorebook combining metadata and entries:
 
-- Top: lorebook metadata editor (name, description, global).
+- Top: lorebook metadata editor (name, description).
 - Bottom: entries table for `GET /lorebooks/:id/entries`.
   - Columns:
     - Keywords (chips).

@@ -49,7 +49,6 @@ A collection of world info entries.
 - **id**: UUID
 - **name**: String
 - **description**: String
-- **is_global**: Boolean (If true, active for all characters)
 
 ## 6. LorebookEntry
 A specific fact triggered by keywords.

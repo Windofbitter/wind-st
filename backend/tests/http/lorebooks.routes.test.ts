@@ -21,7 +21,6 @@ describe("Lorebook routes", () => {
       payload: {
         name: "World",
         description: "desc",
-        isGlobal: true,
       },
     });
 

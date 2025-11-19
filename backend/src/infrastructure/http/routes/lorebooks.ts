@@ -15,20 +15,6 @@ function toLorebookFilter(
 ): LorebookFilter | undefined {
   const filter: LorebookFilter = {};
 
-  if (query.isGlobal !== undefined) {
-    const raw = query.isGlobal;
-    if (raw === "true" || raw === true) {
-      filter.isGlobal = true;
-    } else if (raw === "false" || raw === false) {
-      filter.isGlobal = false;
-    } else {
-      throw new AppError(
-        "VALIDATION_ERROR",
-        "Invalid lorebook query: isGlobal must be true or false",
-      );
-    }
-  }
-
   if (
     typeof query.nameContains === "string" &&
     query.nameContains.trim() !== ""
@@ -60,17 +46,9 @@ function ensureCreateLorebookPayload(body: unknown): CreateLorebookInput {
     );
   }
 
-  if (value.isGlobal !== undefined && typeof value.isGlobal !== "boolean") {
-    throw new AppError(
-      "VALIDATION_ERROR",
-      "Invalid lorebook payload: isGlobal must be boolean",
-    );
-  }
-
   return {
     name: value.name,
     description: value.description,
-    isGlobal: value.isGlobal ?? false,
   };
 }
 
@@ -103,16 +81,6 @@ function ensureUpdateLorebookPayload(body: unknown): UpdateLorebookInput {
       );
     }
     patch.description = value.description;
-  }
-
-  if (value.isGlobal !== undefined) {
-    if (typeof value.isGlobal !== "boolean") {
-      throw new AppError(
-        "VALIDATION_ERROR",
-        "Invalid lorebook patch: isGlobal must be boolean",
-      );
-    }
-    patch.isGlobal = value.isGlobal;
   }
 
   return patch;

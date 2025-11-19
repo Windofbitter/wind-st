@@ -43,8 +43,7 @@ export function runMigrations(db: SqliteDatabase): void {
     CREATE TABLE IF NOT EXISTS lorebooks (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      is_global INTEGER NOT NULL
+      description TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS lorebook_entries (

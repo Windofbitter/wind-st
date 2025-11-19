@@ -96,7 +96,7 @@ Patterns:
 - Constructors take a `SqliteDatabase` (better-sqlite3 instance).
 - `create` methods:
   - Generate IDs with `crypto.randomUUID()`.
-  - Apply default flags (e.g. `builtIn`, `isGlobal`, `isEnabled`).
+  - Apply default flags (e.g. `builtIn`, `isEnabled`).
   - Encode flexible fields as JSON where appropriate:
     - `LorebookEntry.keywords` → JSON string
     - `Message.toolCalls` / `toolResults` → JSON

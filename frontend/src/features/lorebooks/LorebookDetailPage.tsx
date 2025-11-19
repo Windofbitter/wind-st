@@ -75,7 +75,6 @@ export function LorebookDetailPage() {
       setMetaDraft({
         name: data.name,
         description: data.description,
-        isGlobal: data.isGlobal,
       });
     } catch (err) {
       setLorebookState({
@@ -316,34 +315,7 @@ export function LorebookDetailPage() {
                 }
               />
             </div>
-            <div className="input-group">
-              <label htmlFor="lb-scope">
-                {t("lorebooks.detailScopeLabel")}
-              </label>
-              <div id="lb-scope" style={{ display: "flex", gap: "1rem" }}>
-                <label>
-                  <input
-                    type="radio"
-                    name="lorebook-scope"
-                    checked={!metaDraft.isGlobal}
-                    onChange={() => setMetaDraft({ ...metaDraft, isGlobal: false })}
-                  />{" "}
-                  {t("lorebooks.detailScopeLocal")}
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="lorebook-scope"
-                    checked={metaDraft.isGlobal === true}
-                    onChange={() => setMetaDraft({ ...metaDraft, isGlobal: true })}
-                  />{" "}
-                  {t("lorebooks.detailScopeGlobal")}
-                </label>
-              </div>
-              <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
-                {t("lorebooks.detailScopeHint")}
-              </div>
-            </div>
+            {/* Scope removed; lorebooks are attached via prompt stack */}
             <button
               type="button"
               className="btn btn-primary"

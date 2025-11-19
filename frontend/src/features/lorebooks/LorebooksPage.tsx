@@ -20,7 +20,6 @@ interface LoadState {
 const emptyForm: CreateLorebookRequest = {
   name: "",
   description: "",
-  isGlobal: false,
 };
 
 export function LorebooksPage() {
@@ -38,28 +37,17 @@ export function LorebooksPage() {
     null,
   );
 
-  // Filters
-  const [scopeFilter, setScopeFilter] = useState<"all" | "global" | "local">(
-    "all",
-  );
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     void loadLorebooks();
-  }, [scopeFilter, search]);
+  }, [search]);
 
   async function loadLorebooks() {
     setState({ loading: true, error: null });
     try {
-      const isGlobalParam =
-        scopeFilter === "global"
-          ? true
-          : scopeFilter === "local"
-            ? false
-            : undefined;
       const nameContainsParam = search.trim() !== "" ? search.trim() : undefined;
       const data = await listLorebooks({
-        isGlobal: isGlobalParam,
         nameContains: nameContainsParam,
       });
       setLorebooks(data);
@@ -153,32 +141,7 @@ export function LorebooksPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="lb-scope">
-              {t("lorebooks.listScopeLabel")}
-            </label>
-            <div id="lb-scope" style={{ display: "flex", gap: "1rem" }}>
-              <label>
-                <input
-                  type="radio"
-                  name="lorebook-scope"
-                  checked={!form.isGlobal}
-                  onChange={() => setForm({ ...form, isGlobal: false })}
-                />{" "}
-                {t("lorebooks.listScopeLocal")}
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="lorebook-scope"
-                  checked={form.isGlobal === true}
-                  onChange={() => setForm({ ...form, isGlobal: true })}
-                />{" "}
-                {t("lorebooks.listScopeGlobal")}
-              </label>
-            </div>
-            <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
-              {t("lorebooks.listScopeHint")}
-            </div>
+            {/* Scope removed; lorebooks are attached via prompt stack */}
           </div>
           <button
             type="submit"
@@ -202,29 +165,6 @@ export function LorebooksPage() {
           {t("lorebooks.listTitle")}
         </h3>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button
-              type="button"
-              className={"btn" + (scopeFilter === "all" ? " btn-primary" : "")}
-              onClick={() => setScopeFilter("all")}
-            >
-              {t("lorebooks.listFilterAll")}
-            </button>
-            <button
-              type="button"
-              className={"btn" + (scopeFilter === "global" ? " btn-primary" : "")}
-              onClick={() => setScopeFilter("global")}
-            >
-              {t("lorebooks.listFilterGlobal")}
-            </button>
-            <button
-              type="button"
-              className={"btn" + (scopeFilter === "local" ? " btn-primary" : "")}
-              onClick={() => setScopeFilter("local")}
-            >
-              {t("lorebooks.listFilterLocal")}
-            </button>
-          </div>
           <input
             type="text"
             placeholder={t("lorebooks.listFilterSearchPlaceholder")}
@@ -246,7 +186,6 @@ export function LorebooksPage() {
             <tr>
               <th>{t("lorebooks.listTableName")}</th>
               <th>{t("lorebooks.listTableDescription")}</th>
-              <th>{t("lorebooks.listTableGlobal")}</th>
               <th>{t("lorebooks.listTableActions")}</th>
             </tr>
           </thead>
@@ -255,11 +194,6 @@ export function LorebooksPage() {
               <tr key={lb.id}>
                 <td>{lb.name}</td>
                 <td>{lb.description}</td>
-                <td>
-                  {lb.isGlobal
-                    ? t("lorebooks.listYes")
-                    : t("lorebooks.listNo")}
-                </td>
                 <td>
                   <div
                     style={{

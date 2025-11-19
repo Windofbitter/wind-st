@@ -16,7 +16,6 @@ describe("LorebookEntryRepositorySqlite", () => {
     const lorebook = await lorebookRepo.create({
       name: "Book",
       description: "desc",
-      isGlobal: false,
     });
     lorebookId = lorebook.id;
     entryRepo = new LorebookEntryRepositorySqlite(db);

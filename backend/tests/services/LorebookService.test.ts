@@ -19,21 +19,18 @@ describe("LorebookService", () => {
     const lb = await service.createLorebook({
       name: "Book",
       description: "desc",
-      isGlobal: true,
     });
 
-    const listed = await service.listLorebooks({ isGlobal: true });
-    expect(listed).toHaveLength(1);
+    const listed = await service.listLorebooks({ nameContains: "Bo" });
+    expect(listed.map((l) => l.id)).toContain(lb.id);
 
     const fetched = await service.getLorebook(lb.id);
     expect(fetched?.name).toBe("Book");
 
     const updated = await service.updateLorebook(lb.id, {
       description: "updated",
-      isGlobal: false,
     });
     expect(updated?.description).toBe("updated");
-    expect(updated?.isGlobal).toBe(false);
 
     const entry = await service.createLorebookEntry(lb.id, {
       keywords: ["a"],

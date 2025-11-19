@@ -214,7 +214,6 @@ export class FakeLorebookRepository implements LorebookRepository {
       id,
       name: data.name,
       description: data.description,
-      isGlobal: data.isGlobal ?? false,
     };
     this.items.set(id, lorebook);
     return lorebook;
@@ -226,9 +225,6 @@ export class FakeLorebookRepository implements LorebookRepository {
 
   async list(filter?: LorebookFilter): Promise<Lorebook[]> {
     let all = Array.from(this.items.values());
-    if (filter?.isGlobal !== undefined) {
-      all = all.filter((l) => l.isGlobal === filter.isGlobal);
-    }
     if (filter?.nameContains) {
       all = all.filter((l) => l.name.includes(filter.nameContains as string));
     }
@@ -244,8 +240,6 @@ export class FakeLorebookRepository implements LorebookRepository {
     const updated: Lorebook = {
       ...existing,
       ...patch,
-      isGlobal:
-        patch.isGlobal !== undefined ? patch.isGlobal : existing.isGlobal,
     };
     this.items.set(id, updated);
     return updated;

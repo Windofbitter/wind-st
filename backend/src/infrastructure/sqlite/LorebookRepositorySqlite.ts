@@ -13,7 +13,6 @@ function mapRowToLorebook(row: any): Lorebook {
     id: row.id,
     name: row.name,
     description: row.description,
-    isGlobal: row.is_global === 1,
   };
 }
 
@@ -22,27 +21,24 @@ export class LorebookRepositorySqlite implements LorebookRepository {
 
   async create(data: CreateLorebookInput): Promise<Lorebook> {
     const id = crypto.randomUUID();
-    const isGlobal = data.isGlobal ?? false;
 
     const stmt = this.db.prepare(
       `
       INSERT INTO lorebooks (
         id,
         name,
-        description,
-        is_global
+        description
       )
-      VALUES (?, ?, ?, ?)
+      VALUES (?, ?, ?)
     `.trim(),
     );
 
-    stmt.run(id, data.name, data.description, isGlobal ? 1 : 0);
+    stmt.run(id, data.name, data.description);
 
     return {
       id,
       name: data.name,
       description: data.description,
-      isGlobal,
     };
   }
 
@@ -52,8 +48,7 @@ export class LorebookRepositorySqlite implements LorebookRepository {
       SELECT
         id,
         name,
-        description,
-        is_global
+        description
       FROM lorebooks
       WHERE id = ?
     `.trim(),
@@ -68,11 +63,6 @@ export class LorebookRepositorySqlite implements LorebookRepository {
     const where: string[] = [];
     const params: unknown[] = [];
 
-    if (filter?.isGlobal !== undefined) {
-      where.push("is_global = ?");
-      params.push(filter.isGlobal ? 1 : 0);
-    }
-
     if (filter?.nameContains) {
       where.push("name LIKE ?");
       params.push(`%${filter.nameContains}%`);
@@ -83,8 +73,7 @@ export class LorebookRepositorySqlite implements LorebookRepository {
       SELECT
         id,
         name,
-        description,
-        is_global
+        description
       FROM lorebooks
     ` +
       (where.length > 0 ? ` WHERE ${where.join(" AND ")}` : "") +
@@ -109,10 +98,6 @@ export class LorebookRepositorySqlite implements LorebookRepository {
     if (patch.description !== undefined) {
       sets.push("description = ?");
       params.push(patch.description);
-    }
-    if (patch.isGlobal !== undefined) {
-      sets.push("is_global = ?");
-      params.push(patch.isGlobal ? 1 : 0);
     }
 
     if (sets.length === 0) {

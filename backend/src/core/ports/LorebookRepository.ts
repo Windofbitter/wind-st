@@ -3,17 +3,14 @@ import type { Lorebook } from "../entities/Lorebook";
 export interface CreateLorebookInput {
   name: string;
   description: string;
-  isGlobal?: boolean;
 }
 
 export interface UpdateLorebookInput {
   name?: string;
   description?: string;
-  isGlobal?: boolean;
 }
 
 export interface LorebookFilter {
-  isGlobal?: boolean;
   nameContains?: string;
 }
 
