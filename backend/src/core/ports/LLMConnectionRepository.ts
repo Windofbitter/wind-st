@@ -5,6 +5,7 @@ export interface CreateLLMConnectionInput {
   provider: LLMProvider;
   baseUrl: string;
   defaultModel: string;
+  apiKey: string;
   isEnabled?: boolean;
 }
 
@@ -12,6 +13,7 @@ export interface UpdateLLMConnectionInput {
   name?: string;
   baseUrl?: string;
   defaultModel?: string;
+  apiKey?: string;
   isEnabled?: boolean;
 }
 
@@ -25,4 +27,3 @@ export interface LLMConnectionRepository {
   ): Promise<LLMConnection | null>;
   delete(id: string): Promise<void>;
 }
-

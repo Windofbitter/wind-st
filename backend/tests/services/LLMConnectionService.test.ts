@@ -17,6 +17,7 @@ describe("LLMConnectionService", () => {
       provider: "openai_compatible",
       baseUrl: "http://localhost",
       defaultModel: "gpt",
+      apiKey: "sk-service",
       isEnabled: true,
     });
 
@@ -25,12 +26,14 @@ describe("LLMConnectionService", () => {
 
     const fetched = await service.getConnection(created.id);
     expect(fetched?.name).toBe("Conn");
+    expect(fetched?.apiKey).toBe("sk-service");
 
     const updated = await service.updateConnection(created.id, {
       baseUrl: "http://example",
       isEnabled: false,
     });
     expect(updated?.baseUrl).toBe("http://example");
+    expect(updated?.apiKey).toBe("sk-service");
     expect(updated?.isEnabled).toBe(false);
 
     await repo.delete(created.id);

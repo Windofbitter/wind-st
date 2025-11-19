@@ -112,7 +112,10 @@ Application and HTTP layers depend only on ports defined in `core`; infrastructu
     - MCP tools from `mcp_tools` presets.
 - `ChatOrchestrator`
   - `handleUserMessage(chatId, userContent)`
-  - Steps:
+  - Responsibilities:
+    - Single entrypoint for orchestrated user → assistant turns for a chat.
+    - Only layer allowed to call `LLMClient` and append assistant/tool messages via `MessageService`.
+  - Steps for a turn:
     1. Append user message.
     2. Build prompt via `PromptBuilder`.
     3. Call `LLMClient.completeChat` with tools from `ToolRegistry`.
@@ -120,6 +123,49 @@ Application and HTTP layers depend only on ports defined in `core`; infrastructu
     5. Append final assistant message and return it.
 
 `ChatOrchestrator` depends only on ports: `PromptBuilder`, `LLMClient`, `MCPClient`, `MessageService`, `ChatService`.
+
+#### Concurrency and "chat busy"
+
+- Guarantee:
+  - At most one orchestrated turn (`handleUserMessage`) may run for a given `chatId` at any time.
+- Implementation (initial):
+  - Enforce a per-process lock keyed by `chatId` inside `ChatOrchestrator` so concurrent calls for the same chat either wait, fail fast, or are explicitly queued.
+  - HTTP `POST /chats/:id/turns` should treat an in-flight turn for `:id` as "chat busy" and return a deterministic error (for example, HTTP 409) instead of starting another turn.
+- Representation:
+  - "Busy" is an orchestration concern, not a `Chat` field: the `Chat` entity remains free of transient status flags.
+  - The UI derives busy state from in-flight `/chats/:id/turns` calls or from the new `ChatRun` model (`status = running`).
+
+#### Deleting the last turn
+
+- Semantics:
+  - Deleting history is defined as truncating the conversation at the last user turn.
+  - When requested, the system deletes:
+    - the last `user` message for a chat, and
+    - all messages that come after it (assistant/tool/system) for that same chat.
+- Constraints:
+  - Only the tail of the conversation can be deleted; arbitrary deletion of messages in the middle of a chat is not supported.
+  - Deletion is only allowed when there is no `ChatRun` in `running` status for that chat (i.e., chat is not busy).
+- Implementation:
+  - `ChatOrchestrator` (or a dedicated application service) is responsible for:
+    - Listing messages for the chat in order.
+    - Locating the last `user` message.
+    - Deleting that message and all subsequent messages.
+    - Optionally updating or marking the associated `ChatRun` as `canceled` or removing it.
+
+#### ChatRun lifecycle and crash recovery
+
+- Lifecycle:
+  - `pending`: Run created but work not yet started (reserved for queued executions).
+  - `running`: Turn is actively being processed by `ChatOrchestrator`.
+  - `completed`: Turn finished successfully; associated assistant message has been appended.
+  - `failed`: Turn failed with an error; details captured in `error`/logs.
+  - `canceled`: Turn was aborted explicitly (for example, by a "stop generation" request).
+- Process termination while a run is running:
+  - If the process dies while a `ChatRun` is in `running`, that work is effectively lost.
+  - On startup, the backend should treat any `ChatRun` that is still `running` as `failed` or `canceled` (implementation choice), mark it accordingly, and consider the chat idle again.
+  - The transcript may contain partially generated assistant/tool messages; the orchestration layer should either:
+    - append only fully-formed messages, or
+    - mark partial runs as `failed` while leaving the truncated transcript as-is (client may choose to hide those runs).
 
 ## HTTP API (Fastify)
 
@@ -169,6 +215,8 @@ Application and HTTP layers depend only on ports defined in `core`; infrastructu
   - `GET /chats/:id/messages`
   - `POST /chats/:id/messages`
   - `POST /chats/:id/turns` (orchestrated user → assistant turn)
+  - Optional future endpoints:
+    - `DELETE /chats/:id/turns/last` (truncate conversation by deleting the last user turn and all following messages)
 - LLM config:
   - `GET /chats/:id/llm-config`
   - `PATCH /chats/:id/llm-config`

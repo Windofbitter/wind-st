@@ -101,6 +101,7 @@ export function runMigrations(db: SqliteDatabase): void {
       provider TEXT NOT NULL,
       base_url TEXT NOT NULL,
       default_model TEXT NOT NULL,
+      api_key TEXT NOT NULL,
       is_enabled INTEGER NOT NULL
     );
 
@@ -117,5 +118,21 @@ export function runMigrations(db: SqliteDatabase): void {
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_llm_configs_chat
       ON chat_llm_configs(chat_id);
+
+    CREATE TABLE IF NOT EXISTS chat_runs (
+      id TEXT PRIMARY KEY,
+      chat_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      user_message_id TEXT NOT NULL,
+      assistant_message_id TEXT,
+      started_at TEXT NOT NULL,
+      finished_at TEXT,
+      error TEXT,
+      token_usage TEXT,
+      FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_chat_runs_chat_status
+      ON chat_runs(chat_id, status, started_at);
   `);
 }

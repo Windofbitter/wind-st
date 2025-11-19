@@ -315,6 +315,7 @@ export class FakeLLMConnectionRepository implements LLMConnectionRepository {
       provider: data.provider,
       baseUrl: data.baseUrl,
       defaultModel: data.defaultModel,
+      apiKey: data.apiKey,
       isEnabled: data.isEnabled ?? true,
     };
     this.items.set(id, connection);
@@ -338,6 +339,7 @@ export class FakeLLMConnectionRepository implements LLMConnectionRepository {
     const updated: LLMConnection = {
       ...existing,
       ...patch,
+      apiKey: patch.apiKey !== undefined ? patch.apiKey : existing.apiKey,
       isEnabled:
         patch.isEnabled !== undefined ? patch.isEnabled : existing.isEnabled,
     };

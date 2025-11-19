@@ -14,6 +14,7 @@ function mapRowToLLMConnection(row: any): LLMConnection {
     provider: row.provider as LLMProvider,
     baseUrl: row.base_url,
     defaultModel: row.default_model,
+    apiKey: row.api_key,
     isEnabled: row.is_enabled === 1,
   };
 }
@@ -24,6 +25,7 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
   async create(data: CreateLLMConnectionInput): Promise<LLMConnection> {
     const id = crypto.randomUUID();
     const isEnabled = data.isEnabled ?? true;
+    const apiKey = data.apiKey;
 
     const stmt = this.db.prepare(
       `
@@ -33,9 +35,10 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
         provider,
         base_url,
         default_model,
+        api_key,
         is_enabled
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -45,6 +48,7 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
       data.provider,
       data.baseUrl,
       data.defaultModel,
+      apiKey,
       isEnabled ? 1 : 0,
     );
 
@@ -54,6 +58,7 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
       provider: data.provider,
       baseUrl: data.baseUrl,
       defaultModel: data.defaultModel,
+      apiKey,
       isEnabled,
     };
   }
@@ -67,6 +72,7 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
         provider,
         base_url,
         default_model,
+        api_key,
         is_enabled
       FROM llm_connections
       WHERE id = ?
@@ -87,6 +93,7 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
         provider,
         base_url,
         default_model,
+        api_key,
         is_enabled
       FROM llm_connections
       ORDER BY name ASC
@@ -115,6 +122,10 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
     if (patch.defaultModel !== undefined) {
       sets.push("default_model = ?");
       params.push(patch.defaultModel);
+    }
+    if (patch.apiKey !== undefined) {
+      sets.push("api_key = ?");
+      params.push(patch.apiKey);
     }
     if (patch.isEnabled !== undefined) {
       sets.push("is_enabled = ?");

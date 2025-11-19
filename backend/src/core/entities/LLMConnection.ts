@@ -6,6 +6,6 @@ export interface LLMConnection {
   provider: LLMProvider;
   baseUrl: string;
   defaultModel: string;
+  apiKey: string;
   isEnabled: boolean;
 }
-

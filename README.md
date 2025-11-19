@@ -11,6 +11,7 @@ The goal is to let creators build rich character experiences by composing reusab
 - Preset / PromptPreset model for building ordered prompt stacks.
 - MCP tool integration configured via presets and per-character settings.
 - Configurable LLM connections and per-chat LLM settings.
+- Orchestrated chat turns with per-chat runs and basic concurrency (“chat busy”) semantics.
 
 ## Tech Stack
 
@@ -22,3 +23,4 @@ The goal is to let creators build rich character experiences by composing reusab
 
 - Data entities: `docs/entities.md`
 - Tech stack overview: `docs/tech-stack.md`
+- Backend design (including ChatRun and ChatOrchestrator): `docs/backend-design.md`

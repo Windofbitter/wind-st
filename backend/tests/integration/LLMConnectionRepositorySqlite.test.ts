@@ -25,6 +25,7 @@ describe("LLMConnectionRepositorySqlite", () => {
       provider: "openai_compatible",
       baseUrl: "http://localhost",
       defaultModel: "gpt-4.1",
+      apiKey: "sk-test",
       isEnabled: true,
     });
 
@@ -35,14 +36,17 @@ describe("LLMConnectionRepositorySqlite", () => {
     const fetched = await repo.getById(created.id);
     expect(fetched).not.toBeNull();
     expect(fetched?.provider).toBe("openai_compatible");
+    expect(fetched?.apiKey).toBe("sk-test");
 
     const updated = await repo.update(created.id, {
       baseUrl: "http://example.com",
       defaultModel: "gpt-4.2",
+      apiKey: "sk-updated",
       isEnabled: false,
     });
     expect(updated).not.toBeNull();
     expect(updated?.baseUrl).toBe("http://example.com");
+    expect(updated?.apiKey).toBe("sk-updated");
     expect(updated?.isEnabled).toBe(false);
 
     await repo.delete(created.id);
@@ -60,6 +64,7 @@ describe("LLMConnectionRepositorySqlite", () => {
       provider: "openai_compatible",
       baseUrl: "http://localhost",
       defaultModel: "gpt",
+      apiKey: "sk-test-2",
       isEnabled: true,
     });
 

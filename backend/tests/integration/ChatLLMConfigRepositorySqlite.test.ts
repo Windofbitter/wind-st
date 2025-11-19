@@ -36,6 +36,7 @@ describe("ChatLLMConfigRepositorySqlite", () => {
       provider: "openai_compatible",
       baseUrl: "http://example",
       defaultModel: "gpt-test",
+      apiKey: "sk-config",
       isEnabled: true,
     });
     llmConnectionId = connection.id;
@@ -75,4 +76,3 @@ describe("ChatLLMConfigRepositorySqlite", () => {
     expect(afterDelete).toBeNull();
   });
 });
-

@@ -49,6 +49,7 @@ The config is normalized in `src/config.ts` and exposed as:
 - `src/core/entities/*` – Plain TypeScript domain entities (no logic).
 - `src/core/ports/*` – Repository interfaces (ports) for each domain.
 - `src/application/services/*` – Application services, built on the ports.
+- `src/application/orchestrators/*` – Higher-level orchestration (e.g., chat turns).
 - `src/infrastructure/sqlite/*` – SQLite implementations:
   - `db.ts` – `openDatabase()` + `runMigrations` call.
   - `migrations.ts` – Creates tables + indexes idempotently.
@@ -73,6 +74,7 @@ The backend uses a single SQLite database with foreign keys enabled:
   - `lorebooks`, `lorebook_entries`
   - `mcp_servers`
   - `llm_connections`, `chat_llm_configs`
+  - `chat_runs`
 - Sets up indexes for common lookups.
 - Enables cascade behavior at the DB level where appropriate:
   - `characters` → `chats` → `messages` (ON DELETE CASCADE).
@@ -119,6 +121,29 @@ Patterns:
     - Normal way to retire a connection is `updateConnection(id, { isEnabled: false })`.
 
 If you ever add a “force delete” path, keep it separate and explicit; do not relax this invariant in the default `delete` call.
+
+### Chat runs and orchestration
+
+`ChatRun` records a single orchestrated LLM turn for a chat:
+
+- `ChatRun` rows live in `chat_runs`, keyed by `chat_id`.
+- Each run links the initiating `user` message and the final `assistant` message and tracks status/usage.
+
+`ChatOrchestrator` (`src/application/orchestrators/ChatOrchestrator.ts`):
+
+- Is the only layer that:
+  - Calls the `LLMClient` (currently implemented by `OpenAILLMClient`).
+  - Appends assistant messages as part of an orchestrated turn.
+- Enforces per-chat concurrency via an in-memory lock:
+  - At most one `handleUserMessage(chatId, ...)` may run for a given chat at any time.
+  - A second concurrent call fails fast with a “Chat is busy” error.
+- Uses `ChatRunRepository` to:
+  - Create a `running` run when a user turn starts.
+  - Mark the run `completed`/`failed` with timestamps, assistant message ID and token usage.
+
+The `LLMClient` port abstracts the actual LLM API; the default implementation is `OpenAILLMClient` (`src/infrastructure/llm/OpenAILLMClient.ts`), which uses the official `openai` SDK in “OpenAI-compatible” mode.
+
+For `openai_compatible` connections, `OpenAILLMClient` expects the per-connection `apiKey` field on `LLMConnection` to be set; there is no environment-variable fallback. The connection’s `baseUrl` and `model` are taken from the `LLMConnection` and `ChatLLMConfig` rows for the chat.
 
 ## Services (application layer)
 
