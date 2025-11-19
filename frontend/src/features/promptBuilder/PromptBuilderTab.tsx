@@ -9,12 +9,39 @@ import {
 } from "../../api/promptStack";
 import type { Preset } from "../../api/presets";
 import { listPresets } from "../../api/presets";
+import type {
+  Lorebook,
+  CharacterLorebook,
+} from "../../api/lorebooks";
+import {
+  listLorebooks,
+  listCharacterLorebooks,
+  attachCharacterLorebook,
+  detachCharacterLorebook,
+} from "../../api/lorebooks";
+import type {
+  MCPServer,
+  CharacterMCPServer,
+} from "../../api/mcpServers";
+import {
+  listMCPServers,
+  listCharacterMCPServers,
+  attachCharacterMCPServer,
+  detachCharacterMCPServer,
+} from "../../api/mcpServers";
 import { ApiError } from "../../api/httpClient";
 import { PresetPalette } from "./PresetPalette";
 import type { PromptStackItemView } from "./PromptStackList";
 import { PromptStackList } from "./PromptStackList";
+import { LorebookStackSection } from "./LorebookStackSection";
+import { MCPStackSection } from "./MCPStackSection";
 
 type RoleFilter = "all" | PromptRole;
+
+interface LoadState {
+  loading: boolean;
+  error: string | null;
+}
 
 interface PromptBuilderTabProps {
   characterId: string;
@@ -44,6 +71,34 @@ export function PromptBuilderTab({
     null,
   );
 
+  const [lorebooks, setLorebooks] = useState<Lorebook[]>([]);
+  const [lorebooksState, setLorebooksState] = useState<LoadState>({
+    loading: false,
+    error: null,
+  });
+  const [characterLorebooks, setCharacterLorebooks] = useState<
+    CharacterLorebook[]
+  >([]);
+  const [characterLorebooksState, setCharacterLorebooksState] =
+    useState<LoadState>({
+      loading: false,
+      error: null,
+    });
+
+  const [mcpServers, setMcpServers] = useState<MCPServer[]>([]);
+  const [mcpServersState, setMcpServersState] = useState<LoadState>({
+    loading: false,
+    error: null,
+  });
+  const [characterMcpServers, setCharacterMcpServers] = useState<
+    CharacterMCPServer[]
+  >([]);
+  const [characterMcpServersState, setCharacterMcpServersState] =
+    useState<LoadState>({
+      loading: false,
+      error: null,
+    });
+
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [reordering, setReordering] = useState(false);
   const [attachError, setAttachError] = useState<string | null>(null);
@@ -55,6 +110,10 @@ export function PromptBuilderTab({
   useEffect(() => {
     void loadStack();
     void loadPresets();
+    void loadLorebooks();
+    void loadCharacterLorebooks();
+    void loadMcpServers();
+    void loadCharacterMcpServers();
   }, [characterId]);
 
   async function loadStack() {
@@ -78,7 +137,7 @@ export function PromptBuilderTab({
     setPresetsLoading(true);
     setPresetsError(null);
     try {
-      const data = await listPresets();
+      const data = await listPresets({ kind: "static_text" });
       setPresets(data);
     } catch (err) {
       setPresetsError(
@@ -88,6 +147,74 @@ export function PromptBuilderTab({
       );
     } finally {
       setPresetsLoading(false);
+    }
+  }
+
+  async function loadLorebooks() {
+    setLorebooksState({ loading: true, error: null });
+    try {
+      const data = await listLorebooks();
+      setLorebooks(data);
+      setLorebooksState({ loading: false, error: null });
+    } catch (err) {
+      setLorebooksState({
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to load lorebooks",
+      });
+    }
+  }
+
+  async function loadCharacterLorebooks() {
+    setCharacterLorebooksState({ loading: true, error: null });
+    try {
+      const data = await listCharacterLorebooks(characterId);
+      setCharacterLorebooks(data);
+      setCharacterLorebooksState({ loading: false, error: null });
+    } catch (err) {
+      setCharacterLorebooksState({
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to load character lorebooks",
+      });
+    }
+  }
+
+  async function loadMcpServers() {
+    setMcpServersState({ loading: true, error: null });
+    try {
+      const data = await listMCPServers();
+      setMcpServers(data);
+      setMcpServersState({ loading: false, error: null });
+    } catch (err) {
+      setMcpServersState({
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to load MCP servers",
+      });
+    }
+  }
+
+  async function loadCharacterMcpServers() {
+    setCharacterMcpServersState({ loading: true, error: null });
+    try {
+      const data = await listCharacterMCPServers(characterId);
+      setCharacterMcpServers(data);
+      setCharacterMcpServersState({ loading: false, error: null });
+    } catch (err) {
+      setCharacterMcpServersState({
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to load character MCP servers",
+      });
     }
   }
 
@@ -185,6 +312,70 @@ export function PromptBuilderTab({
       );
     } finally {
       setReordering(false);
+    }
+  }
+
+  async function handleAttachLorebook(lorebookId: string) {
+    setCharacterLorebooksState((s) => ({ ...s, error: null }));
+    try {
+      await attachCharacterLorebook(characterId, lorebookId);
+      await loadCharacterLorebooks();
+    } catch (err) {
+      setCharacterLorebooksState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to attach lorebook",
+      }));
+    }
+  }
+
+  async function handleDetachLorebook(mappingId: string) {
+    setCharacterLorebooksState((s) => ({ ...s, error: null }));
+    try {
+      await detachCharacterLorebook(mappingId);
+      await loadCharacterLorebooks();
+    } catch (err) {
+      setCharacterLorebooksState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to detach lorebook",
+      }));
+    }
+  }
+
+  async function handleAttachMcpServer(serverId: string) {
+    setCharacterMcpServersState((s) => ({ ...s, error: null }));
+    try {
+      await attachCharacterMCPServer(characterId, serverId);
+      await loadCharacterMcpServers();
+    } catch (err) {
+      setCharacterMcpServersState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to attach MCP server",
+      }));
+    }
+  }
+
+  async function handleDetachMcpServer(mappingId: string) {
+    setCharacterMcpServersState((s) => ({ ...s, error: null }));
+    try {
+      await detachCharacterMCPServer(mappingId);
+      await loadCharacterMcpServers();
+    } catch (err) {
+      setCharacterMcpServersState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to detach MCP server",
+      }));
     }
   }
 
@@ -335,6 +526,36 @@ export function PromptBuilderTab({
           )}
         </div>
       </div>
+
+      <LorebookStackSection
+        lorebooks={lorebooks}
+        attached={characterLorebooks}
+        loading={
+          lorebooksState.loading ||
+          characterLorebooksState.loading
+        }
+        error={
+          lorebooksState.error ??
+          characterLorebooksState.error
+        }
+        onAttach={(id) => void handleAttachLorebook(id)}
+        onDetach={(id) => void handleDetachLorebook(id)}
+      />
+
+      <MCPStackSection
+        servers={mcpServers}
+        attached={characterMcpServers}
+        loading={
+          mcpServersState.loading ||
+          characterMcpServersState.loading
+        }
+        error={
+          mcpServersState.error ??
+          characterMcpServersState.error
+        }
+        onAttach={(id) => void handleAttachMcpServer(id)}
+        onDetach={(id) => void handleDetachMcpServer(id)}
+      />
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>

@@ -4,6 +4,7 @@ import { ChatOrchestrator } from "../../src/application/orchestrators/ChatOrches
 import { ChatService } from "../../src/application/services/ChatService";
 import { MessageService } from "../../src/application/services/MessageService";
 import { LLMConnectionService } from "../../src/application/services/LLMConnectionService";
+import { HistoryConfigService } from "../../src/application/services/HistoryConfigService";
 import {
   FakeChatRepository,
   FakeChatLLMConfigRepository,
@@ -25,6 +26,24 @@ function createEnvironment(customClient?: LLMClient) {
   const messageService = new MessageService(messageRepo);
   const llmConnectionService = new LLMConnectionService(llmConnectionRepo);
   const chatRunRepo = new FakeChatRunRepository();
+  const historyConfigService = new HistoryConfigService({
+    async create(data) {
+      return { chatId: data.chatId, historyEnabled: data.historyEnabled, messageLimit: data.messageLimit };
+    },
+    async getByChatId() {
+      return null;
+    },
+    async updateByChatId(chatId, patch) {
+      return {
+        chatId,
+        historyEnabled: patch.historyEnabled ?? true,
+        messageLimit: patch.messageLimit ?? 20,
+      };
+    },
+    async deleteByChatId() {
+      // no-op
+    },
+  });
   const llmClient =
     customClient ?? new FakeLLMClient({
       message: { role: "assistant", content: "default-response" },
@@ -35,6 +54,7 @@ function createEnvironment(customClient?: LLMClient) {
     messageService,
     llmConnectionService,
     chatRunRepo,
+    historyConfigService,
     llmClient,
   );
 

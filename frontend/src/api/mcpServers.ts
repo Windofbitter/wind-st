@@ -9,6 +9,12 @@ export interface MCPServer {
   isEnabled: boolean;
 }
 
+export interface CharacterMCPServer {
+  id: string;
+  characterId: string;
+  mcpServerId: string;
+}
+
 export interface CreateMCPServerRequest {
   name: string;
   command: string;
@@ -45,5 +51,35 @@ export async function updateMCPServer(
 
 export async function deleteMCPServer(id: string): Promise<void> {
   await unwrap(http.delete<void>(`/mcp-servers/${id}`));
+}
+
+export async function listCharacterMCPServers(
+  characterId: string,
+): Promise<CharacterMCPServer[]> {
+  return unwrap(
+    http.get<CharacterMCPServer[]>(
+      `/characters/${characterId}/mcp-servers`,
+    ),
+  );
+}
+
+export async function attachCharacterMCPServer(
+  characterId: string,
+  mcpServerId: string,
+): Promise<CharacterMCPServer> {
+  return unwrap(
+    http.post<CharacterMCPServer>(
+      `/characters/${characterId}/mcp-servers`,
+      { mcpServerId },
+    ),
+  );
+}
+
+export async function detachCharacterMCPServer(
+  id: string,
+): Promise<void> {
+  await unwrap(
+    http.delete<void>(`/character-mcp-servers/${id}`),
+  );
 }
 

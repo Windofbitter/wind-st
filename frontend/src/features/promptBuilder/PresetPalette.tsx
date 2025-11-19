@@ -84,18 +84,6 @@ export function PresetPalette({
         "static_text",
         t("promptBuilder.paletteSectionStaticBlocks"),
       )}
-      {renderSection(
-        "lorebook",
-        t("promptBuilder.paletteSectionLorebooks"),
-      )}
-      {renderSection(
-        "history",
-        t("promptBuilder.paletteSectionHistory"),
-      )}
-      {renderSection(
-        "mcp_tools",
-        t("promptBuilder.paletteSectionMcpTools"),
-      )}
     </div>
   );
 }

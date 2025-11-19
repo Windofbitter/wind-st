@@ -16,32 +16,25 @@ describe("PresetRepositorySqlite", () => {
     db.close();
   });
 
-  it("creates, lists, gets, updates and deletes presets with JSON config", async () => {
+  it("creates, lists, gets, updates and deletes presets", async () => {
     const builtIn = await repo.create({
       title: "BuiltIn",
       description: "builtin preset",
       kind: "static_text",
       content: "Hello",
       builtIn: true,
-      config: { a: 1 },
     });
     const custom = await repo.create({
       title: "Custom",
       description: "custom preset",
-      kind: "history",
+      kind: "static_text",
       content: null,
       builtIn: false,
-      config: null,
     });
 
     const fetched = await repo.getById(builtIn.id);
     expect(fetched).not.toBeNull();
     expect(fetched?.builtIn).toBe(true);
-    expect(fetched?.config).toEqual({ a: 1 });
-
-    const kindFiltered = await repo.list({ kind: "history" });
-    expect(kindFiltered).toHaveLength(1);
-    expect(kindFiltered[0].id).toBe(custom.id);
 
     const builtInFiltered = await repo.list({ builtIn: true });
     expect(builtInFiltered).toHaveLength(1);
@@ -54,12 +47,10 @@ describe("PresetRepositorySqlite", () => {
     const updated = await repo.update(custom.id, {
       content: "Updated",
       builtIn: true,
-      config: { nested: { x: 1 } },
     });
     expect(updated).not.toBeNull();
     expect(updated?.content).toBe("Updated");
     expect(updated?.builtIn).toBe(true);
-    expect(updated?.config).toEqual({ nested: { x: 1 } });
 
     await repo.delete(builtIn.id);
     const afterDelete = await repo.getById(builtIn.id);
@@ -73,7 +64,6 @@ describe("PresetRepositorySqlite", () => {
       kind: "static_text",
       content: null,
       builtIn: false,
-      config: null,
     });
 
     const result = await repo.update(preset.id, {});

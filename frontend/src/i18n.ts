@@ -62,6 +62,8 @@ const resources = {
         maxTokensLabel: "Max output tokens",
         saveConfigButton: "Save Config",
         saveConfigButtonSaving: "Saving…",
+        historyEnabledLabel: "Include conversation history",
+        historyMessageLimitLabel: "History messages to keep",
         promptStackTitle: "Prompt Stack Preview",
         promptStackSelectCharacter:
           "Select a character to see prompt stack.",
@@ -258,6 +260,10 @@ const resources = {
         previewStackLabel: "Stack:",
         previewEmptyPersona: "<empty persona>",
         previewNoPresets: "<no presets attached>",
+        lorebooksAttachedTitle: "Attached Lorebooks",
+        lorebooksAttachedEmpty: "No lorebooks attached yet.",
+        mcpAttachedTitle: "Attached MCP Servers",
+        mcpAttachedEmpty: "No MCP servers attached yet.",
       },
       llmConnections: {
         newTitle: "New Connection",
@@ -409,6 +415,8 @@ const resources = {
         maxTokensLabel: "最大输出 Token 数",
         saveConfigButton: "保存配置",
         saveConfigButtonSaving: "正在保存…",
+        historyEnabledLabel: "包含会话历史",
+        historyMessageLimitLabel: "保留的历史消息数",
         promptStackTitle: "提示栈预览",
         promptStackSelectCharacter: "选择一个角色查看提示栈。",
         promptStackLoading: "正在加载提示栈…",

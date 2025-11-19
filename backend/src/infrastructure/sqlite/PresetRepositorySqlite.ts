@@ -16,7 +16,6 @@ function mapRowToPreset(row: any): Preset {
     kind: row.kind as PresetKind,
     content: row.content,
     builtIn: row.built_in === 1,
-    config: row.config ? (JSON.parse(row.config) as unknown) : null,
   };
 }
 
@@ -35,10 +34,9 @@ export class PresetRepositorySqlite implements PresetRepository {
         description,
         kind,
         content,
-        built_in,
-        config
+        built_in
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -49,9 +47,6 @@ export class PresetRepositorySqlite implements PresetRepository {
       data.kind,
       data.content ?? null,
       builtIn ? 1 : 0,
-      data.config === undefined || data.config === null
-        ? null
-        : JSON.stringify(data.config),
     );
 
     return {
@@ -61,7 +56,6 @@ export class PresetRepositorySqlite implements PresetRepository {
       kind: data.kind,
       content: data.content ?? null,
       builtIn,
-      config: data.config ?? null,
     };
   }
 
@@ -74,8 +68,7 @@ export class PresetRepositorySqlite implements PresetRepository {
         description,
         kind,
         content,
-        built_in,
-        config
+        built_in
       FROM presets
       WHERE id = ?
     `.trim(),
@@ -113,8 +106,7 @@ export class PresetRepositorySqlite implements PresetRepository {
         description,
         kind,
         content,
-        built_in,
-        config
+        built_in
       FROM presets
     ` +
       (where.length > 0 ? ` WHERE ${where.join(" AND ")}` : "") +
@@ -144,12 +136,6 @@ export class PresetRepositorySqlite implements PresetRepository {
     if (patch.builtIn !== undefined) {
       sets.push("built_in = ?");
       params.push(patch.builtIn ? 1 : 0);
-    }
-    if (patch.config !== undefined) {
-      sets.push("config = ?");
-      params.push(
-        patch.config === null ? null : JSON.stringify(patch.config),
-      );
     }
 
     if (sets.length === 0) {

@@ -26,23 +26,15 @@ By default the server listens on `0.0.0.0:3000` (or `PORT` env var).
 
 ## Configuration
 
-Config is loaded from `config.json` in the current working directory (`process.cwd()`):
+The backend does not require an external config file to find the SQLite
+database. By default it uses:
 
-- Example config: `backend/config.json`
+- `backend/data/app.db`
 
-```json
-{
-  "database": {
-    "sqlitePath": "./data/app.db"
-  }
-}
-```
-
-When you run scripts from `backend/` (e.g. `npm run dev`), the example `backend/config.json` is used by default. In other environments, ensure a compatible `config.json` exists in the working directory.
-
-The config is normalized in `src/config.ts` and exposed as:
-
-- `appConfig.database.sqlitePath` (absolute path).
+`openDatabase()` (`src/infrastructure/sqlite/db.ts`) ensures the directory
+exists, opens the file, and runs migrations. If you want to point to a
+different database file during development, run the server from another
+checkout or adjust `DB_PATH` in `db.ts`.
 
 ## Git layout
 
@@ -167,6 +159,7 @@ Key rules:
 
 - `PromptStackService`:
   - Validates that `characterId` and `presetId` exist before attaching.
+  - Only allows attaching `static_text` presets to a character's stack.
   - Manages `PromptPreset.sortOrder`:
     - New attach without `position` → appended at the end.
     - Attach with `position`:

@@ -147,9 +147,9 @@ API functions:
 
 DTOs:
 
-- `PresetKind` – `"static_text" | "lorebook" | "history" | "mcp_tools"`.
-- `Preset` – `{ id, title, description, kind, content, builtIn, config }`.
-- `CreatePresetRequest` – `{ title, description, kind, content?, builtIn?, config? }`.
+- `PresetKind` – `"static_text"`.
+- `Preset` – `{ id, title, description, kind, content, builtIn }`.
+- `CreatePresetRequest` – `{ title, description, kind, content?, builtIn? }`.
 - `UpdatePresetRequest` – partial of `CreatePresetRequest`.
 
 API functions:

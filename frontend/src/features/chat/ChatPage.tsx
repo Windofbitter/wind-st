@@ -11,6 +11,11 @@ import {
   listChats,
   updateChatConfig,
 } from "../../api/chats";
+import type { ChatHistoryConfig } from "../../api/historyConfig";
+import {
+  getChatHistoryConfig,
+  updateChatHistoryConfig,
+} from "../../api/historyConfig";
 import type { Message } from "../../api/messages";
 import { listMessages } from "../../api/messages";
 import type { LLMConnection } from "../../api/llmConnections";
@@ -67,6 +72,14 @@ export function ChatPage() {
   });
   const [savingChatConfig, setSavingChatConfig] = useState(false);
 
+  const [chatHistoryConfig, setChatHistoryConfig] =
+    useState<ChatHistoryConfig | null>(null);
+  const [chatHistoryState, setChatHistoryState] =
+    useState<LoadState>({
+      loading: false,
+      error: null,
+    });
+
   const [promptStack, setPromptStack] = useState<PromptPreset[]>([]);
   const [promptStackState, setPromptStackState] = useState<LoadState>({
     loading: false,
@@ -101,10 +114,12 @@ export function ChatPage() {
     if (!selectedChatId) {
       setMessages([]);
       setChatConfig(null);
+      setChatHistoryConfig(null);
       return;
     }
     void loadMessages(selectedChatId);
     void loadChatConfig(selectedChatId);
+    void loadChatHistoryConfig(selectedChatId);
   }, [selectedChatId]);
 
   async function loadCharacters() {
@@ -206,6 +221,24 @@ export function ChatPage() {
     setChatConfigState({ loading: false, error: null });
   }
 
+  async function loadChatHistoryConfig(chatId: string) {
+    setChatHistoryState({ loading: true, error: null });
+    try {
+      const cfg = await getChatHistoryConfig(chatId);
+      setChatHistoryConfig(cfg);
+    } catch (err) {
+      setChatHistoryState({
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to load history config",
+      });
+      return;
+    }
+    setChatHistoryState({ loading: false, error: null });
+  }
+
   async function loadPromptStack(characterId: string) {
     setPromptStackState({ loading: true, error: null });
     try {
@@ -297,6 +330,14 @@ export function ChatPage() {
     setChatConfig(next);
   }
 
+  async function handleHistoryConfigChange(
+    patch: Partial<ChatHistoryConfig>,
+  ) {
+    if (!chatHistoryConfig || !activeChat) return;
+    const next = { ...chatHistoryConfig, ...patch };
+    setChatHistoryConfig(next);
+  }
+
   async function handleSaveChatConfig() {
     if (!chatConfig || !activeChat) return;
 
@@ -311,6 +352,18 @@ export function ChatPage() {
       };
       const updated = await updateChatConfig(activeChat.id, payload);
       setChatConfig(updated);
+
+      if (chatHistoryConfig) {
+        const historyPayload = {
+          historyEnabled: chatHistoryConfig.historyEnabled,
+          messageLimit: chatHistoryConfig.messageLimit,
+        };
+        const updatedHistory = await updateChatHistoryConfig(
+          activeChat.id,
+          historyPayload,
+        );
+        setChatHistoryConfig(updatedHistory);
+      }
     } catch (err) {
       setChatConfigState((s) => ({
         ...s,
@@ -512,6 +565,11 @@ export function ChatPage() {
               {t("common.errorPrefix")} {chatConfigState.error}
             </div>
           )}
+          {chatHistoryState.error && (
+            <div className="badge">
+              {t("common.errorPrefix")} {chatHistoryState.error}
+            </div>
+          )}
           {llmState.error && (
             <div className="badge">
               {t("common.errorLoadingConnections")}{" "}
@@ -524,7 +582,7 @@ export function ChatPage() {
           {activeChat && !chatConfig && chatConfigState.loading && (
             <div>{t("common.loadingConfig")}</div>
           )}
-          {activeChat && chatConfig && (
+          {activeChat && chatConfig && chatHistoryConfig && (
             <>
               <div className="input-group">
                 <label htmlFor="llm-connection-select">
@@ -594,6 +652,37 @@ export function ChatPage() {
                   onChange={(e) =>
                     void handleChatConfigChange({
                       maxOutputTokens: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div className="input-group">
+                <label htmlFor="history-enabled">
+                  {t("chat.historyEnabledLabel")}
+                </label>
+                <input
+                  id="history-enabled"
+                  type="checkbox"
+                  checked={chatHistoryConfig.historyEnabled}
+                  onChange={(e) =>
+                    void handleHistoryConfigChange({
+                      historyEnabled: e.target.checked,
+                    })
+                  }
+                />
+              </div>
+              <div className="input-group">
+                <label htmlFor="history-limit">
+                  {t("chat.historyMessageLimitLabel")}
+                </label>
+                <input
+                  id="history-limit"
+                  type="number"
+                  min="1"
+                  value={chatHistoryConfig.messageLimit}
+                  onChange={(e) =>
+                    void handleHistoryConfigChange({
+                      messageLimit: Number(e.target.value),
                     })
                   }
                 />

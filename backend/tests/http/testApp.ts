@@ -7,6 +7,7 @@ import { LorebookService } from "../../src/application/services/LorebookService"
 import { MCPServerService } from "../../src/application/services/MCPServerService";
 import { PresetService } from "../../src/application/services/PresetService";
 import { PromptStackService } from "../../src/application/services/PromptStackService";
+import { HistoryConfigService } from "../../src/application/services/HistoryConfigService";
 import { ChatOrchestrator } from "../../src/application/orchestrators/ChatOrchestrator";
 import { registerErrorHandler } from "../../src/infrastructure/http/errorHandler";
 import { registerHealthRoutes } from "../../src/infrastructure/http/routes/health";
@@ -59,6 +60,32 @@ export async function createTestApp(
   const mcpServerRepository = new FakeMCPServerRepository();
   const presetRepository = new FakePresetRepository();
   const promptPresetRepository = new FakePromptPresetRepository();
+  const historyConfigRepository = {
+    async create(data: {
+      chatId: string;
+      historyEnabled: boolean;
+      messageLimit: number;
+    }) {
+      return data;
+    },
+    async getByChatId():
+      Promise<{ chatId: string; historyEnabled: boolean; messageLimit: number } | null> {
+      return null;
+    },
+    async updateByChatId(
+      chatId: string,
+      patch: { historyEnabled?: boolean; messageLimit?: number },
+    ) {
+      return {
+        chatId,
+        historyEnabled: patch.historyEnabled ?? true,
+        messageLimit: patch.messageLimit ?? 20,
+      };
+    },
+    async deleteByChatId() {
+      // no-op
+    },
+  };
 
   const characterService = new CharacterService(characterRepository);
   const chatService = new ChatService(chatRepository, chatConfigRepository);
@@ -75,6 +102,9 @@ export async function createTestApp(
     presetRepository,
     promptPresetRepository,
   );
+  const historyConfigService = new HistoryConfigService(
+    historyConfigRepository,
+  );
 
   const llmClient = overrides.llmClient ?? new FakeLLMClient();
 
@@ -83,6 +113,7 @@ export async function createTestApp(
     messageService,
     llmConnectionService,
     chatRunRepository,
+    historyConfigService,
     llmClient,
   );
 
@@ -98,6 +129,7 @@ export async function createTestApp(
   app.decorate("promptStackService", promptStackService);
   app.decorate("chatOrchestrator", chatOrchestrator);
   app.decorate("chatRunRepository", chatRunRepository);
+  app.decorate("historyConfigService", historyConfigService);
 
   registerHealthRoutes(app);
   registerCharacterRoutes(app);

@@ -15,6 +15,12 @@ export interface LorebookEntry {
   isEnabled: boolean;
 }
 
+export interface CharacterLorebook {
+  id: string;
+  characterId: string;
+  lorebookId: string;
+}
+
 export interface ListLorebooksParams {
   nameContains?: string;
 }
@@ -100,6 +106,36 @@ export async function deleteLorebookEntry(
 ): Promise<void> {
   await unwrap(
     http.delete<void>(`/lorebook-entries/${entryId}`),
+  );
+}
+
+export async function listCharacterLorebooks(
+  characterId: string,
+): Promise<CharacterLorebook[]> {
+  return unwrap(
+    http.get<CharacterLorebook[]>(
+      `/characters/${characterId}/lorebooks`,
+    ),
+  );
+}
+
+export async function attachCharacterLorebook(
+  characterId: string,
+  lorebookId: string,
+): Promise<CharacterLorebook> {
+  return unwrap(
+    http.post<CharacterLorebook>(
+      `/characters/${characterId}/lorebooks`,
+      { lorebookId },
+    ),
+  );
+}
+
+export async function detachCharacterLorebook(
+  id: string,
+): Promise<void> {
+  await unwrap(
+    http.delete<void>(`/character-lorebooks/${id}`),
   );
 }
 

@@ -25,7 +25,6 @@ const emptyCreateForm: CreatePresetRequest = {
   kind: "static_text",
   content: "",
   builtIn: false,
-  config: null,
 };
 
 export function PresetsPage() {
@@ -137,7 +136,6 @@ export function PresetsPage() {
       description: preset.description,
       content: preset.content,
       builtIn: preset.builtIn,
-      config: preset.config,
     });
     setEditError(null);
   }
@@ -191,15 +189,6 @@ export function PresetsPage() {
               </option>
               <option value="static_text">
                 {t("presets.filtersKindStaticText")}
-              </option>
-              <option value="lorebook">
-                {t("presets.filtersKindLorebook")}
-              </option>
-              <option value="history">
-                {t("presets.filtersKindHistory")}
-              </option>
-              <option value="mcp_tools">
-                {t("presets.filtersKindMcpTools")}
               </option>
             </select>
           </div>
@@ -280,15 +269,6 @@ export function PresetsPage() {
               >
                 <option value="static_text">
                   {t("presets.filtersKindStaticText")}
-                </option>
-                <option value="lorebook">
-                  {t("presets.filtersKindLorebook")}
-                </option>
-                <option value="history">
-                  {t("presets.filtersKindHistory")}
-                </option>
-                <option value="mcp_tools">
-                  {t("presets.filtersKindMcpTools")}
                 </option>
               </select>
             </div>
@@ -500,4 +480,3 @@ export function PresetsPage() {
     </div>
   );
 }
-

@@ -5,17 +5,7 @@ import type {
   PresetRepository,
   UpdatePresetInput,
 } from "../../../core/ports/PresetRepository";
-import type { PresetKind } from "../../../core/entities/Preset";
 import { AppError } from "../../../application/errors/AppError";
-
-function isPresetKind(value: unknown): value is PresetKind {
-  return (
-    value === "static_text" ||
-    value === "lorebook" ||
-    value === "history" ||
-    value === "mcp_tools"
-  );
-}
 
 function toPresetFilter(
   query: Record<string, unknown>,
@@ -23,13 +13,13 @@ function toPresetFilter(
   const filter: PresetFilter = {};
 
   if (query.kind !== undefined) {
-    if (!isPresetKind(query.kind)) {
+    if (query.kind !== "static_text") {
       throw new AppError(
         "VALIDATION_ERROR",
         "Invalid preset query: kind is not supported",
       );
     }
-    filter.kind = query.kind;
+    filter.kind = "static_text";
   }
 
   if (query.builtIn !== undefined) {
@@ -70,7 +60,7 @@ function ensureCreatePresetPayload(body: unknown): CreatePresetInput {
     typeof value.title !== "string" ||
     value.title.trim() === "" ||
     typeof value.description !== "string" ||
-    !isPresetKind(value.kind)
+    value.kind !== "static_text"
   ) {
     throw new AppError(
       "VALIDATION_ERROR",
@@ -102,7 +92,6 @@ function ensureCreatePresetPayload(body: unknown): CreatePresetInput {
     kind: value.kind,
     content: value.content ?? null,
     builtIn: value.builtIn ?? false,
-    config: value.config ?? null,
   };
 }
 
@@ -155,10 +144,6 @@ function ensureUpdatePresetPayload(body: unknown): UpdatePresetInput {
       );
     }
     patch.builtIn = value.builtIn;
-  }
-
-  if (value.config !== undefined) {
-    patch.config = value.config;
   }
 
   return patch;

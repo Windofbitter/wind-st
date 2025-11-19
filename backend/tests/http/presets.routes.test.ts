@@ -36,6 +36,26 @@ describe("Preset routes", () => {
     expect(presets.map((p) => p.title)).toContain("Static");
   });
 
+  it("rejects creating non-static presets", async () => {
+    const ctx = await createTestApp();
+    app = ctx.app;
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/presets",
+      payload: {
+        title: "History preset",
+        description: "d",
+        kind: "history",
+        content: null,
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    const body = response.json() as any;
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it("validates preset payload", async () => {
     const ctx = await createTestApp();
     app = ctx.app;

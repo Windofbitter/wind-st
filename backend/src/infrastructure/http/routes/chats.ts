@@ -1,6 +1,13 @@
 import type { FastifyInstance } from "fastify";
-import type { ChatFilter, CreateChatInput } from "../../../core/ports/ChatRepository";
-import type { CreateChatLLMConfigInput, UpdateChatLLMConfigInput } from "../../../core/ports/ChatLLMConfigRepository";
+import type {
+  ChatFilter,
+  CreateChatInput,
+} from "../../../core/ports/ChatRepository";
+import type {
+  CreateChatLLMConfigInput,
+  UpdateChatLLMConfigInput,
+} from "../../../core/ports/ChatLLMConfigRepository";
+import type { UpdateChatHistoryConfigInput } from "../../../core/ports/ChatHistoryConfigRepository";
 import { AppError } from "../../../application/errors/AppError";
 
 type InitialChatConfigInput = Omit<CreateChatLLMConfigInput, "chatId">;
@@ -13,6 +20,11 @@ interface CreateChatBody {
 
 interface CreateTurnBody {
   content: string;
+}
+
+interface UpdateHistoryConfigBody {
+  historyEnabled?: boolean;
+  messageLimit?: number;
 }
 
 function toChatFilter(query: Record<string, unknown>): ChatFilter | undefined {
@@ -146,6 +158,46 @@ function ensureUpdateChatConfigPayload(
   return patch;
 }
 
+function ensureUpdateHistoryConfigPayload(
+  body: unknown,
+): UpdateChatHistoryConfigInput {
+  if (!body || typeof body !== "object") {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Invalid history config patch: expected object",
+    );
+  }
+
+  const value = body as UpdateHistoryConfigBody;
+  const patch: UpdateChatHistoryConfigInput = {};
+
+  if (value.historyEnabled !== undefined) {
+    if (typeof value.historyEnabled !== "boolean") {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid history config patch: historyEnabled must be boolean",
+      );
+    }
+    patch.historyEnabled = value.historyEnabled;
+  }
+
+  if (value.messageLimit !== undefined) {
+    if (
+      typeof value.messageLimit !== "number" ||
+      !Number.isFinite(value.messageLimit) ||
+      value.messageLimit <= 0
+    ) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid history config patch: messageLimit must be positive number",
+      );
+    }
+    patch.messageLimit = value.messageLimit;
+  }
+
+  return patch;
+}
+
 function ensureCreateTurnPayload(body: unknown): CreateTurnBody {
   if (!body || typeof body !== "object") {
     throw new AppError(
@@ -220,6 +272,20 @@ export function registerChatRoutes(app: FastifyInstance): void {
         "Chat LLM config not found",
       );
     }
+    return updated;
+  });
+
+  app.get("/chats/:id/history-config", async (request) => {
+    const { id } = request.params as { id: string };
+    const config = await app.historyConfigService.getHistoryConfig(id);
+    return config;
+  });
+
+  app.patch("/chats/:id/history-config", async (request) => {
+    const { id } = request.params as { id: string };
+    const patch = ensureUpdateHistoryConfigPayload(request.body);
+    const updated =
+      await app.historyConfigService.updateHistoryConfig(id, patch);
     return updated;
   });
 

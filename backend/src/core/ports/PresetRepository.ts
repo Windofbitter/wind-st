@@ -6,7 +6,6 @@ export interface CreatePresetInput {
   kind: PresetKind;
   content?: string | null;
   builtIn?: boolean;
-  config?: unknown | null;
 }
 
 export interface UpdatePresetInput {
@@ -14,7 +13,6 @@ export interface UpdatePresetInput {
   description?: string;
   content?: string | null;
   builtIn?: boolean;
-  config?: unknown | null;
 }
 
 export interface PresetFilter {

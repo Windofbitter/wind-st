@@ -40,3 +40,4 @@ coverage/
 
 # Local SQLite database files
 backend/data/
+data/

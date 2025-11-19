@@ -20,8 +20,7 @@ export function runMigrations(db: SqliteDatabase): void {
       description TEXT NOT NULL,
       kind TEXT NOT NULL,
       content TEXT,
-      built_in INTEGER NOT NULL,
-      config TEXT
+      built_in INTEGER NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_presets_kind
@@ -59,6 +58,17 @@ export function runMigrations(db: SqliteDatabase): void {
     CREATE INDEX IF NOT EXISTS idx_lorebook_entries_lorebook
       ON lorebook_entries(lorebook_id, insertion_order);
 
+    CREATE TABLE IF NOT EXISTS character_lorebooks (
+      id TEXT PRIMARY KEY,
+      character_id TEXT NOT NULL,
+      lorebook_id TEXT NOT NULL,
+      FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
+      FOREIGN KEY (lorebook_id) REFERENCES lorebooks(id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_character_lorebooks_unique
+      ON character_lorebooks(character_id, lorebook_id);
+
     CREATE TABLE IF NOT EXISTS chats (
       id TEXT PRIMARY KEY,
       character_id TEXT NOT NULL,
@@ -93,6 +103,17 @@ export function runMigrations(db: SqliteDatabase): void {
       env TEXT NOT NULL,
       is_enabled INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS character_mcp_servers (
+      id TEXT PRIMARY KEY,
+      character_id TEXT NOT NULL,
+      mcp_server_id TEXT NOT NULL,
+      FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
+      FOREIGN KEY (mcp_server_id) REFERENCES mcp_servers(id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_character_mcp_servers_unique
+      ON character_mcp_servers(character_id, mcp_server_id);
 
     CREATE TABLE IF NOT EXISTS llm_connections (
       id TEXT PRIMARY KEY,
@@ -133,5 +154,12 @@ export function runMigrations(db: SqliteDatabase): void {
 
     CREATE INDEX IF NOT EXISTS idx_chat_runs_chat_status
       ON chat_runs(chat_id, status, started_at);
+
+    CREATE TABLE IF NOT EXISTS chat_history_configs (
+      chat_id TEXT PRIMARY KEY,
+      history_enabled INTEGER NOT NULL,
+      message_limit INTEGER NOT NULL,
+      FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
+    );
   `);
 }
