@@ -23,7 +23,9 @@ function toChatFilter(query: Record<string, unknown>): ChatFilter | undefined {
   return undefined;
 }
 
-function ensureCreateChatPayload(body: unknown): {
+function ensureCreateChatPayload(
+  body: unknown,
+): {
   chat: CreateChatInput;
   initialConfig?: InitialChatConfigInput;
 } {
@@ -71,13 +73,21 @@ function ensureCreateChatPayload(body: unknown): {
     };
   }
 
-  return {
+  const result: {
+    chat: CreateChatInput;
+    initialConfig?: InitialChatConfigInput;
+  } = {
     chat: {
       characterId: value.characterId,
       title: value.title,
     },
-    initialConfig,
   };
+
+  if (initialConfig) {
+    result.initialConfig = initialConfig;
+  }
+
+  return result;
 }
 
 function ensureUpdateChatConfigPayload(
@@ -230,4 +240,3 @@ export function registerChatRoutes(app: FastifyInstance): void {
     return assistantMessage;
   });
 }
-

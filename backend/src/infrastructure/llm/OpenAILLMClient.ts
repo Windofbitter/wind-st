@@ -76,6 +76,11 @@ export class OpenAILLMClient implements LLMClient {
         }
       : undefined;
 
-    return { message, usage };
+    const result: LLMChatCompletionResponse = { message };
+    if (usage) {
+      result.usage = usage;
+    }
+
+    return result;
   }
 }

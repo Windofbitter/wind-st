@@ -46,11 +46,16 @@ function ensureAttachPresetPayload(body: unknown): AttachPresetBody {
     );
   }
 
-  return {
+  const result: AttachPresetBody = {
     presetId: value.presetId,
     role: value.role,
-    position: value.position,
   };
+
+  if (value.position !== undefined) {
+    result.position = value.position;
+  }
+
+  return result;
 }
 
 function ensureReorderPayload(body: unknown): ReorderBody {
@@ -111,4 +116,3 @@ export function registerPromptStackRoutes(app: FastifyInstance): void {
     void reply.status(204).send();
   });
 }
-
