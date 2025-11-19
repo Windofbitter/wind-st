@@ -36,14 +36,30 @@ export function LorebooksPage() {
     null,
   );
 
+  // Filters
+  const [scopeFilter, setScopeFilter] = useState<"all" | "global" | "local">(
+    "all",
+  );
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
     void loadLorebooks();
-  }, []);
+  }, [scopeFilter, search]);
 
   async function loadLorebooks() {
     setState({ loading: true, error: null });
     try {
-      const data = await listLorebooks();
+      const isGlobalParam =
+        scopeFilter === "global"
+          ? true
+          : scopeFilter === "local"
+            ? false
+            : undefined;
+      const nameContainsParam = search.trim() !== "" ? search.trim() : undefined;
+      const data = await listLorebooks({
+        isGlobal: isGlobalParam,
+        nameContains: nameContainsParam,
+      });
       setLorebooks(data);
     } catch (err) {
       setState({
@@ -129,19 +145,30 @@ export function LorebooksPage() {
             />
           </div>
           <div className="input-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={form.isGlobal ?? false}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    isGlobal: e.target.checked,
-                  })
-                }
-              />{" "}
-              Global lorebook
-            </label>
+            <label htmlFor="lb-scope">Scope</label>
+            <div id="lb-scope" style={{ display: "flex", gap: "1rem" }}>
+              <label>
+                <input
+                  type="radio"
+                  name="lorebook-scope"
+                  checked={!form.isGlobal}
+                  onChange={() => setForm({ ...form, isGlobal: false })}
+                />{" "}
+                Local
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="lorebook-scope"
+                  checked={form.isGlobal === true}
+                  onChange={() => setForm({ ...form, isGlobal: true })}
+                />{" "}
+                Global
+              </label>
+            </div>
+            <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
+              Global is an organizational tag for filtering; it does not change behavior.
+            </div>
           </div>
           <button
             type="submit"
@@ -160,6 +187,38 @@ export function LorebooksPage() {
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Lorebooks</h3>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className={"btn" + (scopeFilter === "all" ? " btn-primary" : "")}
+              onClick={() => setScopeFilter("all")}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              className={"btn" + (scopeFilter === "global" ? " btn-primary" : "")}
+              onClick={() => setScopeFilter("global")}
+            >
+              Global
+            </button>
+            <button
+              type="button"
+              className={"btn" + (scopeFilter === "local" ? " btn-primary" : "")}
+              onClick={() => setScopeFilter("local")}
+            >
+              Local
+            </button>
+          </div>
+          <input
+            type="text"
+            placeholder="Search by name…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ flex: 1, minWidth: "200px" }}
+          />
+        </div>
         {state.loading && <div>Loading lorebooks…</div>}
         {state.error && (
           <div className="badge">Error: {state.error}</div>

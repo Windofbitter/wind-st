@@ -213,6 +213,54 @@ export function LorebookDetailPage() {
     }
   }
 
+  // Toggle entry active state inline
+  async function toggleEntryEnabled(entryId: string, enabled: boolean) {
+    try {
+      setEntries((prev) =>
+        prev.map((e) => (e.id === entryId ? { ...e, isEnabled: enabled } : e)),
+      );
+      await updateLorebookEntry(entryId, { isEnabled: enabled });
+    } catch (err) {
+      setEntriesState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError ? err.message : "Failed to update entry state",
+      }));
+      if (lorebookId) {
+        await loadEntries(lorebookId);
+      }
+    }
+  }
+
+  // Move entry up/down by delta (-1 or +1) and persist sequential order
+  async function moveEntry(entryId: string, delta: -1 | 1) {
+    const idx = entries.findIndex((e) => e.id === entryId);
+    if (idx < 0) return;
+    const newIndex = idx + delta;
+    if (newIndex < 0 || newIndex >= entries.length) return;
+
+    const reordered = entries.slice();
+    const [item] = reordered.splice(idx, 1);
+    reordered.splice(newIndex, 0, item);
+
+    // optimistic UI
+    setEntries(reordered.map((e, i) => ({ ...e, insertionOrder: i })));
+    try {
+      await Promise.all(
+        reordered.map((e, i) => updateLorebookEntry(e.id, { insertionOrder: i })),
+      );
+    } catch (err) {
+      setEntriesState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError ? err.message : "Failed to reorder entries",
+      }));
+      if (lorebookId) {
+        await loadEntries(lorebookId);
+      }
+    }
+  }
+
   if (!lorebookId) {
     return <div>Lorebook ID is missing.</div>;
   }
@@ -255,19 +303,30 @@ export function LorebookDetailPage() {
               />
             </div>
             <div className="input-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={metaDraft.isGlobal ?? false}
-                  onChange={(e) =>
-                    setMetaDraft({
-                      ...metaDraft,
-                      isGlobal: e.target.checked,
-                    })
-                  }
-                />{" "}
-                Global lorebook
-              </label>
+              <label htmlFor="lb-scope">Scope</label>
+              <div id="lb-scope" style={{ display: "flex", gap: "1rem" }}>
+                <label>
+                  <input
+                    type="radio"
+                    name="lorebook-scope"
+                    checked={!metaDraft.isGlobal}
+                    onChange={() => setMetaDraft({ ...metaDraft, isGlobal: false })}
+                  />{" "}
+                  Local
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="lorebook-scope"
+                    checked={metaDraft.isGlobal === true}
+                    onChange={() => setMetaDraft({ ...metaDraft, isGlobal: true })}
+                  />{" "}
+                  Global
+                </label>
+              </div>
+              <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
+                Global is an organizational tag for filtering; it does not change behavior.
+              </div>
             </div>
             <button
               type="button"
@@ -289,6 +348,7 @@ export function LorebookDetailPage() {
             <input
               id="entry-keywords"
               type="text"
+              placeholder="e.g., spaceship, warp core, starship"
               value={entryForm.keywords.join(", ")}
               onChange={(e) =>
                 setEntryForm({
@@ -300,6 +360,9 @@ export function LorebookDetailPage() {
                 })
               }
             />
+            <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
+              Matching triggers when any keyword is found.
+            </div>
           </div>
           <div className="input-group">
             <label htmlFor="entry-content">Content</label>
@@ -327,8 +390,11 @@ export function LorebookDetailPage() {
                   })
                 }
               />{" "}
-              Enabled
+              Active
             </label>
+            <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
+              Only active entries are used.
+            </div>
           </div>
           <button
             type="submit"
@@ -357,12 +423,12 @@ export function LorebookDetailPage() {
               <th>Keywords</th>
               <th>Content</th>
               <th>Order</th>
-              <th>Enabled</th>
+              <th>Active</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {entries.map((entry) => (
+            {entries.map((entry, index) => (
               <tr key={entry.id}>
                 <td>
                   {entry.keywords.map((k) => (
@@ -379,8 +445,40 @@ export function LorebookDetailPage() {
                   {entry.content.split("\n")[0] ?? ""}
                   {entry.content.includes("\n") ? "…" : ""}
                 </td>
-                <td>{entry.insertionOrder}</td>
-                <td>{entry.isEnabled ? "Yes" : "No"}</td>
+                <td>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <span>#{index + 1}</span>
+                    <div style={{ display: "flex", gap: "0.25rem", marginLeft: "0.5rem" }}>
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={index === 0}
+                        title="Move up"
+                        onClick={() => void moveEntry(entry.id, -1)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={index === entries.length - 1}
+                        title="Move down"
+                        onClick={() => void moveEntry(entry.id, +1)}
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={entry.isEnabled}
+                      onChange={(e) => void toggleEntryEnabled(entry.id, e.target.checked)}
+                    />
+                  </label>
+                </td>
                 <td>
                   <div
                     style={{
@@ -502,4 +600,5 @@ export function LorebookDetailPage() {
     </div>
   );
 }
+
 
