@@ -464,10 +464,7 @@ export function LorebookDetailPage() {
                       type="checkbox"
                       checked={entry.isEnabled}
                       onChange={(e) => void toggleEntryEnabled(entry.id, e.target.checked)}
-                    />{" "}
-                    {entry.isEnabled
-                      ? t("lorebooks.listYes")
-                      : t("lorebooks.listNo")}
+                    />
                   </label>
                 </td>
                 <td>

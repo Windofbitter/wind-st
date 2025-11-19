@@ -325,10 +325,7 @@ export function MCPServersPage() {
                           e.target.checked,
                         )
                       }
-                    />{" "}
-                    {server.isEnabled
-                      ? t("mcpServers.listYes")
-                      : t("mcpServers.listNo")}
+                    />
                   </label>
                 </td>
                 <td>

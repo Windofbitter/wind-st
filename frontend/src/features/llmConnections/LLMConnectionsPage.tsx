@@ -299,10 +299,7 @@ export function LLMConnectionsPage() {
                           e.target.checked,
                         )
                       }
-                    />{" "}
-                    {conn.isEnabled
-                      ? t("llmConnections.listYes")
-                      : t("llmConnections.listNo")}
+                    />
                   </label>
                 </td>
                 <td>
