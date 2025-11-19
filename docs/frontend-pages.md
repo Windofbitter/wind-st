@@ -201,19 +201,26 @@ UI:
   - Small textarea for `persona` (full-screen editing still available in the `Persona` tab).
   - Save button calling `PATCH /characters/:id` with `{ persona }`.
 
-- Left column: **Available Presets + Quick Create**
-  - Filterable list by kind (`kind` query via `GET /presets?kind=...`).
-  - Drag handle to drag a preset into the stack.
-  - Buttons to create + attach in one step:
+- Left column: **Palettes + Quick Create**
+  - Multiple palette sections act as sources (not separate stacks):
+    - **Static Blocks**:
+      - List of `static_text` presets (optionally filterable via `GET /presets?kind=static_text`).
+      - Each card is draggable into the Current Stack.
+    - **Lorebooks**:
+      - List of lorebooks from `GET /lorebooks`, each represented as a `lorebook` preset card.
+      - Cards are draggable into the Current Stack.
+    - **MCP Tool Sets**:
+      - List of tool-set presets (or MCP servers grouped into presets) from `GET /presets?kind=mcp_tools` / `GET /mcp-servers`.
+      - Cards are draggable into the Current Stack.
+    - **Built-ins / History**:
+      - Shows built-in presets like default system prompt or history strategy (typically non-removable).
+      - Dragging them into the Current Stack pins them there as special rows.
+  - Quick-create helpers (mainly for static text):
     - "Add text block":
       - Shows inline form for title/description/content.
       - On save:
         - `POST /presets` with `kind = static_text`.
-        - `POST /characters/:characterId/prompt-stack` to attach it.
-    - "Add lorebook block":
-      - Dropdown of lorebooks, creates `kind = lorebook` preset with `config = { lorebookId }`, then attaches.
-    - "Add tools block":
-      - Multi-select of MCP servers, creates `kind = mcp_tools` preset with `config = { mcpServerIds }`, then attaches.
+        - `POST /characters/:characterId/prompt-stack` to attach it at the drop/append position using the current role context.
 
 - Right column: **Prompt Stack + Preview**
   - "Current Stack" panel:

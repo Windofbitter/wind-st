@@ -132,24 +132,32 @@ You speak in a formal tone.
                 </div>
 
                 <div class="flex-row" style="align-items: flex-start;">
-                    <!-- Available presets + quick create -->
+                    <!-- Palettes + quick create -->
                     <div style="flex: 1;">
-                        <h4>Available Presets</h4>
+                        <h4>Palettes</h4>
+
+                        <h5 style="margin-bottom: 0.5rem;">Static Blocks</h5>
                         <div class="card" draggable="true">
                             <strong>Standard System</strong>
                             <div style="font-size: 0.8rem; color: #888;">Static Text</div>
                         </div>
+
+                        <h5 style="margin: 1rem 0 0.5rem;">Lorebooks</h5>
                         <div class="card" draggable="true">
                             <strong>Fantasy Lore</strong>
                             <div style="font-size: 0.8rem; color: #888;">Lorebook</div>
                         </div>
-                        <div class="card" draggable="true">
-                            <strong>Chat History (Default)</strong>
-                            <div style="font-size: 0.8rem; color: #888;">History</div>
-                        </div>
+
+                        <h5 style="margin: 1rem 0 0.5rem;">MCP Tool Sets</h5>
                         <div class="card" draggable="true">
                             <strong>Web Search</strong>
                             <div style="font-size: 0.8rem; color: #888;">MCP Tools</div>
+                        </div>
+
+                        <h5 style="margin: 1rem 0 0.5rem;">Built-ins / History</h5>
+                        <div class="card" draggable="true">
+                            <strong>Chat History (Default)</strong>
+                            <div style="font-size: 0.8rem; color: #888;">Built-in History</div>
                         </div>
 
                         <div class="card" style="margin-top: 1rem;">
@@ -179,9 +187,10 @@ You speak in a formal tone.
                                 </select>
                             </div>
                             <div
-                                style="background-color: #111; border: 1px solid var(--border-color); max-height: 260px; padding: 1rem; border-radius: 8px; overflow-y: auto;">
+                                style="background-color: #111; border: 1px solid var(--border-color); max-height: 260px; padding: 1rem; border-radius: 8px; overflow-y: auto;"
+                                ondragover="event.preventDefault()">
 
-                                <div class="preset-list-item">
+                                <div class="preset-list-item" draggable="true">
                                     <div>
                                         <strong>Standard System</strong>
                                         <span class="badge">System · Static</span>
@@ -189,7 +198,7 @@ You speak in a formal tone.
                                     <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
                                 </div>
 
-                                <div class="preset-list-item">
+                                <div class="preset-list-item" draggable="true">
                                     <div>
                                         <strong>Fantasy Lore</strong>
                                         <span class="badge">System · Lorebook</span>
@@ -197,12 +206,11 @@ You speak in a formal tone.
                                     <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
                                 </div>
 
-                                <div class="preset-list-item">
+                                <div class="preset-list-item" draggable="true">
                                     <div>
                                         <strong>Chat History (Default)</strong>
-                                        <span class="badge">System · History</span>
+                                        <span class="badge">System · History · Built-in</span>
                                     </div>
-                                    <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
                                 </div>
 
                             </div>
