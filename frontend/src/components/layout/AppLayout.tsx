@@ -1,22 +1,28 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "../../App.css";
 
-function getPageTitle(pathname: string): string {
-  if (pathname.startsWith("/chat")) return "Chat";
-  if (pathname.startsWith("/characters")) return "Characters";
-  if (pathname.startsWith("/presets")) return "Presets";
-  if (pathname.startsWith("/lorebooks")) return "Lorebooks";
-  if (pathname.startsWith("/llm-connections")) return "LLM Connections";
-  if (pathname.startsWith("/mcp-servers")) return "MCP Servers";
-  if (pathname.startsWith("/runs")) return "Runs";
-  if (pathname.startsWith("/settings")) return "Settings";
-  if (pathname.startsWith("/health")) return "Health";
-  return "Chat";
+function getPageTitle(
+  pathname: string,
+  t: (key: string) => string,
+): string {
+  if (pathname.startsWith("/chat")) return t("nav.chat");
+  if (pathname.startsWith("/characters")) return t("nav.characters");
+  if (pathname.startsWith("/presets")) return t("nav.presets");
+  if (pathname.startsWith("/lorebooks")) return t("nav.lorebooks");
+  if (pathname.startsWith("/llm-connections"))
+    return t("nav.llmConnections");
+  if (pathname.startsWith("/mcp-servers")) return t("nav.mcpServers");
+  if (pathname.startsWith("/runs")) return t("nav.runs");
+  if (pathname.startsWith("/settings")) return t("nav.settings");
+  if (pathname.startsWith("/health")) return t("nav.health");
+  return t("nav.chat");
 }
 
 export function AppLayout() {
   const location = useLocation();
-  const title = getPageTitle(location.pathname);
+  const { t } = useTranslation();
+  const title = getPageTitle(location.pathname, t);
 
   return (
     <div className="app-root">
@@ -29,7 +35,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            Chat
+            {t("nav.chat")}
           </NavLink>
           <NavLink
             to="/characters"
@@ -37,7 +43,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            Characters
+            {t("nav.characters")}
           </NavLink>
           <NavLink
             to="/presets"
@@ -45,7 +51,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            Presets
+            {t("nav.presets")}
           </NavLink>
           <NavLink
             to="/lorebooks"
@@ -53,7 +59,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            Lorebooks
+            {t("nav.lorebooks")}
           </NavLink>
           <NavLink
             to="/llm-connections"
@@ -61,7 +67,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            LLM Connections
+            {t("nav.llmConnections")}
           </NavLink>
           <NavLink
             to="/mcp-servers"
@@ -69,7 +75,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            MCP Servers
+            {t("nav.mcpServers")}
           </NavLink>
           <NavLink
             to="/runs"
@@ -77,7 +83,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            Runs
+            {t("nav.runs")}
           </NavLink>
         </nav>
 
@@ -88,7 +94,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            Settings
+            {t("nav.settings")}
           </NavLink>
           <NavLink
             to="/health"
@@ -96,7 +102,7 @@ export function AppLayout() {
               isActive ? "nav-link active" : "nav-link"
             }
           >
-            Health
+            {t("nav.health")}
           </NavLink>
         </div>
       </aside>

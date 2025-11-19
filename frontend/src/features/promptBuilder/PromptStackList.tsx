@@ -12,6 +12,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useTranslation } from "react-i18next";
 import type { PromptRole } from "../../api/promptStack";
 import type { PresetKind } from "../../api/presets";
 
@@ -87,6 +88,7 @@ function SortableStackItem({
   item,
   onRemove,
 }: SortableStackItemProps) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -111,9 +113,16 @@ function SortableStackItem({
   };
 
   const roleLabel = item.role.toUpperCase();
-  const kindLabel = item.kind
-    ? item.kind.replace("_", " ")
-    : undefined;
+  let kindLabel: string | undefined;
+  if (item.kind === "static_text") {
+    kindLabel = t("promptBuilder.kindLabelStaticText");
+  } else if (item.kind === "lorebook") {
+    kindLabel = t("promptBuilder.kindLabelLorebook");
+  } else if (item.kind === "history") {
+    kindLabel = t("promptBuilder.kindLabelHistory");
+  } else if (item.kind === "mcp_tools") {
+    kindLabel = t("promptBuilder.kindLabelMcpTools");
+  }
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -142,7 +151,7 @@ function SortableStackItem({
         style={{ padding: "0.25rem 0.6rem" }}
         onClick={() => onRemove(item.id)}
       >
-        Remove
+        {t("promptBuilder.stackRemoveButton")}
       </button>
     </div>
   );

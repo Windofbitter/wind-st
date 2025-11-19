@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   CreateMCPServerRequest,
   MCPServer,
@@ -26,6 +27,7 @@ const emptyForm: CreateMCPServerRequest = {
 };
 
 export function MCPServersPage() {
+  const { t } = useTranslation();
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -94,7 +96,7 @@ export function MCPServersPage() {
 
   async function handleDelete(id: string) {
     const confirmed = window.confirm(
-      "Delete this MCP server configuration?",
+      t("mcpServers.deleteConfirm"),
     );
     if (!confirmed) return;
     try {
@@ -173,10 +175,14 @@ export function MCPServersPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>New MCP Server</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("mcpServers.newTitle")}
+        </h3>
         <form onSubmit={handleCreate}>
           <div className="input-group">
-            <label htmlFor="mcp-name">Name</label>
+            <label htmlFor="mcp-name">
+              {t("mcpServers.newNameLabel")}
+            </label>
             <input
               id="mcp-name"
               type="text"
@@ -188,7 +194,9 @@ export function MCPServersPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="mcp-command">Command</label>
+            <label htmlFor="mcp-command">
+              {t("mcpServers.newCommandLabel")}
+            </label>
             <input
               id="mcp-command"
               type="text"
@@ -203,7 +211,9 @@ export function MCPServersPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="mcp-args">Args (space-separated)</label>
+            <label htmlFor="mcp-args">
+              {t("mcpServers.newArgsLabel")}
+            </label>
             <input
               id="mcp-args"
               type="text"
@@ -218,7 +228,7 @@ export function MCPServersPage() {
           </div>
           <div className="input-group">
             <label htmlFor="mcp-env">
-              Env (KEY=VALUE, comma-separated)
+              {t("mcpServers.newEnvLabel")}
             </label>
             <input
               id="mcp-env"
@@ -244,7 +254,7 @@ export function MCPServersPage() {
                   })
                 }
               />{" "}
-              Enabled
+              {t("mcpServers.newEnabledLabel")}
             </label>
           </div>
           <button
@@ -252,30 +262,38 @@ export function MCPServersPage() {
             className="btn btn-primary"
             disabled={creating}
           >
-            {creating ? "Creating…" : "Create MCP Server"}
+            {creating
+              ? t("mcpServers.newCreateButtonCreating")
+              : t("mcpServers.newCreateButton")}
           </button>
           {createError && (
             <div className="badge" style={{ marginTop: "0.5rem" }}>
-              Error: {createError}
+              {t("common.errorPrefix")} {createError}
             </div>
           )}
         </form>
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>MCP Servers</h3>
-        {state.loading && <div>Loading MCP servers…</div>}
+        <h3 style={{ marginTop: 0 }}>
+          {t("mcpServers.listTitle")}
+        </h3>
+        {state.loading && (
+          <div>{t("mcpServers.listLoading")}</div>
+        )}
         {state.error && (
-          <div className="badge">Error: {state.error}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {state.error}
+          </div>
         )}
         <table className="table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Command</th>
-              <th>Args</th>
-              <th>Enabled</th>
-              <th>Actions</th>
+              <th>{t("mcpServers.listTableName")}</th>
+              <th>{t("mcpServers.listTableCommand")}</th>
+              <th>{t("mcpServers.listTableArgs")}</th>
+              <th>{t("mcpServers.listTableEnabled")}</th>
+              <th>{t("mcpServers.listTableActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -284,7 +302,11 @@ export function MCPServersPage() {
                 <td>{server.name}</td>
                 <td>{server.command}</td>
                 <td>{server.args.join(" ")}</td>
-                <td>{server.isEnabled ? "Yes" : "No"}</td>
+                <td>
+                  {server.isEnabled
+                    ? t("mcpServers.listYes")
+                    : t("mcpServers.listNo")}
+                </td>
                 <td>
                   <div
                     style={{
@@ -297,7 +319,7 @@ export function MCPServersPage() {
                       className="btn btn-primary"
                       onClick={() => startEdit(server)}
                     >
-                      Edit
+                      {t("mcpServers.listEditButton")}
                     </button>
                     <button
                       type="button"
@@ -306,7 +328,7 @@ export function MCPServersPage() {
                         void handleDelete(server.id)
                       }
                     >
-                      Delete
+                      {t("mcpServers.listDeleteButton")}
                     </button>
                   </div>
                 </td>
@@ -316,7 +338,7 @@ export function MCPServersPage() {
               <tr>
                 <td colSpan={5}>
                   <span style={{ opacity: 0.8 }}>
-                    No MCP servers configured.
+                    {t("mcpServers.listEmpty")}
                   </span>
                 </td>
               </tr>
@@ -329,9 +351,13 @@ export function MCPServersPage() {
             className="card"
             style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
           >
-            <h4 style={{ marginTop: 0 }}>Edit MCP server</h4>
+            <h4 style={{ marginTop: 0 }}>
+              {t("mcpServers.editTitle")}
+            </h4>
             <div className="input-group">
-              <label htmlFor="edit-name">Name</label>
+              <label htmlFor="edit-name">
+                {t("mcpServers.editNameLabel")}
+              </label>
               <input
                 id="edit-name"
                 type="text"
@@ -345,7 +371,9 @@ export function MCPServersPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="edit-command">Command</label>
+              <label htmlFor="edit-command">
+                {t("mcpServers.editCommandLabel")}
+              </label>
               <input
                 id="edit-command"
                 type="text"
@@ -359,7 +387,9 @@ export function MCPServersPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="edit-args">Args</label>
+              <label htmlFor="edit-args">
+                {t("mcpServers.editArgsLabel")}
+              </label>
               <input
                 id="edit-args"
                 type="text"
@@ -373,7 +403,9 @@ export function MCPServersPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="edit-env">Env</label>
+              <label htmlFor="edit-env">
+                {t("mcpServers.editEnvLabel")}
+              </label>
               <input
                 id="edit-env"
                 type="text"
@@ -398,7 +430,7 @@ export function MCPServersPage() {
                     })
                   }
                 />{" "}
-                Enabled
+                {t("mcpServers.editEnabledLabel")}
               </label>
             </div>
             <button
@@ -407,7 +439,9 @@ export function MCPServersPage() {
               disabled={savingEdit}
               onClick={() => void saveEdit()}
             >
-              {savingEdit ? "Saving…" : "Save Changes"}
+              {savingEdit
+                ? t("mcpServers.editSaveButtonSaving")
+                : t("mcpServers.editSaveButton")}
             </button>
             <button
               type="button"
@@ -418,11 +452,11 @@ export function MCPServersPage() {
                 setEditForm({});
               }}
             >
-              Cancel
+              {t("mcpServers.editCancelButton")}
             </button>
             {editError && (
               <div className="badge" style={{ marginTop: "0.5rem" }}>
-                Error: {editError}
+                {t("common.errorPrefix")} {editError}
               </div>
             )}
           </div>

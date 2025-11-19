@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type {
   CreateLorebookEntryRequest,
   Lorebook,
@@ -31,6 +32,7 @@ const emptyEntryForm: CreateLorebookEntryRequest = {
 
 export function LorebookDetailPage() {
   const { lorebookId } = useParams<{ lorebookId: string }>();
+  const { t } = useTranslation();
 
   const [lorebook, setLorebook] = useState<Lorebook | null>(null);
   const [lorebookState, setLorebookState] = useState<LoadState>({
@@ -195,7 +197,9 @@ export function LorebookDetailPage() {
   }
 
   async function deleteEntry(id: string) {
-    const confirmed = window.confirm("Delete this entry?");
+    const confirmed = window.confirm(
+      t("lorebooks.entriesDeleteConfirm"),
+    );
     if (!confirmed) return;
     try {
       await deleteLorebookEntry(id);
@@ -262,21 +266,29 @@ export function LorebookDetailPage() {
   }
 
   if (!lorebookId) {
-    return <div>Lorebook ID is missing.</div>;
+    return <div>{t("lorebooks.detailMissingId")}</div>;
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Lorebook</h3>
-        {lorebookState.loading && <div>Loading lorebook…</div>}
+        <h3 style={{ marginTop: 0 }}>
+          {t("lorebooks.detailTitle")}
+        </h3>
+        {lorebookState.loading && (
+          <div>{t("lorebooks.detailLoadingLorebook")}</div>
+        )}
         {lorebookState.error && (
-          <div className="badge">Error: {lorebookState.error}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {lorebookState.error}
+          </div>
         )}
         {lorebook && (
           <>
             <div className="input-group">
-              <label htmlFor="lb-name">Name</label>
+              <label htmlFor="lb-name">
+                {t("lorebooks.detailNameLabel")}
+              </label>
               <input
                 id="lb-name"
                 type="text"
@@ -290,7 +302,9 @@ export function LorebookDetailPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="lb-description">Description</label>
+              <label htmlFor="lb-description">
+                {t("lorebooks.detailDescriptionLabel")}
+              </label>
               <textarea
                 id="lb-description"
                 value={metaDraft.description ?? ""}
@@ -303,7 +317,9 @@ export function LorebookDetailPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="lb-scope">Scope</label>
+              <label htmlFor="lb-scope">
+                {t("lorebooks.detailScopeLabel")}
+              </label>
               <div id="lb-scope" style={{ display: "flex", gap: "1rem" }}>
                 <label>
                   <input
@@ -312,7 +328,7 @@ export function LorebookDetailPage() {
                     checked={!metaDraft.isGlobal}
                     onChange={() => setMetaDraft({ ...metaDraft, isGlobal: false })}
                   />{" "}
-                  Local
+                  {t("lorebooks.detailScopeLocal")}
                 </label>
                 <label>
                   <input
@@ -321,11 +337,11 @@ export function LorebookDetailPage() {
                     checked={metaDraft.isGlobal === true}
                     onChange={() => setMetaDraft({ ...metaDraft, isGlobal: true })}
                   />{" "}
-                  Global
+                  {t("lorebooks.detailScopeGlobal")}
                 </label>
               </div>
               <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
-                Global is an organizational tag for filtering; it does not change behavior.
+                {t("lorebooks.detailScopeHint")}
               </div>
             </div>
             <button
@@ -334,21 +350,29 @@ export function LorebookDetailPage() {
               disabled={savingMeta}
               onClick={() => void saveMeta()}
             >
-              {savingMeta ? "Saving…" : "Save Lorebook"}
+              {savingMeta
+                ? t("lorebooks.detailSaveButtonSaving")
+                : t("lorebooks.detailSaveButton")}
             </button>
           </>
         )}
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>New Entry</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("lorebooks.newEntryTitle")}
+        </h3>
         <form onSubmit={createEntry}>
           <div className="input-group">
-            <label htmlFor="entry-keywords">Keywords (comma-separated)</label>
+            <label htmlFor="entry-keywords">
+              {t("lorebooks.newEntryKeywordsLabel")}
+            </label>
             <input
               id="entry-keywords"
               type="text"
-              placeholder="e.g., spaceship, warp core, starship"
+              placeholder={t(
+                "lorebooks.newEntryKeywordsPlaceholder",
+              )}
               value={entryForm.keywords.join(", ")}
               onChange={(e) =>
                 setEntryForm({
@@ -361,11 +385,13 @@ export function LorebookDetailPage() {
               }
             />
             <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
-              Matching triggers when any keyword is found.
+              {t("lorebooks.newEntryKeywordsHint")}
             </div>
           </div>
           <div className="input-group">
-            <label htmlFor="entry-content">Content</label>
+            <label htmlFor="entry-content">
+              {t("lorebooks.newEntryContentLabel")}
+            </label>
             <textarea
               id="entry-content"
               value={entryForm.content}
@@ -390,10 +416,10 @@ export function LorebookDetailPage() {
                   })
                 }
               />{" "}
-              Active
+              {t("lorebooks.newEntryActiveLabel")}
             </label>
             <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
-              Only active entries are used.
+              {t("lorebooks.newEntryActiveHint")}
             </div>
           </div>
           <button
@@ -401,30 +427,38 @@ export function LorebookDetailPage() {
             className="btn btn-primary"
             disabled={creatingEntry}
           >
-            {creatingEntry ? "Creating…" : "Add Entry"}
+            {creatingEntry
+              ? t("lorebooks.newEntryCreateButtonCreating")
+              : t("lorebooks.newEntryCreateButton")}
           </button>
           {entryError && (
             <div className="badge" style={{ marginTop: "0.5rem" }}>
-              Error: {entryError}
+              {t("common.errorPrefix")} {entryError}
             </div>
           )}
         </form>
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Entries</h3>
-        {entriesState.loading && <div>Loading entries…</div>}
+        <h3 style={{ marginTop: 0 }}>
+          {t("lorebooks.entriesTitle")}
+        </h3>
+        {entriesState.loading && (
+          <div>{t("lorebooks.entriesLoading")}</div>
+        )}
         {entriesState.error && (
-          <div className="badge">Error: {entriesState.error}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {entriesState.error}
+          </div>
         )}
         <table className="table">
           <thead>
             <tr>
-              <th>Keywords</th>
-              <th>Content</th>
-              <th>Order</th>
-              <th>Active</th>
-              <th>Actions</th>
+              <th>{t("lorebooks.entriesTableKeywords")}</th>
+              <th>{t("lorebooks.entriesTableContent")}</th>
+              <th>{t("lorebooks.entriesTableOrder")}</th>
+              <th>{t("lorebooks.entriesTableActive")}</th>
+              <th>{t("lorebooks.entriesTableActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -453,7 +487,7 @@ export function LorebookDetailPage() {
                         type="button"
                         className="btn"
                         disabled={index === 0}
-                        title="Move up"
+                        title={t("lorebooks.entriesMoveUpTitle")}
                         onClick={() => void moveEntry(entry.id, -1)}
                       >
                         ↑
@@ -462,7 +496,7 @@ export function LorebookDetailPage() {
                         type="button"
                         className="btn"
                         disabled={index === entries.length - 1}
-                        title="Move down"
+                        title={t("lorebooks.entriesMoveDownTitle")}
                         onClick={() => void moveEntry(entry.id, +1)}
                       >
                         ↓
@@ -508,7 +542,7 @@ export function LorebookDetailPage() {
               <tr>
                 <td colSpan={5}>
                   <span style={{ opacity: 0.8 }}>
-                    No entries yet. Add one above.
+                    {t("lorebooks.entriesEmpty")}
                   </span>
                 </td>
               </tr>
@@ -521,10 +555,12 @@ export function LorebookDetailPage() {
             className="card"
             style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
           >
-            <h4 style={{ marginTop: 0 }}>Edit entry</h4>
+            <h4 style={{ marginTop: 0 }}>
+              {t("lorebooks.editEntryTitle")}
+            </h4>
             <div className="input-group">
               <label htmlFor="edit-keywords">
-                Keywords (comma-separated)
+                {t("lorebooks.editEntryKeywordsLabel")}
               </label>
               <input
                 id="edit-keywords"
@@ -542,7 +578,9 @@ export function LorebookDetailPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="edit-content">Content</label>
+              <label htmlFor="edit-content">
+                {t("lorebooks.editEntryContentLabel")}
+              </label>
               <textarea
                 id="edit-content"
                 rows={4}
@@ -567,7 +605,7 @@ export function LorebookDetailPage() {
                     })
                   }
                 />{" "}
-                Enabled
+                {t("lorebooks.editEntryEnabledLabel")}
               </label>
             </div>
             <button
@@ -576,7 +614,9 @@ export function LorebookDetailPage() {
               disabled={savingEntry}
               onClick={() => void saveEntryEdit()}
             >
-              {savingEntry ? "Saving…" : "Save Entry"}
+              {savingEntry
+                ? t("lorebooks.editEntrySaveButtonSaving")
+                : t("lorebooks.editEntrySaveButton")}
             </button>
             <button
               type="button"
@@ -587,11 +627,11 @@ export function LorebookDetailPage() {
                 setEditEntryForm({});
               }}
             >
-              Cancel
+              {t("lorebooks.editEntryCancelButton")}
             </button>
             {entryError && (
               <div className="badge" style={{ marginTop: "0.5rem" }}>
-                Error: {entryError}
+                {t("common.errorPrefix")} {entryError}
               </div>
             )}
           </div>

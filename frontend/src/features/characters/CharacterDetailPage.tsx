@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type {
   Character,
   UpdateCharacterRequest,
@@ -21,6 +22,7 @@ interface LoadState {
 export function CharacterDetailPage() {
   const { characterId } = useParams<{ characterId: string }>();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const [tab, setTab] = useState<TabKey>("overview");
   const [character, setCharacter] = useState<Character | null>(
@@ -118,7 +120,7 @@ export function CharacterDetailPage() {
   }
 
   if (!characterId) {
-    return <div>Character ID is missing.</div>;
+    return <div>{t("characters.detailMissingId")}</div>;
   }
 
   return (
@@ -142,7 +144,7 @@ export function CharacterDetailPage() {
             }}
             onClick={() => handleTabChange("overview")}
           >
-            Overview
+            {t("characters.detailTabsOverview")}
           </button>
           <button
             type="button"
@@ -155,7 +157,7 @@ export function CharacterDetailPage() {
             }}
             onClick={() => handleTabChange("persona")}
           >
-            Persona
+            {t("characters.detailTabsPersona")}
           </button>
           <button
             type="button"
@@ -168,23 +170,33 @@ export function CharacterDetailPage() {
             }}
             onClick={() => handleTabChange("prompt")}
           >
-            Prompt Builder
+            {t("characters.detailTabsPromptBuilder")}
           </button>
         </div>
-        {state.loading && <div>Loading character…</div>}
+        {state.loading && (
+          <div>{t("characters.detailLoading")}</div>
+        )}
         {state.error && (
-          <div className="badge">Error: {state.error}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {state.error}
+          </div>
         )}
         {saveError && (
-          <div className="badge">Error: {saveError}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {saveError}
+          </div>
         )}
       </div>
 
       {character && tab === "overview" && (
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Overview</h3>
+          <h3 style={{ marginTop: 0 }}>
+            {t("characters.detailOverviewTitle")}
+          </h3>
           <div className="input-group">
-            <label htmlFor="char-name">Name</label>
+            <label htmlFor="char-name">
+              {t("characters.listNameLabel")}
+            </label>
             <input
               id="char-name"
               type="text"
@@ -198,7 +210,9 @@ export function CharacterDetailPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="char-description">Description</label>
+            <label htmlFor="char-description">
+              {t("characters.listDescriptionLabel")}
+            </label>
             <textarea
               id="char-description"
               value={overviewDraft.description ?? ""}
@@ -211,7 +225,9 @@ export function CharacterDetailPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="char-avatar">Avatar path</label>
+            <label htmlFor="char-avatar">
+              {t("characters.listAvatarPathLabel")}
+            </label>
             <input
               id="char-avatar"
               type="text"
@@ -225,7 +241,9 @@ export function CharacterDetailPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="char-notes">Creator notes</label>
+            <label htmlFor="char-notes">
+              {t("characters.listCreatorNotesLabel")}
+            </label>
             <textarea
               id="char-notes"
               value={overviewDraft.creatorNotes ?? ""}
@@ -243,16 +261,22 @@ export function CharacterDetailPage() {
             disabled={saving}
             onClick={() => void saveOverview()}
           >
-            {saving ? "Saving…" : "Save"}
+            {saving
+              ? t("characters.detailOverviewSaveButtonSaving")
+              : t("characters.detailOverviewSaveButton")}
           </button>
         </div>
       )}
 
       {character && tab === "persona" && (
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Persona</h3>
+          <h3 style={{ marginTop: 0 }}>
+            {t("characters.detailPersonaTitle")}
+          </h3>
           <div className="input-group">
-            <label htmlFor="persona-full">Persona</label>
+            <label htmlFor="persona-full">
+              {t("characters.detailPersonaLabel")}
+            </label>
             <textarea
               id="persona-full"
               rows={12}
@@ -266,7 +290,9 @@ export function CharacterDetailPage() {
             disabled={saving}
             onClick={() => void savePersona(personaDraft)}
           >
-            {saving ? "Saving…" : "Save Persona"}
+            {saving
+              ? t("characters.detailPersonaSaveButtonSaving")
+              : t("characters.detailPersonaSaveButton")}
           </button>
         </div>
       )}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   CreatePresetRequest,
   Preset,
@@ -28,6 +29,7 @@ const emptyCreateForm: CreatePresetRequest = {
 };
 
 export function PresetsPage() {
+  const { t } = useTranslation();
   const [presets, setPresets] = useState<Preset[]>([]);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -111,7 +113,7 @@ export function PresetsPage() {
 
   async function handleDeletePreset(id: string) {
     const confirmed = window.confirm(
-      "Delete this preset? It may be referenced by prompt stacks.",
+      t("presets.deleteConfirm"),
     );
     if (!confirmed) return;
     try {
@@ -165,10 +167,14 @@ export function PresetsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Filters</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("presets.filtersTitle")}
+        </h3>
         <div className="flex-row">
           <div className="input-group" style={{ flex: 1 }}>
-            <label htmlFor="preset-kind">Kind</label>
+            <label htmlFor="preset-kind">
+              {t("presets.filtersKindLabel")}
+            </label>
             <select
               id="preset-kind"
               value={filterKind}
@@ -180,15 +186,27 @@ export function PresetsPage() {
                 )
               }
             >
-              <option value="all">All</option>
-              <option value="static_text">Static text</option>
-              <option value="lorebook">Lorebook</option>
-              <option value="history">History</option>
-              <option value="mcp_tools">MCP tools</option>
+              <option value="all">
+                {t("presets.filtersKindAll")}
+              </option>
+              <option value="static_text">
+                {t("presets.filtersKindStaticText")}
+              </option>
+              <option value="lorebook">
+                {t("presets.filtersKindLorebook")}
+              </option>
+              <option value="history">
+                {t("presets.filtersKindHistory")}
+              </option>
+              <option value="mcp_tools">
+                {t("presets.filtersKindMcpTools")}
+              </option>
             </select>
           </div>
           <div className="input-group" style={{ flex: 1 }}>
-            <label htmlFor="preset-built-in">Built-in</label>
+            <label htmlFor="preset-built-in">
+              {t("presets.filtersBuiltInLabel")}
+            </label>
             <select
               id="preset-built-in"
               value={filterBuiltIn}
@@ -198,13 +216,21 @@ export function PresetsPage() {
                 )
               }
             >
-              <option value="all">All</option>
-              <option value="true">Only built-in</option>
-              <option value="false">Only user-defined</option>
+              <option value="all">
+                {t("presets.filtersBuiltInAll")}
+              </option>
+              <option value="true">
+                {t("presets.filtersBuiltInTrue")}
+              </option>
+              <option value="false">
+                {t("presets.filtersBuiltInFalse")}
+              </option>
             </select>
           </div>
           <div className="input-group" style={{ flex: 2 }}>
-            <label htmlFor="preset-search">Title contains</label>
+            <label htmlFor="preset-search">
+              {t("presets.filtersTitleContainsLabel")}
+            </label>
             <input
               id="preset-search"
               type="text"
@@ -216,11 +242,15 @@ export function PresetsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>New Preset</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("presets.newTitle")}
+        </h3>
         <form onSubmit={handleCreatePreset}>
           <div className="flex-row">
             <div className="input-group" style={{ flex: 1 }}>
-              <label htmlFor="preset-title">Title</label>
+              <label htmlFor="preset-title">
+                {t("presets.newFormTitleLabel")}
+              </label>
               <input
                 id="preset-title"
                 type="text"
@@ -235,7 +265,9 @@ export function PresetsPage() {
               />
             </div>
             <div className="input-group" style={{ width: 220 }}>
-              <label htmlFor="preset-kind-new">Kind</label>
+              <label htmlFor="preset-kind-new">
+                {t("presets.newFormKindLabel")}
+              </label>
               <select
                 id="preset-kind-new"
                 value={createForm.kind}
@@ -246,15 +278,25 @@ export function PresetsPage() {
                   })
                 }
               >
-                <option value="static_text">Static text</option>
-                <option value="lorebook">Lorebook</option>
-                <option value="history">History</option>
-                <option value="mcp_tools">MCP tools</option>
+                <option value="static_text">
+                  {t("presets.filtersKindStaticText")}
+                </option>
+                <option value="lorebook">
+                  {t("presets.filtersKindLorebook")}
+                </option>
+                <option value="history">
+                  {t("presets.filtersKindHistory")}
+                </option>
+                <option value="mcp_tools">
+                  {t("presets.filtersKindMcpTools")}
+                </option>
               </select>
             </div>
           </div>
           <div className="input-group">
-            <label htmlFor="preset-description">Description</label>
+            <label htmlFor="preset-description">
+              {t("presets.newFormDescriptionLabel")}
+            </label>
             <textarea
               id="preset-description"
               value={createForm.description}
@@ -268,7 +310,9 @@ export function PresetsPage() {
           </div>
           {createForm.kind === "static_text" && (
             <div className="input-group">
-              <label htmlFor="preset-content">Content</label>
+              <label htmlFor="preset-content">
+                {t("presets.newFormContentLabel")}
+              </label>
               <textarea
                 id="preset-content"
                 value={createForm.content ?? ""}
@@ -286,30 +330,38 @@ export function PresetsPage() {
             className="btn btn-primary"
             disabled={creating}
           >
-            {creating ? "Creating…" : "Create Preset"}
+            {creating
+              ? t("presets.newCreateButtonCreating")
+              : t("presets.newCreateButton")}
           </button>
           {createError && (
             <div className="badge" style={{ marginTop: "0.5rem" }}>
-              Error: {createError}
+              {t("common.errorPrefix")} {createError}
             </div>
           )}
         </form>
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Presets</h3>
-        {state.loading && <div>Loading presets…</div>}
+        <h3 style={{ marginTop: 0 }}>
+          {t("presets.listTitle")}
+        </h3>
+        {state.loading && (
+          <div>{t("presets.listLoading")}</div>
+        )}
         {state.error && (
-          <div className="badge">Error: {state.error}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {state.error}
+          </div>
         )}
         <table className="table">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Kind</th>
-              <th>Description</th>
-              <th>Built-in</th>
-              <th>Actions</th>
+              <th>{t("presets.listTableTitle")}</th>
+              <th>{t("presets.listTableKind")}</th>
+              <th>{t("presets.listTableDescription")}</th>
+              <th>{t("presets.listTableBuiltIn")}</th>
+              <th>{t("presets.listTableActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -318,7 +370,11 @@ export function PresetsPage() {
                 <td>{preset.title}</td>
                 <td>{preset.kind}</td>
                 <td>{preset.description}</td>
-                <td>{preset.builtIn ? "Yes" : "No"}</td>
+                <td>
+                  {preset.builtIn
+                    ? t("presets.listBuiltInYes")
+                    : t("presets.listBuiltInNo")}
+                </td>
                 <td>
                   <div
                     style={{
@@ -331,7 +387,7 @@ export function PresetsPage() {
                       className="btn btn-primary"
                       onClick={() => startEdit(preset)}
                     >
-                      Edit
+                      {t("presets.listEditButton")}
                     </button>
                     <button
                       type="button"
@@ -340,7 +396,7 @@ export function PresetsPage() {
                         void handleDeletePreset(preset.id)
                       }
                     >
-                      Delete
+                      {t("presets.listDeleteButton")}
                     </button>
                   </div>
                 </td>
@@ -350,7 +406,7 @@ export function PresetsPage() {
               <tr>
                 <td colSpan={5}>
                   <span style={{ opacity: 0.8 }}>
-                    No presets match filters.
+                    {t("presets.listEmpty")}
                   </span>
                 </td>
               </tr>
@@ -363,9 +419,13 @@ export function PresetsPage() {
             className="card"
             style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
           >
-            <h4 style={{ marginTop: 0 }}>Edit preset</h4>
+            <h4 style={{ marginTop: 0 }}>
+              {t("presets.editTitle")}
+            </h4>
             <div className="input-group">
-              <label htmlFor="edit-title">Title</label>
+              <label htmlFor="edit-title">
+                {t("presets.editFormTitleLabel")}
+              </label>
               <input
                 id="edit-title"
                 type="text"
@@ -379,7 +439,9 @@ export function PresetsPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="edit-description">Description</label>
+              <label htmlFor="edit-description">
+                {t("presets.editFormDescriptionLabel")}
+              </label>
               <textarea
                 id="edit-description"
                 value={editForm.description ?? ""}
@@ -392,7 +454,9 @@ export function PresetsPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="edit-content">Content</label>
+              <label htmlFor="edit-content">
+                {t("presets.editFormContentLabel")}
+              </label>
               <textarea
                 id="edit-content"
                 value={editForm.content ?? ""}
@@ -410,7 +474,9 @@ export function PresetsPage() {
               disabled={savingEdit}
               onClick={() => void saveEdit()}
             >
-              {savingEdit ? "Saving…" : "Save Changes"}
+              {savingEdit
+                ? t("presets.editSaveButtonSaving")
+                : t("presets.editSaveButton")}
             </button>
             <button
               type="button"
@@ -421,11 +487,11 @@ export function PresetsPage() {
                 setEditForm({});
               }}
             >
-              Cancel
+              {t("presets.editCancelButton")}
             </button>
             {editError && (
               <div className="badge" style={{ marginTop: "0.5rem" }}>
-                Error: {editError}
+                {t("common.errorPrefix")} {editError}
               </div>
             )}
           </div>

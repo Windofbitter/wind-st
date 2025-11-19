@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type {
   Character,
   CreateCharacterRequest,
@@ -25,6 +26,7 @@ const emptyForm: CreateCharacterRequest = {
 };
 
 export function CharactersListPage() {
+  const { t } = useTranslation();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -83,7 +85,7 @@ export function CharactersListPage() {
 
   async function handleDeleteCharacter(id: string) {
     const confirmed = window.confirm(
-      "Delete this character? This cannot be undone.",
+      t("characters.listDeleteConfirm"),
     );
     if (!confirmed) return;
 
@@ -105,10 +107,14 @@ export function CharactersListPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>New Character</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("characters.listNewTitle")}
+        </h3>
         <form onSubmit={handleCreateCharacter}>
           <div className="input-group">
-            <label htmlFor="char-name">Name</label>
+            <label htmlFor="char-name">
+              {t("characters.listNameLabel")}
+            </label>
             <input
               id="char-name"
               type="text"
@@ -120,7 +126,9 @@ export function CharactersListPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="char-description">Description</label>
+            <label htmlFor="char-description">
+              {t("characters.listDescriptionLabel")}
+            </label>
             <textarea
               id="char-description"
               value={form.description}
@@ -133,7 +141,9 @@ export function CharactersListPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="char-avatar">Avatar path</label>
+            <label htmlFor="char-avatar">
+              {t("characters.listAvatarPathLabel")}
+            </label>
             <input
               id="char-avatar"
               type="text"
@@ -147,7 +157,9 @@ export function CharactersListPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="char-persona">Persona</label>
+            <label htmlFor="char-persona">
+              {t("characters.listPersonaLabel")}
+            </label>
             <textarea
               id="char-persona"
               value={form.persona}
@@ -160,7 +172,9 @@ export function CharactersListPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="char-notes">Creator notes</label>
+            <label htmlFor="char-notes">
+              {t("characters.listCreatorNotesLabel")}
+            </label>
             <textarea
               id="char-notes"
               value={form.creatorNotes ?? ""}
@@ -177,28 +191,36 @@ export function CharactersListPage() {
             className="btn btn-primary"
             disabled={creating}
           >
-            {creating ? "Creating…" : "Create Character"}
+            {creating
+              ? t("characters.listCreateButtonCreating")
+              : t("characters.listCreateButton")}
           </button>
           {createError && (
             <div className="badge" style={{ marginTop: "0.5rem" }}>
-              Error: {createError}
+              {t("common.errorPrefix")} {createError}
             </div>
           )}
         </form>
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Characters</h3>
-        {state.loading && <div>Loading characters…</div>}
+        <h3 style={{ marginTop: 0 }}>
+          {t("characters.listTitle")}
+        </h3>
+        {state.loading && (
+          <div>{t("characters.listLoading")}</div>
+        )}
         {state.error && (
-          <div className="badge">Error: {state.error}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {state.error}
+          </div>
         )}
         <table className="table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Actions</th>
+              <th>{t("characters.listNameLabel")}</th>
+              <th>{t("characters.listDescriptionLabel")}</th>
+              <th>{t("characters.listTableActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -217,7 +239,7 @@ export function CharactersListPage() {
                       to={`/characters/${c.id}`}
                       className="btn btn-primary"
                     >
-                      Edit
+                      {t("characters.listEditButton")}
                     </Link>
                     <button
                       type="button"
@@ -226,7 +248,7 @@ export function CharactersListPage() {
                         void handleDeleteCharacter(c.id)
                       }
                     >
-                      Delete
+                      {t("characters.listDeleteButton")}
                     </button>
                   </div>
                 </td>
@@ -236,7 +258,7 @@ export function CharactersListPage() {
               <tr>
                 <td colSpan={3}>
                   <span style={{ opacity: 0.8 }}>
-                    No characters yet. Create one above.
+                    {t("characters.listEmpty")}
                   </span>
                 </td>
               </tr>

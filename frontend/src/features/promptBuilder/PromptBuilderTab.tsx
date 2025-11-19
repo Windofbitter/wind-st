@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { PromptPreset, PromptRole } from "../../api/promptStack";
 import {
   attachPromptPreset,
@@ -26,6 +27,7 @@ export function PromptBuilderTab({
   persona,
   onPersonaSave,
 }: PromptBuilderTabProps) {
+  const { t } = useTranslation();
   const [personaDraft, setPersonaDraft] = useState(persona);
   const [savingPersona, setSavingPersona] = useState(false);
   const [personaError, setPersonaError] = useState<string | null>(
@@ -189,9 +191,13 @@ export function PromptBuilderTab({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Quick Persona Editor</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("promptBuilder.quickPersonaTitle")}
+        </h3>
         <div className="input-group">
-          <label htmlFor="persona-textarea">Persona</label>
+          <label htmlFor="persona-textarea">
+            {t("promptBuilder.quickPersonaLabel")}
+          </label>
           <textarea
             id="persona-textarea"
             value={personaDraft}
@@ -207,11 +213,13 @@ export function PromptBuilderTab({
           disabled={savingPersona}
           onClick={() => void handlePersonaSave()}
         >
-          {savingPersona ? "Saving…" : "Save Persona"}
+          {savingPersona
+            ? t("promptBuilder.quickPersonaSaveButtonSaving")
+            : t("promptBuilder.quickPersonaSaveButton")}
         </button>
         {personaError && (
           <div className="badge" style={{ marginTop: "0.5rem" }}>
-            Error: {personaError}
+            {t("common.errorPrefix")} {personaError}
           </div>
         )}
       </div>
@@ -224,15 +232,20 @@ export function PromptBuilderTab({
         }}
       >
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Preset Palette</h3>
-          {presetsLoading && <div>Loading presets…</div>}
+          <h3 style={{ marginTop: 0 }}>
+            {t("promptBuilder.paletteTitle")}
+          </h3>
+          {presetsLoading && (
+            <div>{t("promptBuilder.paletteLoading")}</div>
+          )}
           {presetsError && (
-            <div className="badge">Error: {presetsError}</div>
+            <div className="badge">
+              {t("common.errorPrefix")} {presetsError}
+            </div>
           )}
           {!presetsLoading && presets.length === 0 && (
             <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
-              No presets defined yet. Create them on the Presets
-              page.
+              {t("promptBuilder.paletteEmpty")}
             </div>
           )}
           {presets.length > 0 && (
@@ -255,7 +268,9 @@ export function PromptBuilderTab({
             }}
           >
             <div style={{ display: "flex", gap: "0.75rem" }}>
-              <h3 style={{ margin: 0 }}>Current Stack</h3>
+              <h3 style={{ margin: 0 }}>
+                {t("promptBuilder.stackTitle")}
+              </h3>
               <select
                 value={roleFilter}
                 onChange={(e) =>
@@ -264,10 +279,18 @@ export function PromptBuilderTab({
                   )
                 }
               >
-                <option value="all">All roles</option>
-                <option value="system">System</option>
-                <option value="assistant">Assistant</option>
-                <option value="user">User</option>
+                <option value="all">
+                  {t("promptBuilder.stackRoleFilterAll")}
+                </option>
+                <option value="system">
+                  {t("promptBuilder.stackRoleFilterSystem")}
+                </option>
+                <option value="assistant">
+                  {t("promptBuilder.stackRoleFilterAssistant")}
+                </option>
+                <option value="user">
+                  {t("promptBuilder.stackRoleFilterUser")}
+                </option>
               </select>
             </div>
             {reordering && (
@@ -277,21 +300,26 @@ export function PromptBuilderTab({
                   opacity: 0.8,
                 }}
               >
-                Reordering…
+                {t("promptBuilder.stackReordering")}
               </span>
             )}
           </div>
-          {stackLoading && <div>Loading stack…</div>}
+          {stackLoading && (
+            <div>{t("promptBuilder.stackLoading")}</div>
+          )}
           {stackError && (
-            <div className="badge">Error: {stackError}</div>
+            <div className="badge">
+              {t("common.errorPrefix")} {stackError}
+            </div>
           )}
           {attachError && (
-            <div className="badge">Error: {attachError}</div>
+            <div className="badge">
+              {t("common.errorPrefix")} {attachError}
+            </div>
           )}
           {stackItems.length === 0 && !stackLoading && (
             <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
-              No presets in stack yet. Click a preset on the left to
-              attach it.
+              {t("promptBuilder.stackEmpty")}
             </div>
           )}
           {stackItems.length > 0 && (
@@ -309,7 +337,9 @@ export function PromptBuilderTab({
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Prompt Preview</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("promptBuilder.previewTitle")}
+        </h3>
         <div
           style={{
             fontFamily: "monospace",
@@ -319,14 +349,19 @@ export function PromptBuilderTab({
             overflowY: "auto",
           }}
         >
-          <strong>System / Persona:</strong>
+          <strong>
+            {t("promptBuilder.previewSystemPersonaLabel")}
+          </strong>
           {"\n"}
-          {personaDraft || "<empty persona>"}
+          {personaDraft ||
+            t("promptBuilder.previewEmptyPersona")}
           {"\n\n"}
-          <strong>Stack:</strong>
+          <strong>
+            {t("promptBuilder.previewStackLabel")}
+          </strong>
           {"\n"}
           {stackItems.length === 0
-            ? "<no presets attached>"
+            ? t("promptBuilder.previewNoPresets")
             : stackItems
                 .map(
                   (item, index) =>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type {
   CreateLorebookRequest,
   Lorebook,
@@ -23,6 +24,7 @@ const emptyForm: CreateLorebookRequest = {
 };
 
 export function LorebooksPage() {
+  const { t } = useTranslation();
   const [lorebooks, setLorebooks] = useState<Lorebook[]>([]);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -96,7 +98,7 @@ export function LorebooksPage() {
 
   async function handleDeleteLorebook(id: string) {
     const confirmed = window.confirm(
-      "Delete this lorebook and all entries?",
+      t("lorebooks.listDeleteConfirm"),
     );
     if (!confirmed) return;
 
@@ -117,10 +119,14 @@ export function LorebooksPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>New Lorebook</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("lorebooks.listNewTitle")}
+        </h3>
         <form onSubmit={handleCreateLorebook}>
           <div className="input-group">
-            <label htmlFor="lb-name">Name</label>
+            <label htmlFor="lb-name">
+              {t("lorebooks.listNameLabel")}
+            </label>
             <input
               id="lb-name"
               type="text"
@@ -132,7 +138,9 @@ export function LorebooksPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="lb-description">Description</label>
+            <label htmlFor="lb-description">
+              {t("lorebooks.listDescriptionLabel")}
+            </label>
             <textarea
               id="lb-description"
               value={form.description}
@@ -145,7 +153,9 @@ export function LorebooksPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="lb-scope">Scope</label>
+            <label htmlFor="lb-scope">
+              {t("lorebooks.listScopeLabel")}
+            </label>
             <div id="lb-scope" style={{ display: "flex", gap: "1rem" }}>
               <label>
                 <input
@@ -154,7 +164,7 @@ export function LorebooksPage() {
                   checked={!form.isGlobal}
                   onChange={() => setForm({ ...form, isGlobal: false })}
                 />{" "}
-                Local
+                {t("lorebooks.listScopeLocal")}
               </label>
               <label>
                 <input
@@ -163,11 +173,11 @@ export function LorebooksPage() {
                   checked={form.isGlobal === true}
                   onChange={() => setForm({ ...form, isGlobal: true })}
                 />{" "}
-                Global
+                {t("lorebooks.listScopeGlobal")}
               </label>
             </div>
             <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
-              Global is an organizational tag for filtering; it does not change behavior.
+              {t("lorebooks.listScopeHint")}
             </div>
           </div>
           <button
@@ -175,18 +185,22 @@ export function LorebooksPage() {
             className="btn btn-primary"
             disabled={creating}
           >
-            {creating ? "Creating…" : "Create Lorebook"}
+            {creating
+              ? t("lorebooks.listCreateButtonCreating")
+              : t("lorebooks.listCreateButton")}
           </button>
           {createError && (
             <div className="badge" style={{ marginTop: "0.5rem" }}>
-              Error: {createError}
+              {t("common.errorPrefix")} {createError}
             </div>
           )}
         </form>
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Lorebooks</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("lorebooks.listTitle")}
+        </h3>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
@@ -194,42 +208,46 @@ export function LorebooksPage() {
               className={"btn" + (scopeFilter === "all" ? " btn-primary" : "")}
               onClick={() => setScopeFilter("all")}
             >
-              All
+              {t("lorebooks.listFilterAll")}
             </button>
             <button
               type="button"
               className={"btn" + (scopeFilter === "global" ? " btn-primary" : "")}
               onClick={() => setScopeFilter("global")}
             >
-              Global
+              {t("lorebooks.listFilterGlobal")}
             </button>
             <button
               type="button"
               className={"btn" + (scopeFilter === "local" ? " btn-primary" : "")}
               onClick={() => setScopeFilter("local")}
             >
-              Local
+              {t("lorebooks.listFilterLocal")}
             </button>
           </div>
           <input
             type="text"
-            placeholder="Search by name…"
+            placeholder={t("lorebooks.listFilterSearchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ flex: 1, minWidth: "200px" }}
           />
         </div>
-        {state.loading && <div>Loading lorebooks…</div>}
+        {state.loading && (
+          <div>{t("lorebooks.listLoading")}</div>
+        )}
         {state.error && (
-          <div className="badge">Error: {state.error}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {state.error}
+          </div>
         )}
         <table className="table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Global</th>
-              <th>Actions</th>
+              <th>{t("lorebooks.listTableName")}</th>
+              <th>{t("lorebooks.listTableDescription")}</th>
+              <th>{t("lorebooks.listTableGlobal")}</th>
+              <th>{t("lorebooks.listTableActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -237,7 +255,11 @@ export function LorebooksPage() {
               <tr key={lb.id}>
                 <td>{lb.name}</td>
                 <td>{lb.description}</td>
-                <td>{lb.isGlobal ? "Yes" : "No"}</td>
+                <td>
+                  {lb.isGlobal
+                    ? t("lorebooks.listYes")
+                    : t("lorebooks.listNo")}
+                </td>
                 <td>
                   <div
                     style={{
@@ -249,7 +271,7 @@ export function LorebooksPage() {
                       to={`/lorebooks/${lb.id}`}
                       className="btn btn-primary"
                     >
-                      Open
+                      {t("lorebooks.listOpenButton")}
                     </Link>
                     <button
                       type="button"
@@ -258,7 +280,7 @@ export function LorebooksPage() {
                         void handleDeleteLorebook(lb.id)
                       }
                     >
-                      Delete
+                      {t("lorebooks.listDeleteButton")}
                     </button>
                   </div>
                 </td>
@@ -268,7 +290,7 @@ export function LorebooksPage() {
               <tr>
                 <td colSpan={4}>
                   <span style={{ opacity: 0.8 }}>
-                    No lorebooks yet. Create one above.
+                    {t("lorebooks.listEmpty")}
                   </span>
                 </td>
               </tr>

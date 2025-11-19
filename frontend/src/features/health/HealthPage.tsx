@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getHealth } from "../../api/health";
 import { ApiError } from "../../api/httpClient";
 
@@ -8,6 +9,7 @@ interface LoadState {
 }
 
 export function HealthPage() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<string | null>(null);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -40,10 +42,12 @@ export function HealthPage() {
 
   return (
     <div className="card">
-      <h3 style={{ marginTop: 0 }}>Backend Health</h3>
-      {state.loading && <div>Checking…</div>}
+      <h3 style={{ marginTop: 0 }}>{t("health.title")}</h3>
+      {state.loading && <div>{t("health.checking")}</div>}
       {state.error && (
-        <div className="badge">Error: {state.error}</div>
+        <div className="badge">
+          {t("common.errorPrefix")} {state.error}
+        </div>
       )}
       {status && !state.loading && (
         <div
@@ -53,13 +57,13 @@ export function HealthPage() {
             fontWeight: 500,
           }}
         >
-          Status:{" "}
+          {t("health.statusLabel")}{" "}
           <span
             style={{
               color: ok ? "#00c853" : "#ff5252",
             }}
           >
-            {ok ? "OK" : status}
+            {ok ? t("health.statusOk") : status}
           </span>
         </div>
       )}
@@ -69,7 +73,7 @@ export function HealthPage() {
         style={{ marginTop: "1rem" }}
         onClick={() => void loadHealth()}
       >
-        Refresh
+        {t("health.refreshButton")}
       </button>
     </div>
   );

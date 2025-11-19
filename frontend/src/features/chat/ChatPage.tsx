@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Character } from "../../api/characters";
 import { listCharacters } from "../../api/characters";
 import type { Chat, ChatLLMConfig } from "../../api/chats";
@@ -24,6 +25,8 @@ interface LoadState {
 }
 
 export function ChatPage() {
+  const { t } = useTranslation();
+
   const [characters, setCharacters] = useState<Character[]>([]);
   const [charactersState, setCharactersState] = useState<LoadState>({
     loading: false,
@@ -223,7 +226,10 @@ export function ChatPage() {
 
   async function handleCreateChat() {
     if (!selectedCharacterId) return;
-    const title = window.prompt("Chat title", "New Chat");
+    const title = window.prompt(
+      t("chat.createChatPromptTitle"),
+      t("chat.createChatPromptDefault"),
+    );
     if (!title || title.trim() === "") return;
 
     setGlobalError(null);
@@ -244,7 +250,7 @@ export function ChatPage() {
   async function handleDeleteChat(chatId: string) {
     if (!selectedCharacterId) return;
     const confirmed = window.confirm(
-      "Delete this chat? This cannot be undone.",
+      t("chat.deleteChatConfirm"),
     );
     if (!confirmed) return;
 
@@ -323,7 +329,9 @@ export function ChatPage() {
       <section className="chat-sidebar">
         <div className="card">
           <div className="input-group">
-            <label htmlFor="character-select">Character</label>
+            <label htmlFor="character-select">
+              {t("chat.characterLabel")}
+            </label>
             <select
               id="character-select"
               value={selectedCharacterId ?? ""}
@@ -333,7 +341,9 @@ export function ChatPage() {
                 )
               }
             >
-              <option value="">Select character</option>
+              <option value="">
+                {t("chat.characterPlaceholder")}
+              </option>
               {characters.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -343,24 +353,26 @@ export function ChatPage() {
           </div>
           {charactersState.error && (
             <div className="badge">
-              Error: {charactersState.error}
+              {t("common.errorPrefix")} {charactersState.error}
             </div>
           )}
         </div>
 
         <div className="card" style={{ flex: 1, overflowY: "auto" }}>
           <div className="flex-row" style={{ marginBottom: "0.5rem" }}>
-            <strong>Chats</strong>
+            <strong>{t("chat.chatsTitle")}</strong>
             <button
               className="btn btn-primary"
               onClick={handleCreateChat}
               disabled={!selectedCharacterId}
             >
-              New
+              {t("chat.chatsNew")}
             </button>
           </div>
           {chatsState.error && (
-            <div className="badge">Error: {chatsState.error}</div>
+            <div className="badge">
+              {t("common.errorPrefix")} {chatsState.error}
+            </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             {chats.map((chat) => (
@@ -392,7 +404,9 @@ export function ChatPage() {
                 </button>
               </button>
             ))}
-            {chatsState.loading && <div>Loading chats…</div>}
+            {chatsState.loading && (
+              <div>{t("chat.chatsLoading")}</div>
+            )}
           </div>
         </div>
       </section>
@@ -408,7 +422,8 @@ export function ChatPage() {
           <div className="flex-row">
             <div>
               <div style={{ fontWeight: 600 }}>
-                {selectedCharacter?.name ?? "No character selected"}
+                {selectedCharacter?.name ??
+                  t("chat.noCharacterSelected")}
               </div>
               {activeChat && (
                 <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>
@@ -420,10 +435,12 @@ export function ChatPage() {
         </div>
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <div className="message-list">
-            {messagesState.loading && <div>Loading messages…</div>}
+            {messagesState.loading && (
+              <div>{t("chat.messagesLoading")}</div>
+            )}
             {messagesState.error && (
               <div className="badge">
-                Error: {messagesState.error}
+                {t("common.errorPrefix")} {messagesState.error}
               </div>
             )}
             {messages.map((msg) => (
@@ -448,8 +465,8 @@ export function ChatPage() {
             <textarea
               placeholder={
                 activeChat
-                  ? "Type a message…"
-                  : "Select a chat to start messaging"
+                  ? t("chat.composerPlaceholderActive")
+                  : t("chat.composerPlaceholderInactive")
               }
               value={composerText}
               disabled={!activeChat || isSending}
@@ -470,39 +487,48 @@ export function ChatPage() {
               disabled={!activeChat || isSending || !composerText.trim()}
               onClick={() => void handleSendMessage()}
             >
-              {isSending ? "Sending…" : "Send"}
+              {isSending
+                ? t("chat.sendButtonSending")
+                : t("chat.sendButton")}
             </button>
           </div>
         </div>
         {globalError && (
           <div className="card">
-            <div className="badge">Error: {globalError}</div>
+            <div className="badge">
+              {t("common.errorPrefix")} {globalError}
+            </div>
           </div>
         )}
       </section>
 
       <aside className="chat-right-sidebar">
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>LLM Config</h3>
+          <h3 style={{ marginTop: 0 }}>
+            {t("chat.llmConfigTitle")}
+          </h3>
           {chatConfigState.error && (
             <div className="badge">
-              Error: {chatConfigState.error}
+              {t("common.errorPrefix")} {chatConfigState.error}
             </div>
           )}
           {llmState.error && (
             <div className="badge">
-              Error loading connections: {llmState.error}
+              {t("common.errorLoadingConnections")}{" "}
+              {llmState.error}
             </div>
           )}
-          {!activeChat && <div>Select a chat to configure.</div>}
+          {!activeChat && (
+            <div>{t("chat.selectChatToConfigure")}</div>
+          )}
           {activeChat && !chatConfig && chatConfigState.loading && (
-            <div>Loading config…</div>
+            <div>{t("common.loadingConfig")}</div>
           )}
           {activeChat && chatConfig && (
             <>
               <div className="input-group">
                 <label htmlFor="llm-connection-select">
-                  Connection
+                  {t("chat.llmConnectionLabel")}
                 </label>
                 <select
                   id="llm-connection-select"
@@ -513,7 +539,9 @@ export function ChatPage() {
                     })
                   }
                 >
-                  <option value="">Select connection</option>
+                  <option value="">
+                    {t("chat.llmConnectionPlaceholder")}
+                  </option>
                   {llmConnections.map((conn) => (
                     <option key={conn.id} value={conn.id}>
                       {conn.name}
@@ -522,7 +550,9 @@ export function ChatPage() {
                 </select>
               </div>
               <div className="input-group">
-                <label htmlFor="model-input">Model</label>
+                <label htmlFor="model-input">
+                  {t("chat.modelLabel")}
+                </label>
                 <input
                   id="model-input"
                   type="text"
@@ -536,7 +566,7 @@ export function ChatPage() {
               </div>
               <div className="input-group">
                 <label htmlFor="temperature-input">
-                  Temperature
+                  {t("chat.temperatureLabel")}
                 </label>
                 <input
                   id="temperature-input"
@@ -554,7 +584,7 @@ export function ChatPage() {
               </div>
               <div className="input-group">
                 <label htmlFor="max-tokens-input">
-                  Max output tokens
+                  {t("chat.maxTokensLabel")}
                 </label>
                 <input
                   id="max-tokens-input"
@@ -574,29 +604,35 @@ export function ChatPage() {
                 disabled={savingChatConfig}
                 onClick={() => void handleSaveChatConfig()}
               >
-                {savingChatConfig ? "Saving…" : "Save Config"}
+                {savingChatConfig
+                  ? t("chat.saveConfigButtonSaving")
+                  : t("chat.saveConfigButton")}
               </button>
             </>
           )}
         </div>
 
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Prompt Stack Preview</h3>
+          <h3 style={{ marginTop: 0 }}>
+            {t("chat.promptStackTitle")}
+          </h3>
           {promptStackState.error && (
             <div className="badge">
               Error: {promptStackState.error}
             </div>
           )}
           {!selectedCharacter && (
-            <div>Select a character to see prompt stack.</div>
+            <div>
+              {t("chat.promptStackSelectCharacter")}
+            </div>
           )}
           {selectedCharacter && promptStackState.loading && (
-            <div>Loading prompt stack…</div>
+            <div>{t("chat.promptStackLoading")}</div>
           )}
           {selectedCharacter && !promptStackState.loading && (
             <>
               <div style={{ marginBottom: "0.5rem" }}>
-                <strong>Persona</strong>
+                <strong>{t("chat.personaTitle")}</strong>
                 <div
                   style={{
                     fontSize: "0.85rem",
@@ -607,21 +643,16 @@ export function ChatPage() {
                 >
                   {selectedCharacter.persona || (
                     <span style={{ opacity: 0.7 }}>
-                      No persona defined.
+                      {t("chat.personaEmpty")}
                     </span>
                   )}
                 </div>
               </div>
               <div>
-                <strong>Stack</strong>
+                <strong>{t("chat.stackTitle")}</strong>
                 {promptStack.length === 0 && (
                   <div style={{ opacity: 0.7, fontSize: "0.85rem" }}>
-                    No prompt presets attached. Edit via
-                    {" "}
-                    <span style={{ fontWeight: 600 }}>
-                      Characters → Prompt Builder
-                    </span>
-                    .
+                    {t("chat.stackEmpty")}
                   </div>
                 )}
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>

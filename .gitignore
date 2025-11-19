@@ -37,3 +37,6 @@ coverage/
 .next/
 .svelte-kit/
 .turbo/
+
+# Local SQLite database files
+backend/data/

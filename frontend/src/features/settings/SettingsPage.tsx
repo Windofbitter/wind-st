@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  LANGUAGE_STORAGE_KEY,
+  type SupportedLanguage,
+} from "../../i18n";
 
 const THEME_KEY = "wind-st-theme";
 
 type Theme = "dark" | "light";
 
 export function SettingsPage() {
+  const { t, i18n } = useTranslation();
   const [theme, setTheme] = useState<Theme>("dark");
+  const [language, setLanguage] = useState<SupportedLanguage>(
+    i18n.language === "zh" ? "zh" : "en",
+  );
 
   useEffect(() => {
     const stored = window.localStorage.getItem(THEME_KEY);
@@ -18,11 +27,18 @@ export function SettingsPage() {
     window.localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
+  useEffect(() => {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    void i18n.changeLanguage(language);
+  }, [language, i18n]);
+
   return (
     <div className="card">
-      <h3 style={{ marginTop: 0 }}>Settings</h3>
+      <h3 style={{ marginTop: 0 }}>{t("settings.title")}</h3>
       <div className="input-group">
-        <label htmlFor="theme-select">Theme (UI only)</label>
+        <label htmlFor="theme-select">
+          {t("settings.themeLabel")}
+        </label>
         <select
           id="theme-select"
           value={theme}
@@ -30,13 +46,38 @@ export function SettingsPage() {
             setTheme(e.target.value as Theme)
           }
         >
-          <option value="dark">Dark</option>
-          <option value="light">Light (experimental)</option>
+          <option value="dark">
+            {t("settings.themeDark")}
+          </option>
+          <option value="light">
+            {t("settings.themeLight")}
+          </option>
+        </select>
+      </div>
+      <div className="input-group">
+        <label htmlFor="language-select">
+          {t("settings.languageLabel")}
+        </label>
+        <select
+          id="language-select"
+          value={language}
+          onChange={(e) =>
+            setLanguage(e.target.value as SupportedLanguage)
+          }
+        >
+          <option value="en">
+            {t("settings.languageEnglish")}
+          </option>
+          <option value="zh">
+            {t("settings.languageChinese")}
+          </option>
         </select>
       </div>
       <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>
-        Theme is stored in local storage only. The current CSS is
-        optimized for dark mode.
+        {t("settings.themeHint")}
+      </div>
+      <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>
+        {t("settings.languageHint")}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { ChatRun, ChatRunStatus } from "../../api/runs";
 import { listChatRuns } from "../../api/runs";
 import { ApiError } from "../../api/httpClient";
@@ -9,6 +10,7 @@ interface LoadState {
 }
 
 export function RunsPage() {
+  const { t } = useTranslation();
   const [chatId, setChatId] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     ChatRunStatus | "all"
@@ -47,11 +49,13 @@ export function RunsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Filter</h3>
+        <h3 style={{ marginTop: 0 }}>{t("runs.filterTitle")}</h3>
         <form onSubmit={loadRuns}>
           <div className="flex-row">
             <div className="input-group" style={{ flex: 2 }}>
-              <label htmlFor="runs-chat-id">Chat ID</label>
+              <label htmlFor="runs-chat-id">
+                {t("runs.filterChatIdLabel")}
+              </label>
               <input
                 id="runs-chat-id"
                 type="text"
@@ -60,7 +64,9 @@ export function RunsPage() {
               />
             </div>
             <div className="input-group" style={{ flex: 1 }}>
-              <label htmlFor="runs-status">Status</label>
+              <label htmlFor="runs-status">
+                {t("runs.filterStatusLabel")}
+              </label>
               <select
                 id="runs-status"
                 value={statusFilter}
@@ -70,49 +76,67 @@ export function RunsPage() {
                   )
                 }
               >
-                <option value="all">All</option>
-                <option value="pending">Pending</option>
-                <option value="running">Running</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-                <option value="canceled">Canceled</option>
+                <option value="all">
+                  {t("runs.filterStatusAll")}
+                </option>
+                <option value="pending">
+                  {t("runs.filterStatusPending")}
+                </option>
+                <option value="running">
+                  {t("runs.filterStatusRunning")}
+                </option>
+                <option value="completed">
+                  {t("runs.filterStatusCompleted")}
+                </option>
+                <option value="failed">
+                  {t("runs.filterStatusFailed")}
+                </option>
+                <option value="canceled">
+                  {t("runs.filterStatusCanceled")}
+                </option>
               </select>
             </div>
           </div>
           <button type="submit" className="btn btn-primary">
-            Load Runs
+            {t("runs.filterSubmitButton")}
           </button>
         </form>
         {state.error && (
           <div className="badge" style={{ marginTop: "0.5rem" }}>
-            Error: {state.error}
+            {t("common.errorPrefix")} {state.error}
           </div>
         )}
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Runs</h3>
-        {state.loading && <div>Loading runs…</div>}
+        <h3 style={{ marginTop: 0 }}>{t("runs.listTitle")}</h3>
+        {state.loading && (
+          <div>{t("runs.listLoading")}</div>
+        )}
         <table className="table">
           <thead>
             <tr>
-              <th>Started at</th>
-              <th>Finished at</th>
-              <th>Status</th>
-              <th>Tokens</th>
-              <th>Error</th>
+              <th>{t("runs.listTableStartedAt")}</th>
+              <th>{t("runs.listTableFinishedAt")}</th>
+              <th>{t("runs.listTableStatus")}</th>
+              <th>{t("runs.listTableTokens")}</th>
+              <th>{t("runs.listTableError")}</th>
             </tr>
           </thead>
           <tbody>
             {filteredRuns.map((run) => (
               <tr key={run.id}>
                 <td>{run.startedAt}</td>
-                <td>{run.finishedAt ?? "-"}</td>
-                <td>{run.status}</td>
+                <td>
+                  {run.finishedAt ?? t("runs.listNoFinished")}
+                </td>
+                <td>
+                  {t(`runs.statusValue.${run.status}` as const)}
+                </td>
                 <td>
                   {run.tokenUsage
                     ? run.tokenUsage.total
-                    : "-"}
+                    : t("runs.listNoTokens")}
                 </td>
                 <td>{run.error ?? ""}</td>
               </tr>
@@ -121,7 +145,7 @@ export function RunsPage() {
               <tr>
                 <td colSpan={5}>
                   <span style={{ opacity: 0.8 }}>
-                    No runs loaded yet. Enter a chat ID above.
+                    {t("runs.listNoRuns")}
                   </span>
                 </td>
               </tr>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { Preset, PresetKind } from "../../api/presets";
 
 interface PresetPaletteProps {
@@ -19,6 +20,7 @@ export function PresetPalette({
   presets,
   onAddPreset,
 }: PresetPaletteProps) {
+  const { t } = useTranslation();
   const byKind = groupByKind(presets);
 
   function renderSection(kind: PresetKind, title: string) {
@@ -66,7 +68,9 @@ export function PresetPalette({
                   {preset.description}
                 </div>
               </span>
-              <span className="badge">Add</span>
+              <span className="badge">
+                {t("promptBuilder.paletteAddBadge")}
+              </span>
             </button>
           ))}
         </div>
@@ -76,10 +80,22 @@ export function PresetPalette({
 
   return (
     <div>
-      {renderSection("static_text", "Static Blocks")}
-      {renderSection("lorebook", "Lorebooks")}
-      {renderSection("history", "History")}
-      {renderSection("mcp_tools", "MCP Tool Sets")}
+      {renderSection(
+        "static_text",
+        t("promptBuilder.paletteSectionStaticBlocks"),
+      )}
+      {renderSection(
+        "lorebook",
+        t("promptBuilder.paletteSectionLorebooks"),
+      )}
+      {renderSection(
+        "history",
+        t("promptBuilder.paletteSectionHistory"),
+      )}
+      {renderSection(
+        "mcp_tools",
+        t("promptBuilder.paletteSectionMcpTools"),
+      )}
     </div>
   );
 }

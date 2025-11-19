@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   CreateLLMConnectionRequest,
   LLMConnection,
@@ -28,6 +29,7 @@ const emptyForm: CreateLLMConnectionRequest = {
 };
 
 export function LLMConnectionsPage() {
+  const { t } = useTranslation();
   const [connections, setConnections] = useState<LLMConnection[]>([]);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -91,7 +93,7 @@ export function LLMConnectionsPage() {
 
   async function handleDelete(id: string) {
     const confirmed = window.confirm(
-      "Delete this LLM connection? Chats using it may fail.",
+      t("llmConnections.deleteConfirm"),
     );
     if (!confirmed) return;
     try {
@@ -144,10 +146,14 @@ export function LLMConnectionsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>New Connection</h3>
+        <h3 style={{ marginTop: 0 }}>
+          {t("llmConnections.newTitle")}
+        </h3>
         <form onSubmit={handleCreate}>
           <div className="input-group">
-            <label htmlFor="conn-name">Name</label>
+            <label htmlFor="conn-name">
+              {t("llmConnections.newNameLabel")}
+            </label>
             <input
               id="conn-name"
               type="text"
@@ -159,7 +165,9 @@ export function LLMConnectionsPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="conn-base-url">Base URL</label>
+            <label htmlFor="conn-base-url">
+              {t("llmConnections.newBaseUrlLabel")}
+            </label>
             <input
               id="conn-base-url"
               type="text"
@@ -173,7 +181,9 @@ export function LLMConnectionsPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="conn-model">Default model</label>
+            <label htmlFor="conn-model">
+              {t("llmConnections.newDefaultModelLabel")}
+            </label>
             <input
               id="conn-model"
               type="text"
@@ -187,7 +197,9 @@ export function LLMConnectionsPage() {
             />
           </div>
           <div className="input-group">
-            <label htmlFor="conn-api-key">API key</label>
+            <label htmlFor="conn-api-key">
+              {t("llmConnections.newApiKeyLabel")}
+            </label>
             <input
               id="conn-api-key"
               type="password"
@@ -212,7 +224,7 @@ export function LLMConnectionsPage() {
                   })
                 }
               />{" "}
-              Enabled
+              {t("llmConnections.newEnabledLabel")}
             </label>
           </div>
           <button
@@ -220,31 +232,41 @@ export function LLMConnectionsPage() {
             className="btn btn-primary"
             disabled={creating}
           >
-            {creating ? "Creating…" : "Create Connection"}
+            {creating
+              ? t("llmConnections.newCreateButtonCreating")
+              : t("llmConnections.newCreateButton")}
           </button>
           {createError && (
             <div className="badge" style={{ marginTop: "0.5rem" }}>
-              Error: {createError}
+              {t("common.errorPrefix")} {createError}
             </div>
           )}
         </form>
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Connections</h3>
-        {state.loading && <div>Loading connections…</div>}
+        <h3 style={{ marginTop: 0 }}>
+          {t("llmConnections.listTitle")}
+        </h3>
+        {state.loading && (
+          <div>{t("llmConnections.listLoading")}</div>
+        )}
         {state.error && (
-          <div className="badge">Error: {state.error}</div>
+          <div className="badge">
+            {t("common.errorPrefix")} {state.error}
+          </div>
         )}
         <table className="table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Provider</th>
-              <th>Base URL</th>
-              <th>Default model</th>
-              <th>Enabled</th>
-              <th>Actions</th>
+              <th>{t("llmConnections.listTableName")}</th>
+              <th>{t("llmConnections.listTableProvider")}</th>
+              <th>{t("llmConnections.listTableBaseUrl")}</th>
+              <th>
+                {t("llmConnections.listTableDefaultModel")}
+              </th>
+              <th>{t("llmConnections.listTableEnabled")}</th>
+              <th>{t("llmConnections.listTableActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -254,7 +276,11 @@ export function LLMConnectionsPage() {
                 <td>{conn.provider}</td>
                 <td>{conn.baseUrl}</td>
                 <td>{conn.defaultModel}</td>
-                <td>{conn.isEnabled ? "Yes" : "No"}</td>
+                <td>
+                  {conn.isEnabled
+                    ? t("llmConnections.listYes")
+                    : t("llmConnections.listNo")}
+                </td>
                 <td>
                   <div
                     style={{
@@ -267,7 +293,7 @@ export function LLMConnectionsPage() {
                       className="btn btn-primary"
                       onClick={() => startEdit(conn)}
                     >
-                      Edit
+                      {t("llmConnections.listEditButton")}
                     </button>
                     <button
                       type="button"
@@ -276,7 +302,7 @@ export function LLMConnectionsPage() {
                         void handleDelete(conn.id)
                       }
                     >
-                      Delete
+                      {t("llmConnections.listDeleteButton")}
                     </button>
                   </div>
                 </td>
@@ -286,7 +312,7 @@ export function LLMConnectionsPage() {
               <tr>
                 <td colSpan={6}>
                   <span style={{ opacity: 0.8 }}>
-                    No LLM connections configured.
+                    {t("llmConnections.listEmpty")}
                   </span>
                 </td>
               </tr>
@@ -299,9 +325,13 @@ export function LLMConnectionsPage() {
             className="card"
             style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
           >
-            <h4 style={{ marginTop: 0 }}>Edit connection</h4>
+            <h4 style={{ marginTop: 0 }}>
+              {t("llmConnections.editTitle")}
+            </h4>
             <div className="input-group">
-              <label htmlFor="edit-name">Name</label>
+              <label htmlFor="edit-name">
+                {t("llmConnections.editNameLabel")}
+              </label>
               <input
                 id="edit-name"
                 type="text"
@@ -315,7 +345,9 @@ export function LLMConnectionsPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="edit-base-url">Base URL</label>
+              <label htmlFor="edit-base-url">
+                {t("llmConnections.editBaseUrlLabel")}
+              </label>
               <input
                 id="edit-base-url"
                 type="text"
@@ -329,7 +361,9 @@ export function LLMConnectionsPage() {
               />
             </div>
             <div className="input-group">
-              <label htmlFor="edit-model">Default model</label>
+              <label htmlFor="edit-model">
+                {t("llmConnections.editDefaultModelLabel")}
+              </label>
               <input
                 id="edit-model"
                 type="text"
@@ -354,7 +388,7 @@ export function LLMConnectionsPage() {
                     })
                   }
                 />{" "}
-                Enabled
+                {t("llmConnections.editEnabledLabel")}
               </label>
             </div>
             <button
@@ -363,7 +397,9 @@ export function LLMConnectionsPage() {
               disabled={savingEdit}
               onClick={() => void saveEdit()}
             >
-              {savingEdit ? "Saving…" : "Save Changes"}
+              {savingEdit
+                ? t("llmConnections.editSaveButtonSaving")
+                : t("llmConnections.editSaveButton")}
             </button>
             <button
               type="button"
@@ -374,11 +410,11 @@ export function LLMConnectionsPage() {
                 setEditForm({});
               }}
             >
-              Cancel
+              {t("llmConnections.editCancelButton")}
             </button>
             {editError && (
               <div className="badge" style={{ marginTop: "0.5rem" }}>
-                Error: {editError}
+                {t("common.errorPrefix")} {editError}
               </div>
             )}
           </div>
