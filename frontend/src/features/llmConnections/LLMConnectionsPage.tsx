@@ -143,6 +143,33 @@ export function LLMConnectionsPage() {
     }
   }
 
+  // Inline toggle for enabled state in the list
+  async function toggleConnectionEnabled(id: string, enabled: boolean) {
+    // optimistic UI update
+    setConnections((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, isEnabled: enabled } : c,
+      ),
+    );
+    try {
+      await updateLLMConnection(id, { isEnabled: enabled });
+    } catch (err) {
+      // revert on error
+      setConnections((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, isEnabled: !enabled } : c,
+        ),
+      );
+      setState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to update connection",
+      }));
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
@@ -212,21 +239,6 @@ export function LLMConnectionsPage() {
               }
             />
           </div>
-          <div className="input-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={form.isEnabled ?? true}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    isEnabled: e.target.checked,
-                  })
-                }
-              />{" "}
-              {t("llmConnections.newEnabledLabel")}
-            </label>
-          </div>
           <button
             type="submit"
             className="btn btn-primary"
@@ -277,9 +289,18 @@ export function LLMConnectionsPage() {
                 <td>{conn.baseUrl}</td>
                 <td>{conn.defaultModel}</td>
                 <td>
-                  {conn.isEnabled
-                    ? t("llmConnections.listYes")
-                    : t("llmConnections.listNo")}
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={conn.isEnabled}
+                      onChange={(e) =>
+                        void toggleConnectionEnabled(
+                          conn.id,
+                          e.target.checked,
+                        )
+                      }
+                    />
+                  </label>
                 </td>
                 <td>
                   <div

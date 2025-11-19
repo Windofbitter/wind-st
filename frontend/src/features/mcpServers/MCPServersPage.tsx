@@ -172,6 +172,33 @@ export function MCPServersPage() {
       .join(", ");
   }
 
+  // Inline toggle for enabled state in the list
+  async function toggleServerEnabled(id: string, enabled: boolean) {
+    // optimistic UI update
+    setServers((prev) =>
+      prev.map((s) =>
+        s.id === id ? { ...s, isEnabled: enabled } : s,
+      ),
+    );
+    try {
+      await updateMCPServer(id, { isEnabled: enabled });
+    } catch (err) {
+      // revert on error
+      setServers((prev) =>
+        prev.map((s) =>
+          s.id === id ? { ...s, isEnabled: !enabled } : s,
+        ),
+      );
+      setState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to update MCP server",
+      }));
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
@@ -242,21 +269,6 @@ export function MCPServersPage() {
               }
             />
           </div>
-          <div className="input-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={form.isEnabled ?? true}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    isEnabled: e.target.checked,
-                  })
-                }
-              />{" "}
-              {t("mcpServers.newEnabledLabel")}
-            </label>
-          </div>
           <button
             type="submit"
             className="btn btn-primary"
@@ -303,9 +315,18 @@ export function MCPServersPage() {
                 <td>{server.command}</td>
                 <td>{server.args.join(" ")}</td>
                 <td>
-                  {server.isEnabled
-                    ? t("mcpServers.listYes")
-                    : t("mcpServers.listNo")}
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={server.isEnabled}
+                      onChange={(e) =>
+                        void toggleServerEnabled(
+                          server.id,
+                          e.target.checked,
+                        )
+                      }
+                    />
+                  </label>
                 </td>
                 <td>
                   <div
