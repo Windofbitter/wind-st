@@ -69,3 +69,21 @@ Configuration for an external tool provider.
 - **args**: Array<String> (e.g., ["-y", "@modelcontextprotocol/server-filesystem"])
 - **env**: JSON (Environment variables)
 - **is_enabled**: Boolean
+
+## 9. LLMConnection
+Configuration for an LLM provider endpoint.
+- **id**: UUID
+- **name**: String (e.g., "OpenAI Compatible Main", "Local Ollama")
+- **provider**: Enum (Currently only openai_compatible; future providers may be added)
+- **base_url**: String (Base URL for the OpenAI-compatible API)
+- **default_model**: String (e.g., "gpt-4.1-mini")
+- **is_enabled**: Boolean
+
+## 10. ChatLLMConfig
+Per-chat LLM configuration.
+- **id**: UUID
+- **chat_id**: UUID (FK to Chat)
+- **llm_connection_id**: UUID (FK to LLMConnection)
+- **model**: String
+- **temperature**: Float
+- **max_output_tokens**: Integer
