@@ -169,50 +169,40 @@ You speak in a formal tone.
                     <!-- Current stack + preview -->
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
                         <div>
-                            <h4>Current Stack</h4>
+                            <div class="flex-row" style="justify-content: space-between;">
+                                <h4>Current Stack</h4>
+                                <select style="padding: 0.2rem;">
+                                    <option>All roles</option>
+                                    <option>System</option>
+                                    <option>Assistant</option>
+                                    <option>User</option>
+                                </select>
+                            </div>
                             <div
                                 style="background-color: #111; border: 1px solid var(--border-color); max-height: 260px; padding: 1rem; border-radius: 8px; overflow-y: auto;">
 
                                 <div class="preset-list-item">
                                     <div>
-                                        <strong>Standard System</strong> <span class="badge">Static</span>
+                                        <strong>Standard System</strong>
+                                        <span class="badge">System · Static</span>
                                     </div>
-                                    <div class="flex-row">
-                                        <select style="padding: 0.2rem;">
-                                            <option>System</option>
-                                            <option>Assistant</option>
-                                            <option>User</option>
-                                        </select>
-                                        <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
-                                    </div>
+                                    <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
                                 </div>
 
                                 <div class="preset-list-item">
                                     <div>
-                                        <strong>Fantasy Lore</strong> <span class="badge">Lorebook</span>
+                                        <strong>Fantasy Lore</strong>
+                                        <span class="badge">System · Lorebook</span>
                                     </div>
-                                    <div class="flex-row">
-                                        <select style="padding: 0.2rem;">
-                                            <option>System</option>
-                                            <option>Assistant</option>
-                                            <option>User</option>
-                                        </select>
-                                        <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
-                                    </div>
+                                    <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
                                 </div>
 
                                 <div class="preset-list-item">
                                     <div>
-                                        <strong>Chat History (Default)</strong> <span class="badge">History</span>
+                                        <strong>Chat History (Default)</strong>
+                                        <span class="badge">System · History</span>
                                     </div>
-                                    <div class="flex-row">
-                                        <select style="padding: 0.2rem;">
-                                            <option>System</option>
-                                            <option>Assistant</option>
-                                            <option>User</option>
-                                        </select>
-                                        <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
-                                    </div>
+                                    <button class="btn btn-danger" style="padding: 0.2rem 0.5rem;">x</button>
                                 </div>
 
                             </div>

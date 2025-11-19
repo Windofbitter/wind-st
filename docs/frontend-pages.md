@@ -217,12 +217,19 @@ UI:
 
 - Right column: **Prompt Stack + Preview**
   - "Current Stack" panel:
-    - Vertical list of attached prompt presets sorted by `sortOrder`.
-    - Each row:
-      - Preset title + kind badge.
-      - Role selector (`system`, `assistant`, `user`).
-      - Drag handle.
-      - Remove button.
+    - Header:
+      - Title: "Current Stack".
+      - Single role selector next to it:
+        - Values: `All roles`, `System`, `Assistant`, `User`.
+        - Acts as a view filter and as the default role for new `static_text` presets created via "Quick Create".
+    - Body:
+      - Vertical list of attached prompt presets sorted by `sortOrder`, filtered by the selected role (or all).
+      - Each row:
+        - Preset title.
+        - Badges for role and kind (e.g. `System · Static`, `System · Lorebook`).
+        - Drag handle.
+        - Remove button.
+      - Visual grouping is by role (System / Assistant / User), but data remains a single ordered stack.
   - "Prompt Preview" panel:
     - Read-only textual preview of the messages the backend will see, composed from:
       - Persona.
@@ -415,5 +422,8 @@ Operational view of chat runs for debugging orchestration.
 - Avoid ad-hoc special flags on entities (e.g., `chat.busy`); derive from:
   - Pending `/chats/:id/turns` requests in the frontend.
   - `ChatRun` data from `GET /chats/:id/runs`.
+- Treat roles as simple per-entry labels on a single unified stack:
+  - Do not create separate stacks per role in the data model.
+  - Use badges and optional grouping in the UI; editing roles can be added later if truly needed.
 - Prefer simple "fetch on view enter" + minimal caching instead of complex global stores initially.
 - Surface backend `AppError.code` and `message` directly in UI banners/snackbars to avoid inventing new error semantics.
