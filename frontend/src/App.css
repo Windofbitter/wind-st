@@ -302,7 +302,7 @@
 }
 
 .message-body {
-  white-space: pre-wrap;
+  white-space: normal;
   word-break: break-word;
 }
 
@@ -380,6 +380,51 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.markdown-body {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.markdown-body p {
+  margin: 0.25rem 0;
+}
+
+.markdown-body code {
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 0.1rem 0.25rem;
+  border-radius: 4px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.9rem;
+}
+
+.markdown-body pre {
+  background-color: #0f1924;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.75rem;
+  overflow: auto;
+  max-height: 400px;
+  white-space: pre;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.25rem;
+  margin: 0.35rem 0;
+}
+
+.markdown-body blockquote {
+  margin: 0.35rem 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--border-color);
+  color: #b5b5b5;
+}
+
+.markdown-body a {
+  color: var(--accent-color);
+  text-decoration: underline;
 }
 
 .tool-output {

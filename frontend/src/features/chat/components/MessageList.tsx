@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { Message } from "../../../api/messages";
 import { ToolResultContent } from "./ToolResultContent";
+import { MarkdownMessage } from "./MarkdownMessage";
 
 interface MessageListProps {
   messages: Message[];
@@ -102,7 +103,7 @@ function MessageItem({
         {isTool ? (
           <ToolResultContent message={message} />
         ) : (
-          <div className="message-text">{message.content}</div>
+          <MarkdownMessage content={message.content} />
         )}
       </div>
     </div>
