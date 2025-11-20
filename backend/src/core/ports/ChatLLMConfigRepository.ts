@@ -6,6 +6,8 @@ export interface CreateChatLLMConfigInput {
   model: string;
   temperature: number;
   maxOutputTokens: number;
+  maxToolIterations: number;
+  toolCallTimeoutMs: number;
 }
 
 export interface UpdateChatLLMConfigInput {
@@ -13,6 +15,8 @@ export interface UpdateChatLLMConfigInput {
   model?: string;
   temperature?: number;
   maxOutputTokens?: number;
+  maxToolIterations?: number;
+  toolCallTimeoutMs?: number;
 }
 
 export interface ChatLLMConfigRepository {

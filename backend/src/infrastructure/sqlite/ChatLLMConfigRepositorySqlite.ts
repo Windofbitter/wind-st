@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { DEFAULT_MAX_TOOL_ITERATIONS, DEFAULT_TOOL_CALL_TIMEOUT_MS } from "../../application/config/llmDefaults";
 import type { ChatLLMConfig } from "../../core/entities/ChatLLMConfig";
 import type {
   ChatLLMConfigRepository,
@@ -15,6 +16,8 @@ function mapRowToChatLLMConfig(row: any): ChatLLMConfig {
     model: row.model,
     temperature: row.temperature,
     maxOutputTokens: row.max_output_tokens,
+    maxToolIterations: row.max_tool_iterations ?? DEFAULT_MAX_TOOL_ITERATIONS,
+    toolCallTimeoutMs: row.tool_call_timeout_ms ?? DEFAULT_TOOL_CALL_TIMEOUT_MS,
   };
 }
 
@@ -34,9 +37,11 @@ export class ChatLLMConfigRepositorySqlite
         llm_connection_id,
         model,
         temperature,
-        max_output_tokens
+        max_output_tokens,
+        max_tool_iterations,
+        tool_call_timeout_ms
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -47,6 +52,8 @@ export class ChatLLMConfigRepositorySqlite
       data.model,
       data.temperature,
       data.maxOutputTokens,
+      data.maxToolIterations,
+      data.toolCallTimeoutMs,
     );
 
     return {
@@ -56,6 +63,8 @@ export class ChatLLMConfigRepositorySqlite
       model: data.model,
       temperature: data.temperature,
       maxOutputTokens: data.maxOutputTokens,
+      maxToolIterations: data.maxToolIterations,
+      toolCallTimeoutMs: data.toolCallTimeoutMs,
     };
   }
 
@@ -68,7 +77,9 @@ export class ChatLLMConfigRepositorySqlite
         llm_connection_id,
         model,
         temperature,
-        max_output_tokens
+        max_output_tokens,
+        max_tool_iterations,
+        tool_call_timeout_ms
       FROM chat_llm_configs
       WHERE chat_id = ?
     `.trim(),
@@ -101,6 +112,14 @@ export class ChatLLMConfigRepositorySqlite
     if (patch.maxOutputTokens !== undefined) {
       sets.push("max_output_tokens = ?");
       params.push(patch.maxOutputTokens);
+    }
+    if (patch.maxToolIterations !== undefined) {
+      sets.push("max_tool_iterations = ?");
+      params.push(patch.maxToolIterations);
+    }
+    if (patch.toolCallTimeoutMs !== undefined) {
+      sets.push("tool_call_timeout_ms = ?");
+      params.push(patch.toolCallTimeoutMs);
     }
 
     if (sets.length === 0) {

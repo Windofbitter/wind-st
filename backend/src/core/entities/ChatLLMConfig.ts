@@ -5,5 +5,7 @@ export interface ChatLLMConfig {
   model: string;
   temperature: number;
   maxOutputTokens: number;
+  maxToolIterations: number;
+  toolCallTimeoutMs: number;
 }
 

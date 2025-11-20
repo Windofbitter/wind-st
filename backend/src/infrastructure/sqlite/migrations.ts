@@ -1,5 +1,21 @@
 import type { SqliteDatabase } from "./db";
 
+function ensureColumn(
+  db: SqliteDatabase,
+  table: string,
+  column: string,
+  definition: string,
+): void {
+  const pragma = db.prepare(
+    `PRAGMA table_info(${table})`,
+  );
+  const columns = pragma.all() as Array<{ name: string }>;
+  if (columns.some((col) => col.name === column)) {
+    return;
+  }
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
 export function runMigrations(db: SqliteDatabase): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS characters (
@@ -86,6 +102,7 @@ export function runMigrations(db: SqliteDatabase): void {
       chat_id TEXT NOT NULL,
       role TEXT NOT NULL,
       content TEXT NOT NULL,
+      tool_call_id TEXT,
       tool_calls TEXT,
       tool_results TEXT,
       token_count INTEGER,
@@ -132,6 +149,8 @@ export function runMigrations(db: SqliteDatabase): void {
       model TEXT NOT NULL,
       temperature REAL NOT NULL,
       max_output_tokens INTEGER NOT NULL,
+      max_tool_iterations INTEGER NOT NULL DEFAULT 3,
+      tool_call_timeout_ms INTEGER NOT NULL DEFAULT 15000,
       FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE,
       FOREIGN KEY (llm_connection_id) REFERENCES llm_connections(id)
     );
@@ -162,4 +181,9 @@ export function runMigrations(db: SqliteDatabase): void {
       FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
     );
   `);
+
+  // Add new columns for existing databases without failing when they already exist.
+  ensureColumn(db, "messages", "tool_call_id", "TEXT");
+  ensureColumn(db, "chat_llm_configs", "max_tool_iterations", "INTEGER NOT NULL DEFAULT 3");
+  ensureColumn(db, "chat_llm_configs", "tool_call_timeout_ms", "INTEGER NOT NULL DEFAULT 15000");
 }

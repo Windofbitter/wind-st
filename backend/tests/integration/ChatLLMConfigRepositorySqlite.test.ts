@@ -55,6 +55,8 @@ describe("ChatLLMConfigRepositorySqlite", () => {
       model: "model-1",
       temperature: 0.5,
       maxOutputTokens: 256,
+      maxToolIterations: 3,
+      toolCallTimeoutMs: 15000,
     });
     expect(created.chatId).toBe(chatId);
     expect(created.llmConnectionId).toBe(llmConnectionId);

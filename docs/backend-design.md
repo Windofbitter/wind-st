@@ -100,6 +100,8 @@ Application and HTTP layers depend only on ports defined in `core`; infrastructu
   - `MCPClient`
     - `listTools(server)`
     - `callTool(server, toolName, args)`
+  - Implementation (current):
+    - `StdIoMCPClient` uses the official MCP TypeScript SDK over stdio, spawning the configured `command`/`args` for each `MCPServer` and reusing one client connection per server.
 
 ### Prompt Builder and Orchestration
 
@@ -118,9 +120,9 @@ Application and HTTP layers depend only on ports defined in `core`; infrastructu
   - Steps for a turn:
     1. Append user message.
     2. Build prompt via `PromptBuilder`.
-    3. Call `LLMClient.completeChat` with tools from `ToolRegistry`.
-    4. If tool calls exist, execute via `MCPClient`, append `tool` messages, and call LLM once more.
-    5. Append final assistant message and return it.
+    3. Call `LLMClient.completeChat` with MCP tools exposed as OpenAI-style function tools (not as `system` messages).
+    4. If tool calls exist, execute via `MCPClient`, append `tool` role messages (one per tool call), and call LLM again with those tool results in the conversation.
+    5. When no further tool calls are returned, append the final assistant message and return it.
 
 `ChatOrchestrator` depends only on ports: `PromptBuilder`, `LLMClient`, `MCPClient`, `MessageService`, `ChatService`.
 

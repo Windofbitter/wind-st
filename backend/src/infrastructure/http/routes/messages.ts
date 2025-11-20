@@ -7,6 +7,7 @@ import { AppError } from "../../../application/errors/AppError";
 interface AppendMessageBody {
   role: MessageRole;
   content: string;
+  toolCallId?: string | null;
   toolCalls?: unknown | null;
   toolResults?: unknown | null;
   tokenCount?: number | null;
@@ -88,10 +89,22 @@ function ensureAppendMessagePayload(
     );
   }
 
+  if (
+    value.toolCallId !== undefined &&
+    value.toolCallId !== null &&
+    typeof value.toolCallId !== "string"
+  ) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Invalid message payload: toolCallId must be string or null",
+    );
+  }
+
   return {
     chatId,
     role: value.role,
     content: value.content,
+    toolCallId: value.toolCallId ?? null,
     toolCalls: value.toolCalls ?? null,
     toolResults: value.toolResults ?? null,
     tokenCount:

@@ -41,6 +41,8 @@ describe("ChatService", () => {
         model: "m",
         temperature: 0.5,
         maxOutputTokens: 256,
+        maxToolIterations: 3,
+        toolCallTimeoutMs: 15000,
       },
     );
 
@@ -64,6 +66,8 @@ describe("ChatService", () => {
       model: "m",
       temperature: 0.2,
       maxOutputTokens: 42,
+      maxToolIterations: 3,
+      toolCallTimeoutMs: 15000,
     });
 
     await service.deleteChat(chat.id);
@@ -93,6 +97,8 @@ describe("ChatService", () => {
         model: "m1",
         temperature: 0.1,
         maxOutputTokens: 10,
+        maxToolIterations: 3,
+        toolCallTimeoutMs: 15000,
       },
     );
 

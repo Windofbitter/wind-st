@@ -69,6 +69,8 @@ describe("Chat routes", () => {
           model: "gpt-4.1-mini",
           temperature: 0.7,
           maxOutputTokens: 128,
+          maxToolIterations: 3,
+          toolCallTimeoutMs: 15000,
         },
       },
     });

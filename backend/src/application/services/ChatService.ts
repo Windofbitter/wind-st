@@ -7,6 +7,10 @@ import type {
   UpdateChatLLMConfigInput,
 } from "../../core/ports/ChatLLMConfigRepository";
 import type { ChatRepository } from "../../core/ports/ChatRepository";
+import {
+  DEFAULT_MAX_TOOL_ITERATIONS,
+  DEFAULT_TOOL_CALL_TIMEOUT_MS,
+} from "../config/llmDefaults";
 
 export class ChatService {
   constructor(
@@ -25,6 +29,10 @@ export class ChatService {
       llmConfig = await this.chatConfigRepo.create({
         ...initialConfig,
         chatId: chat.id,
+        maxToolIterations:
+          initialConfig.maxToolIterations ?? DEFAULT_MAX_TOOL_ITERATIONS,
+        toolCallTimeoutMs:
+          initialConfig.toolCallTimeoutMs ?? DEFAULT_TOOL_CALL_TIMEOUT_MS,
       });
     }
 

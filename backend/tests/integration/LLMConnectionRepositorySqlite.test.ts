@@ -87,6 +87,8 @@ describe("LLMConnectionRepositorySqlite", () => {
       model: "m",
       temperature: 0.5,
       maxOutputTokens: 128,
+      maxToolIterations: 3,
+      toolCallTimeoutMs: 15000,
     });
 
     await expect(repo.delete(connection.id)).rejects.toThrow(

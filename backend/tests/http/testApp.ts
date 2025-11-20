@@ -21,6 +21,7 @@ import { registerLLMConnectionRoutes } from "../../src/infrastructure/http/route
 import { registerMCPServerRoutes } from "../../src/infrastructure/http/routes/mcpServers";
 import type { ChatRunRepository } from "../../src/core/ports/ChatRunRepository";
 import type { LLMClient } from "../../src/core/ports/LLMClient";
+import type { MCPClient } from "../../src/core/ports/MCPClient";
 import type { PromptBuilder } from "../../src/core/ports/PromptBuilder";
 import {
   FakeCharacterRepository,
@@ -65,6 +66,8 @@ class SimplePromptBuilder implements PromptBuilder {
       messages: effectiveHistory.map((m) => ({
         role: m.role,
         content: m.content,
+        toolCalls: (m as any).toolCalls ?? undefined,
+        toolCallId: (m as any).toolCallId ?? undefined,
       })),
       tools: [],
     };
@@ -134,6 +137,14 @@ export async function createTestApp(
   );
 
   const llmClient = overrides.llmClient ?? new FakeLLMClient();
+  const mcpClient: MCPClient = {
+    async listTools() {
+      return [];
+    },
+    async callTool() {
+      throw new Error("MCP tools not configured in tests");
+    },
+  };
   const promptBuilder = new SimplePromptBuilder(
     historyConfigService,
     messageService,
@@ -146,6 +157,8 @@ export async function createTestApp(
     chatRunRepository,
     llmClient,
     promptBuilder,
+    mcpClient,
+    mcpServerService,
   );
 
   const app = Fastify({ logger: false });

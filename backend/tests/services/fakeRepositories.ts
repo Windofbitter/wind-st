@@ -62,6 +62,10 @@ import type {
   PromptPresetRepository,
   UpdatePromptPresetInput,
 } from "../../src/core/ports/PromptPresetRepository";
+import {
+  DEFAULT_MAX_TOOL_ITERATIONS,
+  DEFAULT_TOOL_CALL_TIMEOUT_MS,
+} from "../../src/application/config/llmDefaults";
 
 let idCounter = 0;
 
@@ -177,6 +181,8 @@ export class FakeChatLLMConfigRepository implements ChatLLMConfigRepository {
       model: data.model,
       temperature: data.temperature,
       maxOutputTokens: data.maxOutputTokens,
+      maxToolIterations: data.maxToolIterations ?? DEFAULT_MAX_TOOL_ITERATIONS,
+      toolCallTimeoutMs: data.toolCallTimeoutMs ?? DEFAULT_TOOL_CALL_TIMEOUT_MS,
     };
     this.items.set(data.chatId, config);
     return config;
@@ -403,6 +409,7 @@ export class FakeMessageRepository implements MessageRepository {
       chatId: data.chatId,
       role: data.role,
       content: data.content,
+      toolCallId: data.toolCallId ?? null,
       toolCalls: data.toolCalls ?? null,
       toolResults: data.toolResults ?? null,
       tokenCount: data.tokenCount ?? null,

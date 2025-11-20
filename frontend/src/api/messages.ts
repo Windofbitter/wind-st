@@ -7,6 +7,7 @@ export interface Message {
   chatId: string;
   role: MessageRole;
   content: string;
+  toolCallId: string | null;
   toolCalls: unknown | null;
   toolResults: unknown | null;
   tokenCount: number | null;
@@ -20,6 +21,7 @@ export interface ListMessagesParams {
 export interface AppendMessageRequest {
   role: MessageRole;
   content: string;
+  toolCallId?: string | null;
   toolCalls?: unknown | null;
   toolResults?: unknown | null;
   tokenCount?: number | null;

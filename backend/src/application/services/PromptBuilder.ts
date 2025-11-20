@@ -169,10 +169,20 @@ export class DefaultPromptBuilder implements PromptBuilder {
       : history.slice(-1);
 
     for (const msg of effectiveHistory) {
-      messages.push({
+      const llmMessage: LLMChatMessage = {
         role: msg.role,
         content: msg.content,
-      });
+      };
+
+      if (msg.toolCalls) {
+        llmMessage.toolCalls = msg.toolCalls as unknown as LLMChatMessage["toolCalls"];
+      }
+
+      if (msg.toolCallId) {
+        llmMessage.toolCallId = msg.toolCallId;
+      }
+
+      messages.push(llmMessage);
     }
   }
 
@@ -204,4 +214,3 @@ export class DefaultPromptBuilder implements PromptBuilder {
     return tools;
   }
 }
-

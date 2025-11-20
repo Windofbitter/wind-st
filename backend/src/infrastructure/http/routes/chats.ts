@@ -9,6 +9,10 @@ import type {
 } from "../../../core/ports/ChatLLMConfigRepository";
 import type { UpdateChatHistoryConfigInput } from "../../../core/ports/ChatHistoryConfigRepository";
 import { AppError } from "../../../application/errors/AppError";
+import {
+  DEFAULT_MAX_TOOL_ITERATIONS,
+  DEFAULT_TOOL_CALL_TIMEOUT_MS,
+} from "../../../application/config/llmDefaults";
 
 type InitialChatConfigInput = Omit<CreateChatLLMConfigInput, "chatId">;
 
@@ -77,11 +81,35 @@ function ensureCreateChatPayload(
       );
     }
 
+    if (
+      cfg.maxToolIterations !== undefined &&
+      typeof cfg.maxToolIterations !== "number"
+    ) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid chat payload: maxToolIterations must be number when provided",
+      );
+    }
+
+    if (
+      cfg.toolCallTimeoutMs !== undefined &&
+      typeof cfg.toolCallTimeoutMs !== "number"
+    ) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid chat payload: toolCallTimeoutMs must be number when provided",
+      );
+    }
+
     initialConfig = {
       llmConnectionId: cfg.llmConnectionId,
       model: cfg.model,
       temperature: cfg.temperature,
       maxOutputTokens: cfg.maxOutputTokens,
+      maxToolIterations:
+        cfg.maxToolIterations ?? DEFAULT_MAX_TOOL_ITERATIONS,
+      toolCallTimeoutMs:
+        cfg.toolCallTimeoutMs ?? DEFAULT_TOOL_CALL_TIMEOUT_MS,
     };
   }
 
@@ -153,6 +181,32 @@ function ensureUpdateChatConfigPayload(
       );
     }
     patch.maxOutputTokens = value.maxOutputTokens;
+  }
+
+  if (value.maxToolIterations !== undefined) {
+    if (
+      typeof value.maxToolIterations !== "number" ||
+      value.maxToolIterations < 0
+    ) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid chat config patch: maxToolIterations must be non-negative number",
+      );
+    }
+    patch.maxToolIterations = value.maxToolIterations;
+  }
+
+  if (value.toolCallTimeoutMs !== undefined) {
+    if (
+      typeof value.toolCallTimeoutMs !== "number" ||
+      value.toolCallTimeoutMs <= 0
+    ) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid chat config patch: toolCallTimeoutMs must be positive number",
+      );
+    }
+    patch.toolCallTimeoutMs = value.toolCallTimeoutMs;
   }
 
   return patch;

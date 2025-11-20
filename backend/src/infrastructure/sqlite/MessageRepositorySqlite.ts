@@ -13,6 +13,7 @@ function mapRowToMessage(row: any): Message {
     chatId: row.chat_id,
     role: row.role as MessageRole,
     content: row.content,
+    toolCallId: row.tool_call_id ?? null,
     toolCalls: row.tool_calls ? (JSON.parse(row.tool_calls) as unknown) : null,
     toolResults: row.tool_results
       ? (JSON.parse(row.tool_results) as unknown)
@@ -34,11 +35,12 @@ export class MessageRepositorySqlite implements MessageRepository {
         chat_id,
         role,
         content,
+        tool_call_id,
         tool_calls,
         tool_results,
         token_count
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -47,6 +49,7 @@ export class MessageRepositorySqlite implements MessageRepository {
       data.chatId,
       data.role,
       data.content,
+      data.toolCallId ?? null,
       data.toolCalls === undefined || data.toolCalls === null
         ? null
         : JSON.stringify(data.toolCalls),
@@ -61,6 +64,7 @@ export class MessageRepositorySqlite implements MessageRepository {
       chatId: data.chatId,
       role: data.role,
       content: data.content,
+      toolCallId: data.toolCallId ?? null,
       toolCalls: data.toolCalls ?? null,
       toolResults: data.toolResults ?? null,
       tokenCount: data.tokenCount ?? null,
@@ -92,6 +96,7 @@ export class MessageRepositorySqlite implements MessageRepository {
         chat_id,
         role,
         content,
+        tool_call_id,
         tool_calls,
         tool_results,
         token_count

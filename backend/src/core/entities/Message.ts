@@ -5,6 +5,7 @@ export interface Message {
   chatId: string;
   role: MessageRole;
   content: string;
+  toolCallId: string | null;
   toolCalls: unknown | null;
   toolResults: unknown | null;
   tokenCount: number | null;

@@ -16,6 +16,8 @@ export interface ChatLLMConfig {
   model: string;
   temperature: number;
   maxOutputTokens: number;
+  maxToolIterations: number;
+  toolCallTimeoutMs: number;
 }
 
 export type PromptPreviewRole =
@@ -48,6 +50,8 @@ export interface InitialChatConfigInput {
   model: string;
   temperature: number;
   maxOutputTokens: number;
+  maxToolIterations: number;
+  toolCallTimeoutMs: number;
 }
 
 export interface CreateChatRequest {

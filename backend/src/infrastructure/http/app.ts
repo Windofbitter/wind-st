@@ -30,6 +30,7 @@ import { MCPServerRepositorySqlite } from "../sqlite/MCPServerRepositorySqlite";
 import { PresetRepositorySqlite } from "../sqlite/PresetRepositorySqlite";
 import { PromptPresetRepositorySqlite } from "../sqlite/PromptPresetRepositorySqlite";
 import { OpenAILLMClient } from "../llm/OpenAILLMClient";
+import { StdIoMCPClient } from "../mcp/StdIoMCPClient";
 import { registerErrorHandler } from "./errorHandler";
 import { registerHealthRoutes } from "./routes/health";
 import { registerCharacterRoutes } from "./routes/characters";
@@ -104,6 +105,7 @@ export async function buildApp() {
     mcpServerRepository,
     characterMcpServerRepository,
   );
+  const mcpClient = new StdIoMCPClient();
   const historyConfigService = new HistoryConfigService(
     chatHistoryConfigRepository,
   );
@@ -133,6 +135,8 @@ export async function buildApp() {
     chatRunRepository,
     llmClient,
     promptBuilder,
+    mcpClient,
+    mcpServerService,
   );
 
   const app = Fastify({

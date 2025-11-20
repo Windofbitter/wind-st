@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { LLMChatCompletionResponse, LLMClient } from "../../src/core/ports/LLMClient";
 import type { PromptBuilder } from "../../src/core/ports/PromptBuilder";
+import type { MCPClient } from "../../src/core/ports/MCPClient";
 import { ChatOrchestrator } from "../../src/application/orchestrators/ChatOrchestrator";
 import { ChatService } from "../../src/application/services/ChatService";
 import { MessageService } from "../../src/application/services/MessageService";
 import { LLMConnectionService } from "../../src/application/services/LLMConnectionService";
 import { HistoryConfigService } from "../../src/application/services/HistoryConfigService";
+import { MCPServerService } from "../../src/application/services/MCPServerService";
 import {
   FakeChatRepository,
   FakeChatLLMConfigRepository,
   FakeLLMConnectionRepository,
   FakeMessageRepository,
+  FakeMCPServerRepository,
 } from "./fakeRepositories";
 import {
   FakeChatRunRepository,
@@ -37,6 +40,8 @@ class SimplePromptBuilder implements PromptBuilder {
       messages: effectiveHistory.map((m) => ({
         role: m.role,
         content: m.content,
+        toolCalls: (m as any).toolCalls ?? undefined,
+        toolCallId: (m as any).toolCallId ?? undefined,
       })),
       tools: [],
     };
@@ -48,10 +53,12 @@ function createEnvironment(customClient?: LLMClient) {
   const chatConfigRepo = new FakeChatLLMConfigRepository();
   const messageRepo = new FakeMessageRepository();
   const llmConnectionRepo = new FakeLLMConnectionRepository();
+  const mcpServerRepo = new FakeMCPServerRepository();
 
   const chatService = new ChatService(chatRepo, chatConfigRepo);
   const messageService = new MessageService(messageRepo);
   const llmConnectionService = new LLMConnectionService(llmConnectionRepo);
+  const mcpServerService = new MCPServerService(mcpServerRepo);
   const chatRunRepo = new FakeChatRunRepository();
   const historyConfigService = new HistoryConfigService({
     async create(data) {
@@ -75,6 +82,14 @@ function createEnvironment(customClient?: LLMClient) {
     customClient ?? new FakeLLMClient({
       message: { role: "assistant", content: "default-response" },
     });
+  const mcpClient: MCPClient = {
+    async listTools() {
+      return [];
+    },
+    async callTool() {
+      throw new Error("MCP tools not configured in tests");
+    },
+  };
   const promptBuilder = new SimplePromptBuilder(
     historyConfigService,
     messageService,
@@ -87,6 +102,8 @@ function createEnvironment(customClient?: LLMClient) {
     chatRunRepo,
     llmClient,
     promptBuilder,
+    mcpClient,
+    mcpServerService,
   );
 
   return {
@@ -95,6 +112,8 @@ function createEnvironment(customClient?: LLMClient) {
     llmConnectionService,
     chatRunRepo,
     llmClient,
+    mcpServerService,
+    mcpClient,
     orchestrator,
   };
 }
@@ -127,6 +146,8 @@ describe("ChatOrchestrator", () => {
         model: "gpt-4.1",
         temperature: 0.7,
         maxOutputTokens: 64,
+        maxToolIterations: 2,
+        toolCallTimeoutMs: 15000,
       },
     );
 
@@ -187,6 +208,8 @@ describe("ChatOrchestrator", () => {
         model: "gpt-4.1",
         temperature: 0.7,
         maxOutputTokens: 64,
+        maxToolIterations: 2,
+        toolCallTimeoutMs: 15000,
       },
     );
 
