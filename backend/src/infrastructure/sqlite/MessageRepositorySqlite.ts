@@ -48,7 +48,7 @@ export class MessageRepositorySqlite implements MessageRepository {
         state,
         created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
