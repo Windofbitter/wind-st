@@ -219,6 +219,23 @@ export function ChatConfigPanel({
             />
           </div>
           <div className="input-group">
+            <label htmlFor="tool-timeout">
+              {t("chat.toolCallTimeoutLabel")}
+            </label>
+            <input
+              id="tool-timeout"
+              type="number"
+              min="1000"
+              step="500"
+              value={chatConfig.toolCallTimeoutMs}
+              onChange={(e) =>
+                onChatConfigChange({
+                  toolCallTimeoutMs: Number(e.target.value),
+                })
+              }
+            />
+          </div>
+          <div className="input-group">
             <label htmlFor="history-enabled">
               {t("chat.historyEnabledLabel")}
             </label>

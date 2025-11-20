@@ -293,6 +293,8 @@ export function useChatConfigState({
         model: chatConfig.model,
         temperature: chatConfig.temperature,
         maxOutputTokens: chatConfig.maxOutputTokens,
+        maxToolIterations: chatConfig.maxToolIterations,
+        toolCallTimeoutMs: chatConfig.toolCallTimeoutMs,
       };
       const updated = await updateChatConfig(activeChat.id, payload);
       setChatConfig(updated);
