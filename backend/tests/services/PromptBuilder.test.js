@@ -10,12 +10,14 @@ import { MCPServerService } from "../../src/application/services/MCPServerServic
 import { CharacterMCPServerService } from "../../src/application/services/CharacterMCPServerService";
 import { HistoryConfigService } from "../../src/application/services/HistoryConfigService";
 import { MessageService } from "../../src/application/services/MessageService";
+import { LLMConnectionService } from "../../src/application/services/LLMConnectionService";
 import {
   FakeCharacterRepository,
   FakeChatRepository,
   FakeChatLLMConfigRepository,
   FakeLorebookRepository,
   FakeLorebookEntryRepository,
+  FakeLLMConnectionRepository,
   FakeMCPServerRepository,
   FakeMessageRepository,
   FakePresetRepository,
@@ -134,6 +136,7 @@ function createEnvironment() {
   const chatConfigRepo = new FakeChatLLMConfigRepository();
   const lorebookRepo = new FakeLorebookRepository();
   const lorebookEntryRepo = new FakeLorebookEntryRepository();
+  const llmConnectionRepo = new FakeLLMConnectionRepository();
   const mcpServerRepo = new FakeMCPServerRepository();
   const messageRepo = new FakeMessageRepository();
   const presetRepo = new FakePresetRepository();
@@ -145,7 +148,12 @@ function createEnvironment() {
     new InMemoryCharacterMCPServerRepository();
 
   const characterService = new CharacterService(characterRepo);
-  const chatService = new ChatService(chatRepo, chatConfigRepo);
+  const llmConnectionService = new LLMConnectionService(llmConnectionRepo);
+  const chatService = new ChatService(
+    chatRepo,
+    chatConfigRepo,
+    llmConnectionService,
+  );
   const promptStackService = new PromptStackService(
     characterRepo,
     presetRepo,
@@ -421,4 +429,3 @@ describe("DefaultPromptBuilder", () => {
     ]);
   });
 });
-

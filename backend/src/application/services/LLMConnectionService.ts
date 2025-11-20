@@ -22,6 +22,21 @@ export class LLMConnectionService {
     return this.repo.getById(id);
   }
 
+  async getDefaultConnection(
+    preferredId?: string,
+  ): Promise<LLMConnection | null> {
+    if (preferredId) {
+      const preferred = await this.getConnection(preferredId);
+      if (preferred) return preferred;
+    }
+
+    const all = await this.listConnections();
+    if (all.length === 0) return null;
+
+    const firstEnabled = all.find((c) => c.isEnabled);
+    return firstEnabled ?? all[0];
+  }
+
   async updateConnection(
     id: string,
     patch: UpdateLLMConnectionInput,

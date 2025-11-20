@@ -55,9 +55,13 @@ function createEnvironment(customClient?: LLMClient) {
   const llmConnectionRepo = new FakeLLMConnectionRepository();
   const mcpServerRepo = new FakeMCPServerRepository();
 
-  const chatService = new ChatService(chatRepo, chatConfigRepo);
-  const messageService = new MessageService(messageRepo);
   const llmConnectionService = new LLMConnectionService(llmConnectionRepo);
+  const chatService = new ChatService(
+    chatRepo,
+    chatConfigRepo,
+    llmConnectionService,
+  );
+  const messageService = new MessageService(messageRepo);
   const mcpServerService = new MCPServerService(mcpServerRepo);
   const chatRunRepo = new FakeChatRunRepository();
   const historyConfigService = new HistoryConfigService({

@@ -89,12 +89,16 @@ export async function buildApp() {
   const presetRepository = new PresetRepositorySqlite(db);
   const promptPresetRepository = new PromptPresetRepositorySqlite(db);
 
-  const characterService = new CharacterService(characterRepository);
-  const chatService = new ChatService(chatRepository, chatConfigRepository);
-  const messageService = new MessageService(messageRepository);
   const llmConnectionService = new LLMConnectionService(
     llmConnectionRepository,
   );
+  const characterService = new CharacterService(characterRepository);
+  const chatService = new ChatService(
+    chatRepository,
+    chatConfigRepository,
+    llmConnectionService,
+  );
+  const messageService = new MessageService(messageRepository);
   const lorebookService = new LorebookService(
     lorebookRepository,
     lorebookEntryRepository,

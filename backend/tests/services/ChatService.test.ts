@@ -1,20 +1,41 @@
 import { describe, expect, it } from "vitest";
 import { ChatService } from "../../src/application/services/ChatService";
+import { LLMConnectionService } from "../../src/application/services/LLMConnectionService";
 import {
   FakeChatLLMConfigRepository,
   FakeChatRepository,
+  FakeLLMConnectionRepository,
 } from "./fakeRepositories";
+import {
+  DEFAULT_MAX_OUTPUT_TOKENS,
+  DEFAULT_MAX_TOOL_ITERATIONS,
+  DEFAULT_TEMPERATURE,
+  DEFAULT_TOOL_CALL_TIMEOUT_MS,
+} from "../../src/application/config/llmDefaults";
 
-function createService() {
+async function createService() {
   const chatRepo = new FakeChatRepository();
   const chatConfigRepo = new FakeChatLLMConfigRepository();
-  const service = new ChatService(chatRepo, chatConfigRepo);
-  return { chatRepo, chatConfigRepo, service };
+  const llmConnectionRepo = new FakeLLMConnectionRepository();
+  const llmConnectionService = new LLMConnectionService(llmConnectionRepo);
+
+  const service = new ChatService(
+    chatRepo,
+    chatConfigRepo,
+    llmConnectionService,
+  );
+  return {
+    chatRepo,
+    chatConfigRepo,
+    llmConnectionRepo,
+    llmConnectionService,
+    service,
+  };
 }
 
 describe("ChatService", () => {
   it("creates chat without initial config", async () => {
-    const { service, chatConfigRepo } = createService();
+    const { service, chatConfigRepo } = await createService();
 
     const { chat, llmConfig } = await service.createChat({
       characterId: "char-1",
@@ -28,8 +49,54 @@ describe("ChatService", () => {
     expect(storedConfig).toBeNull();
   });
 
+  it("creates chat with default config when a connection exists", async () => {
+    const { service, chatConfigRepo, llmConnectionRepo } =
+      await createService();
+
+    const createdConn = await llmConnectionRepo.create({
+      name: "Primary",
+      provider: "openai_compatible",
+      baseUrl: "http://example",
+      defaultModel: "gpt-4.1-mini",
+      apiKey: "sk-test",
+      isEnabled: true,
+    });
+
+    const { chat, llmConfig } = await service.createChat({
+      characterId: "char-1",
+      title: "Test chat",
+    });
+
+    expect(llmConfig).not.toBeNull();
+    expect(llmConfig?.llmConnectionId).toBe(createdConn.id);
+    expect(llmConfig?.model).toBe(createdConn.defaultModel);
+    expect(llmConfig?.temperature).toBe(DEFAULT_TEMPERATURE);
+    expect(llmConfig?.maxOutputTokens).toBe(
+      DEFAULT_MAX_OUTPUT_TOKENS,
+    );
+    expect(llmConfig?.maxToolIterations).toBe(
+      DEFAULT_MAX_TOOL_ITERATIONS,
+    );
+    expect(llmConfig?.toolCallTimeoutMs).toBe(
+      DEFAULT_TOOL_CALL_TIMEOUT_MS,
+    );
+
+    const storedConfig = await chatConfigRepo.getByChatId(chat.id);
+    expect(storedConfig?.id).toBe(llmConfig?.id);
+  });
+
   it("creates chat with initial LLM config, wiring chatId", async () => {
-    const { service, chatConfigRepo } = createService();
+    const { service, chatConfigRepo, llmConnectionRepo } =
+      await createService();
+
+    const connection = await llmConnectionRepo.create({
+      name: "Primary",
+      provider: "openai_compatible",
+      baseUrl: "http://example",
+      defaultModel: "gpt-4.1",
+      apiKey: "sk-test",
+      isEnabled: true,
+    });
 
     const { chat, llmConfig } = await service.createChat(
       {
@@ -37,7 +104,7 @@ describe("ChatService", () => {
         title: "With config",
       },
       {
-        llmConnectionId: "conn-1",
+        llmConnectionId: connection.id,
         model: "m",
         temperature: 0.5,
         maxOutputTokens: 256,
@@ -54,7 +121,8 @@ describe("ChatService", () => {
   });
 
   it("deletes chat and its config", async () => {
-    const { service, chatRepo, chatConfigRepo } = createService();
+    const { service, chatRepo, chatConfigRepo, llmConnectionRepo } =
+      await createService();
 
     const chat = await chatRepo.create({
       characterId: "char-1",
@@ -62,7 +130,13 @@ describe("ChatService", () => {
     });
     await chatConfigRepo.create({
       chatId: chat.id,
-      llmConnectionId: "conn",
+      llmConnectionId: (await llmConnectionRepo.create({
+        name: "Primary",
+        provider: "openai_compatible",
+        baseUrl: "http://example",
+        defaultModel: "gpt-4.1",
+        apiKey: "sk-test",
+      })).id,
       model: "m",
       temperature: 0.2,
       maxOutputTokens: 42,
@@ -80,7 +154,7 @@ describe("ChatService", () => {
   });
 
   it("proxies get/list/update config operations", async () => {
-    const { service, chatRepo } = createService();
+    const { service, chatRepo, llmConnectionRepo } = await createService();
 
     const chat = await chatRepo.create({
       characterId: "char-1",
@@ -93,7 +167,13 @@ describe("ChatService", () => {
         title: chat.title,
       },
       {
-        llmConnectionId: "conn",
+        llmConnectionId: (await llmConnectionRepo.create({
+          name: "Primary",
+          provider: "openai_compatible",
+          baseUrl: "http://example",
+          defaultModel: "gpt-4.1",
+          apiKey: "sk-test",
+        })).id,
         model: "m1",
         temperature: 0.1,
         maxOutputTokens: 10,

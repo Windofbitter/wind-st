@@ -293,6 +293,12 @@ export function registerChatRoutes(app: FastifyInstance): void {
       payload.chat,
       payload.initialConfig,
     );
+    if (!payload.initialConfig) {
+      request.log.warn(
+        { chatId: chat.id, route: "/chats" },
+        "Chat created without initial LLM config; defaults will be applied when available",
+      );
+    }
 
     void reply.status(201);
     return { chat, llmConfig };
@@ -308,6 +314,11 @@ export function registerChatRoutes(app: FastifyInstance): void {
     const { id } = request.params as { id: string };
     const config = await app.chatService.getChatLLMConfig(id);
     if (!config) {
+      const chatExists = !!(await app.chatService.getChat(id));
+      request.log.warn(
+        { chatId: id, route: "/chats/:id/config", chatExists },
+        "Chat LLM config missing and no default connection available",
+      );
       throw new AppError(
         "CHAT_LLM_CONFIG_NOT_FOUND",
         "Chat LLM config not found",
@@ -321,6 +332,10 @@ export function registerChatRoutes(app: FastifyInstance): void {
     const patch = ensureUpdateChatConfigPayload(request.body);
     const updated = await app.chatService.updateChatLLMConfig(id, patch);
     if (!updated) {
+      request.log.warn(
+        { chatId: id, route: "/chats/:id/config", hasPatch: Object.keys(patch).length > 0 },
+        "Failed to upsert chat LLM config due to missing default connection",
+      );
       throw new AppError(
         "CHAT_LLM_CONFIG_NOT_FOUND",
         "Chat LLM config not found",

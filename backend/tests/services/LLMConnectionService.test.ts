@@ -40,4 +40,31 @@ describe("LLMConnectionService", () => {
     const afterDelete = await service.getConnection(created.id);
     expect(afterDelete).toBeNull();
   });
+
+  it("returns the first enabled connection as default", async () => {
+    const { service } = createService();
+
+    const disabled = await service.createConnection({
+      name: "Disabled",
+      provider: "openai_compatible",
+      baseUrl: "http://disabled",
+      defaultModel: "gpt-disabled",
+      apiKey: "sk",
+      isEnabled: false,
+    });
+    const enabled = await service.createConnection({
+      name: "Enabled",
+      provider: "openai_compatible",
+      baseUrl: "http://enabled",
+      defaultModel: "gpt-enabled",
+      apiKey: "sk",
+      isEnabled: true,
+    });
+
+    const defaultConn = await service.getDefaultConnection();
+    expect(defaultConn?.id).toBe(enabled.id);
+
+    const preferred = await service.getDefaultConnection(disabled.id);
+    expect(preferred?.id).toBe(disabled.id);
+  });
 });

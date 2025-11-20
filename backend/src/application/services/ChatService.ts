@@ -7,16 +7,43 @@ import type {
   UpdateChatLLMConfigInput,
 } from "../../core/ports/ChatLLMConfigRepository";
 import type { ChatRepository } from "../../core/ports/ChatRepository";
+import { LLMConnectionService } from "./LLMConnectionService";
 import {
   DEFAULT_MAX_TOOL_ITERATIONS,
   DEFAULT_TOOL_CALL_TIMEOUT_MS,
+  DEFAULT_TEMPERATURE,
+  DEFAULT_MAX_OUTPUT_TOKENS,
 } from "../config/llmDefaults";
 
 export class ChatService {
   constructor(
     private readonly chatRepo: ChatRepository,
     private readonly chatConfigRepo: ChatLLMConfigRepository,
+    private readonly llmConnectionService: LLMConnectionService,
   ) {}
+
+  private async resolveConfigInput(
+    chatId: string,
+    overrides?: Partial<CreateChatLLMConfigInput>,
+  ): Promise<CreateChatLLMConfigInput | null> {
+    const connection = await this.llmConnectionService.getDefaultConnection(
+      overrides?.llmConnectionId,
+    );
+    if (!connection) return null;
+
+    return {
+      chatId,
+      llmConnectionId: connection.id,
+      model: overrides?.model ?? connection.defaultModel,
+      temperature: overrides?.temperature ?? DEFAULT_TEMPERATURE,
+      maxOutputTokens:
+        overrides?.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+      maxToolIterations:
+        overrides?.maxToolIterations ?? DEFAULT_MAX_TOOL_ITERATIONS,
+      toolCallTimeoutMs:
+        overrides?.toolCallTimeoutMs ?? DEFAULT_TOOL_CALL_TIMEOUT_MS,
+    };
+  }
 
   async createChat(
     data: CreateChatInput,
@@ -25,15 +52,12 @@ export class ChatService {
     const chat = await this.chatRepo.create(data);
 
     let llmConfig: ChatLLMConfig | null = null;
-    if (initialConfig) {
-      llmConfig = await this.chatConfigRepo.create({
-        ...initialConfig,
-        chatId: chat.id,
-        maxToolIterations:
-          initialConfig.maxToolIterations ?? DEFAULT_MAX_TOOL_ITERATIONS,
-        toolCallTimeoutMs:
-          initialConfig.toolCallTimeoutMs ?? DEFAULT_TOOL_CALL_TIMEOUT_MS,
-      });
+    const resolvedConfigInput = await this.resolveConfigInput(
+      chat.id,
+      initialConfig,
+    );
+    if (resolvedConfigInput) {
+      llmConfig = await this.chatConfigRepo.create(resolvedConfigInput);
     }
 
     return { chat, llmConfig };
@@ -53,14 +77,30 @@ export class ChatService {
   }
 
   async getChatLLMConfig(chatId: string): Promise<ChatLLMConfig | null> {
-    return this.chatConfigRepo.getByChatId(chatId);
+    const existing = await this.chatConfigRepo.getByChatId(chatId);
+    if (existing) return existing;
+
+    const configInput = await this.resolveConfigInput(chatId);
+    if (!configInput) return null;
+
+    return this.chatConfigRepo.create(configInput);
   }
 
   async updateChatLLMConfig(
     chatId: string,
     patch: UpdateChatLLMConfigInput,
   ): Promise<ChatLLMConfig | null> {
-    return this.chatConfigRepo.updateByChatId(chatId, patch);
+    const existing = await this.chatConfigRepo.getByChatId(chatId);
+    if (existing) {
+      return this.chatConfigRepo.updateByChatId(chatId, patch);
+    }
+
+    const configInput = await this.resolveConfigInput(
+      chatId,
+      patch as Partial<CreateChatLLMConfigInput>,
+    );
+    if (!configInput) return null;
+
+    return this.chatConfigRepo.create(configInput);
   }
 }
-
