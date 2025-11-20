@@ -201,6 +201,28 @@ export function useConversationState({
 
     setIsSending(true);
     setGlobalError(null);
+
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === messageId);
+      if (idx === -1) return prev;
+      const keep = prev.slice(0, idx + 1);
+      return keep;
+    });
+    setRuns((prev) => {
+      const prunedIds = new Set<string>();
+      const idx = messages.findIndex((m) => m.id === messageId);
+      if (idx !== -1) {
+        for (let i = idx + 1; i < messages.length; i += 1) {
+          prunedIds.add(messages[i].id);
+        }
+      }
+      return prev.filter(
+        (r) =>
+          !prunedIds.has(r.userMessageId) &&
+          (!r.assistantMessageId || !prunedIds.has(r.assistantMessageId)),
+      );
+    });
+
     try {
       await retryMessageApi(activeChat.id, messageId);
       await loadMessages(activeChat.id);

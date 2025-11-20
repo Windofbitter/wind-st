@@ -93,7 +93,36 @@ function MessageItem({
     <div className={`message ${message.role}`}>
       <div className="message-header">
         <span className="message-role">{roleLabel}</span>
-        <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+        {isTool && (
+          <div className="message-meta">
+            <span className="badge badge-subtle">MCP</span>
+            {toolInfo?.method && (
+              <span className="badge badge-subtle">
+                {toolInfo.method}
+              </span>
+            )}
+            {callId && (
+              <span className="badge badge-subtle">
+                Call {callId}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="message-body">
+        {isTool ? (
+          <ToolResultContent message={message} />
+        ) : (
+          <MarkdownMessage content={message.content} />
+        )}
+        <div
+          style={{
+            display: "flex",
+            gap: "0.4rem",
+            marginTop: "0.6rem",
+            justifyContent: "flex-end",
+          }}
+        >
           {showRetry && (
             <button
               className="icon-button"
@@ -114,29 +143,7 @@ function MessageItem({
           >
             🗑️
           </button>
-          {isTool && (
-            <div className="message-meta">
-              <span className="badge badge-subtle">MCP</span>
-              {toolInfo?.method && (
-                <span className="badge badge-subtle">
-                  {toolInfo.method}
-                </span>
-              )}
-              {callId && (
-                <span className="badge badge-subtle">
-                  Call {callId}
-                </span>
-              )}
-            </div>
-          )}
         </div>
-      </div>
-      <div className="message-body">
-        {isTool ? (
-          <ToolResultContent message={message} />
-        ) : (
-          <MarkdownMessage content={message.content} />
-        )}
       </div>
     </div>
   );
