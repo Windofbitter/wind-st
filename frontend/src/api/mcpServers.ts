@@ -7,6 +7,9 @@ export interface MCPServer {
   args: string[];
   env: Record<string, string>;
   isEnabled: boolean;
+  status: "unknown" | "ok" | "error";
+  lastCheckedAt: string | null;
+  toolCount: number | null;
 }
 
 export interface CharacterMCPServer {
@@ -20,6 +23,7 @@ export interface MCPServerStatusResponse {
   status: "ok" | "error";
   toolCount?: number;
   error?: string;
+  checkedAt?: string;
 }
 
 export interface CreateMCPServerRequest {

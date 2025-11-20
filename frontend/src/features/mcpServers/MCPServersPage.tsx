@@ -20,8 +20,6 @@ interface LoadState {
   error: string | null;
 }
 
-type StatusMap = Record<string, MCPServerStatus>;
-
 export function MCPServersPage() {
   const { t } = useTranslation();
   const [servers, setServers] = useState<MCPServer[]>([]);
@@ -30,7 +28,6 @@ export function MCPServersPage() {
     error: null,
   });
   const [editing, setEditing] = useState<MCPServer | null>(null);
-  const [statuses, setStatuses] = useState<StatusMap>({});
   const [testing, setTesting] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -55,24 +52,11 @@ export function MCPServersPage() {
     setState({ loading: false, error: null });
   }
 
-  function setStatus(serverId: string, status: MCPServerStatus) {
-    setStatuses((prev) => ({ ...prev, [serverId]: status }));
-  }
-
-  function clearStatus(serverId: string) {
-    setStatuses((prev) => {
-      const next = { ...prev };
-      delete next[serverId];
-      return next;
-    });
-  }
-
   async function handleDelete(id: string) {
     const confirmed = window.confirm(t("mcpServers.deleteConfirm"));
     if (!confirmed) return;
     try {
       await deleteMCPServer(id);
-      clearStatus(id);
       await loadServers();
     } catch (err) {
       setState((s) => ({
@@ -96,7 +80,18 @@ export function MCPServersPage() {
     try {
       await updateMCPServer(id, { isEnabled: enabled });
       if (!enabled) {
-        clearStatus(id);
+        setServers((prev) =>
+          prev.map((s) =>
+            s.id === id
+              ? {
+                  ...s,
+                  status: "unknown",
+                  lastCheckedAt: null,
+                  toolCount: null,
+                }
+              : s,
+          ),
+        );
         return;
       }
       await testServer(id);
@@ -122,32 +117,42 @@ export function MCPServersPage() {
     options?: { reset?: boolean },
   ) {
     setTesting((prev) => new Set(prev).add(id));
-    const checkedAt = new Date().toISOString();
-
     try {
       const result = await getMCPServerStatus(id, options);
-      if (result.status === "ok") {
-        setStatus(id, {
-          state: "ok",
-          toolCount: result.toolCount ?? 0,
-          checkedAt,
-        });
-      } else {
-        setStatus(id, {
-          state: "error",
-          error: result.error ?? t("mcpServers.statusError"),
-          checkedAt,
-        });
-      }
+      setServers((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                status: result.status,
+                lastCheckedAt: result.checkedAt ?? new Date().toISOString(),
+                toolCount:
+                  result.status === "ok"
+                    ? result.toolCount ?? 0
+                    : null,
+              }
+            : s,
+        ),
+      );
     } catch (err) {
-      setStatus(id, {
-        state: "error",
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to check status",
-        checkedAt,
-      });
+      const checkedAt = new Date().toISOString();
+      const errorMessage =
+        err instanceof ApiError
+          ? err.message
+          : "Failed to check status";
+      setServers((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                status: "error",
+                lastCheckedAt: checkedAt,
+                toolCount: null,
+              }
+            : s,
+        ),
+      );
+      window.alert(errorMessage);
     } finally {
       setTesting((prev) => {
         const next = new Set(prev);
@@ -184,7 +189,16 @@ export function MCPServersPage() {
           <tbody>
             {servers.map((server) => {
               const isTesting = testing.has(server.id);
-              const status = statuses[server.id];
+              const status: MCPServerStatus = {
+                state:
+                  server.status === "ok"
+                    ? "ok"
+                    : server.status === "error"
+                      ? "error"
+                      : "unknown",
+                toolCount: server.toolCount ?? undefined,
+                checkedAt: server.lastCheckedAt ?? undefined,
+              };
               return (
                 <tr key={server.id}>
                   <td>{server.name}</td>

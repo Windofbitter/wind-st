@@ -7,6 +7,9 @@ export interface CreateLLMConnectionInput {
   defaultModel: string;
   apiKey: string;
   isEnabled?: boolean;
+  status?: LLMConnection["status"];
+  lastTestedAt?: LLMConnection["lastTestedAt"];
+  modelsAvailable?: LLMConnection["modelsAvailable"];
 }
 
 export interface UpdateLLMConnectionInput {
@@ -15,6 +18,9 @@ export interface UpdateLLMConnectionInput {
   defaultModel?: string;
   apiKey?: string;
   isEnabled?: boolean;
+  status?: LLMConnection["status"];
+  lastTestedAt?: LLMConnection["lastTestedAt"];
+  modelsAvailable?: LLMConnection["modelsAvailable"];
 }
 
 export interface LLMConnectionRepository {

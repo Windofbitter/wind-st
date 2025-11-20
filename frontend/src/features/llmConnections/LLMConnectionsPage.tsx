@@ -10,9 +10,14 @@ import {
   createLLMConnection,
   deleteLLMConnection,
   listLLMConnections,
+  testLLMConnection,
+  testLLMConnectionDraft,
   updateLLMConnection,
 } from "../../api/llmConnections";
 import { ApiError } from "../../api/httpClient";
+import { CreateConnectionCard } from "./components/CreateConnectionCard";
+import { ConnectionsTable } from "./components/ConnectionsTable";
+import { EditConnectionCard } from "./components/EditConnectionCard";
 
 interface LoadState {
   loading: boolean;
@@ -48,6 +53,16 @@ export function LLMConnectionsPage() {
     useState<UpdateLLMConnectionRequest>({});
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [draftTesting, setDraftTesting] = useState(false);
+  const [draftTestResult, setDraftTestResult] = useState<string | null>(
+    null,
+  );
+  const [editTesting, setEditTesting] = useState(false);
+  const [editTestResult, setEditTestResult] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     void loadConnections();
@@ -118,9 +133,11 @@ export function LLMConnectionsPage() {
       baseUrl: conn.baseUrl,
       defaultModel: conn.defaultModel,
       isEnabled: conn.isEnabled,
+      apiKey: conn.apiKey,
     };
     setEditForm(patch);
     setEditError(null);
+    setEditTestResult(null);
   }
 
   async function saveEdit() {
@@ -143,9 +160,104 @@ export function LLMConnectionsPage() {
     }
   }
 
-  // Inline toggle for enabled state in the list
+  async function handleTest(id: string) {
+    setTestingId(id);
+    try {
+      const result = await testLLMConnection(id);
+      setConnections((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                status: result.status ?? (result.state === "ok" ? "ok" : "error"),
+                lastTestedAt: result.checkedAt ?? null,
+                modelsAvailable: result.modelsAvailable ?? null,
+              }
+            : c,
+        ),
+      );
+    } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : "Failed to test connection";
+      setConnections((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                status: "error",
+                lastTestedAt: null,
+              }
+            : c,
+        ),
+      );
+      window.alert(msg);
+    } finally {
+      setTestingId(null);
+    }
+  }
+
+  async function handleTestDraft(payload: CreateLLMConnectionRequest) {
+    setDraftTesting(true);
+    setDraftTestResult(t("common.testing"));
+    try {
+      const result = await testLLMConnectionDraft(payload);
+      setDraftTestResult(
+        result.state === "ok"
+          ? t("llmConnections.testResultOk", {
+              count: result.modelsAvailable ?? 0,
+            })
+          : t("llmConnections.testResultFail", {
+              message: result.error ?? "",
+            }),
+      );
+    } catch (err) {
+      setDraftTestResult(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to test connection",
+      );
+    } finally {
+      setDraftTesting(false);
+    }
+  }
+
+  async function handleTestEditDraft() {
+    if (!editingId) return;
+    const payload: CreateLLMConnectionRequest = {
+      name: editForm.name ?? "",
+      provider: (editForm.provider as LLMProvider) ?? "openai_compatible",
+      baseUrl: editForm.baseUrl ?? "",
+      defaultModel: editForm.defaultModel ?? "",
+      apiKey: editForm.apiKey ?? "",
+      isEnabled: editForm.isEnabled ?? true,
+    };
+    setEditTesting(true);
+    setEditTestResult(t("common.testing"));
+    try {
+      const result = await testLLMConnectionDraft(payload);
+      setEditTestResult(
+        result.state === "ok"
+          ? t("llmConnections.testResultOk", {
+              count: result.modelsAvailable ?? 0,
+            })
+          : t("llmConnections.testResultFail", {
+              message: result.error ?? "",
+            }),
+      );
+    } catch (err) {
+      setEditTestResult(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to test connection",
+      );
+    } finally {
+      setEditTesting(false);
+    }
+  }
+
   async function toggleConnectionEnabled(id: string, enabled: boolean) {
-    // optimistic UI update
     setConnections((prev) =>
       prev.map((c) =>
         c.id === id ? { ...c, isEnabled: enabled } : c,
@@ -154,7 +266,6 @@ export function LLMConnectionsPage() {
     try {
       await updateLLMConnection(id, { isEnabled: enabled });
     } catch (err) {
-      // revert on error
       setConnections((prev) =>
         prev.map((c) =>
           c.id === id ? { ...c, isEnabled: !enabled } : c,
@@ -172,261 +283,44 @@ export function LLMConnectionsPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>
-          {t("llmConnections.newTitle")}
-        </h3>
-        <form onSubmit={handleCreate}>
-          <div className="input-group">
-            <label htmlFor="conn-name">
-              {t("llmConnections.newNameLabel")}
-            </label>
-            <input
-              id="conn-name"
-              type="text"
-              value={form.name}
-              onChange={(e) =>
-                setForm({ ...form, name: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="conn-base-url">
-              {t("llmConnections.newBaseUrlLabel")}
-            </label>
-            <input
-              id="conn-base-url"
-              type="text"
-              value={form.baseUrl}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  baseUrl: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="conn-model">
-              {t("llmConnections.newDefaultModelLabel")}
-            </label>
-            <input
-              id="conn-model"
-              type="text"
-              value={form.defaultModel}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  defaultModel: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="conn-api-key">
-              {t("llmConnections.newApiKeyLabel")}
-            </label>
-            <input
-              id="conn-api-key"
-              type="password"
-              value={form.apiKey}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  apiKey: e.target.value,
-                })
-              }
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={creating}
-          >
-            {creating
-              ? t("llmConnections.newCreateButtonCreating")
-              : t("llmConnections.newCreateButton")}
-          </button>
-          {createError && (
-            <div className="badge" style={{ marginTop: "0.5rem" }}>
-              {t("common.errorPrefix")} {createError}
-            </div>
-          )}
-        </form>
-      </div>
+      <CreateConnectionCard
+        form={form}
+        onChange={setForm}
+        onSubmit={handleCreate}
+        creating={creating}
+        error={createError}
+        onTest={() => void handleTestDraft(form)}
+        testing={draftTesting}
+        testResult={draftTestResult}
+      />
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>
-          {t("llmConnections.listTitle")}
-        </h3>
-        {state.loading && (
-          <div>{t("llmConnections.listLoading")}</div>
-        )}
-        {state.error && (
-          <div className="badge">
-            {t("common.errorPrefix")} {state.error}
-          </div>
-        )}
-        <table className="table">
-          <thead>
-            <tr>
-              <th>{t("llmConnections.listTableName")}</th>
-              <th>{t("llmConnections.listTableProvider")}</th>
-              <th>{t("llmConnections.listTableBaseUrl")}</th>
-              <th>
-                {t("llmConnections.listTableDefaultModel")}
-              </th>
-              <th>{t("llmConnections.listTableEnabled")}</th>
-              <th>{t("llmConnections.listTableActions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {connections.map((conn) => (
-              <tr key={conn.id}>
-                <td>{conn.name}</td>
-                <td>{conn.provider}</td>
-                <td>{conn.baseUrl}</td>
-                <td>{conn.defaultModel}</td>
-                <td>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={conn.isEnabled}
-                      onChange={(e) =>
-                        void toggleConnectionEnabled(
-                          conn.id,
-                          e.target.checked,
-                        )
-                      }
-                    />
-                  </label>
-                </td>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => startEdit(conn)}
-                    >
-                      {t("llmConnections.listEditButton")}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={() =>
-                        void handleDelete(conn.id)
-                      }
-                    >
-                      {t("llmConnections.listDeleteButton")}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {connections.length === 0 && !state.loading && (
-              <tr>
-                <td colSpan={6}>
-                  <span style={{ opacity: 0.8 }}>
-                    {t("llmConnections.listEmpty")}
-                  </span>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <ConnectionsTable
+        connections={connections}
+        loading={state.loading}
+        error={state.error}
+        onEdit={startEdit}
+        onDelete={handleDelete}
+        onToggleEnabled={toggleConnectionEnabled}
+        onTest={handleTest}
+        testingId={testingId}
+      />
 
-        {editingId && (
-          <div
-            className="card"
-            style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
-          >
-            <h4 style={{ marginTop: 0 }}>
-              {t("llmConnections.editTitle")}
-            </h4>
-            <div className="input-group">
-              <label htmlFor="edit-name">
-                {t("llmConnections.editNameLabel")}
-              </label>
-              <input
-                id="edit-name"
-                type="text"
-                value={editForm.name ?? ""}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    name: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="edit-base-url">
-                {t("llmConnections.editBaseUrlLabel")}
-              </label>
-              <input
-                id="edit-base-url"
-                type="text"
-                value={editForm.baseUrl ?? ""}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    baseUrl: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="edit-model">
-                {t("llmConnections.editDefaultModelLabel")}
-              </label>
-              <input
-                id="edit-model"
-                type="text"
-                value={editForm.defaultModel ?? ""}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    defaultModel: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={savingEdit}
-              onClick={() => void saveEdit()}
-            >
-              {savingEdit
-                ? t("llmConnections.editSaveButtonSaving")
-                : t("llmConnections.editSaveButton")}
-            </button>
-            <button
-              type="button"
-              className="btn"
-              style={{ marginLeft: "0.5rem" }}
-              onClick={() => {
-                setEditingId(null);
-                setEditForm({});
-              }}
-            >
-              {t("llmConnections.editCancelButton")}
-            </button>
-            {editError && (
-              <div className="badge" style={{ marginTop: "0.5rem" }}>
-                {t("common.errorPrefix")} {editError}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {editingId && (
+        <EditConnectionCard
+          form={editForm}
+          onChange={setEditForm}
+          onSave={saveEdit}
+          onCancel={() => {
+            setEditingId(null);
+            setEditForm({});
+          }}
+          saving={savingEdit}
+          error={editError}
+          onTest={() => void handleTestEditDraft()}
+          testing={editTesting}
+          testResult={editTestResult}
+        />
+      )}
     </div>
   );
 }
-

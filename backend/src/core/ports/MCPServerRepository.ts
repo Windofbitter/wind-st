@@ -6,6 +6,9 @@ export interface CreateMCPServerInput {
   args: string[];
   env: Record<string, string>;
   isEnabled?: boolean;
+  status?: MCPServer["status"];
+  lastCheckedAt?: MCPServer["lastCheckedAt"];
+  toolCount?: MCPServer["toolCount"];
 }
 
 export interface UpdateMCPServerInput {
@@ -14,6 +17,9 @@ export interface UpdateMCPServerInput {
   args?: string[];
   env?: Record<string, string>;
   isEnabled?: boolean;
+  status?: MCPServer["status"];
+  lastCheckedAt?: MCPServer["lastCheckedAt"];
+  toolCount?: MCPServer["toolCount"];
 }
 
 export interface MCPServerRepository {

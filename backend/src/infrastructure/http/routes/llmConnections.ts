@@ -52,6 +52,9 @@ function ensureCreateConnectionPayload(
     defaultModel: value.defaultModel,
     apiKey: value.apiKey,
     isEnabled: value.isEnabled ?? true,
+    status: "unknown",
+    modelsAvailable: null,
+    lastTestedAt: null,
   };
 }
 
@@ -144,6 +147,30 @@ export function registerLLMConnectionRoutes(app: FastifyInstance): void {
     const created = await app.llmConnectionService.createConnection(input);
     void reply.status(201);
     return created;
+  });
+
+  app.get("/llm-connections/:id/test", async (request) => {
+    const { id } = request.params as { id: string };
+    const result = await app.llmDiagnosticsService.testConnection(id);
+    const status = result.state;
+    await app.llmConnectionService.updateConnection(id, {
+      status,
+      lastTestedAt: result.checkedAt,
+      modelsAvailable: result.modelsAvailable ?? null,
+    });
+    return { ...result, status };
+  });
+
+  app.post("/llm-connections/test", async (request) => {
+    const input = ensureCreateConnectionPayload(request.body);
+    const result = await app.llmDiagnosticsService.testDraftConnection(input);
+    return result;
+  });
+
+  app.get("/llm-connections/:id/models", async (request) => {
+    const { id } = request.params as { id: string };
+    const models = await app.llmDiagnosticsService.listModels(id);
+    return { models };
   });
 
   app.patch("/llm-connections/:id", async (request) => {

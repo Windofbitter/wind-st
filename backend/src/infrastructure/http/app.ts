@@ -9,6 +9,7 @@ import { LorebookService } from "../../application/services/LorebookService";
 import { CharacterLorebookService } from "../../application/services/CharacterLorebookService";
 import { CharacterMCPServerService } from "../../application/services/CharacterMCPServerService";
 import { MCPServerService } from "../../application/services/MCPServerService";
+import { LLMConnectionDiagnosticsService } from "../../application/services/LLMConnectionDiagnosticsService";
 import { PresetService } from "../../application/services/PresetService";
 import { PromptStackService } from "../../application/services/PromptStackService";
 import { ChatOrchestrator } from "../../application/orchestrators/ChatOrchestrator";
@@ -31,6 +32,7 @@ import { MCPServerRepositorySqlite } from "../sqlite/MCPServerRepositorySqlite";
 import { PresetRepositorySqlite } from "../sqlite/PresetRepositorySqlite";
 import { PromptPresetRepositorySqlite } from "../sqlite/PromptPresetRepositorySqlite";
 import { OpenAILLMClient } from "../llm/OpenAILLMClient";
+import { OpenAIAdminClient } from "../llm/OpenAIAdminClient";
 import { StdIoMCPClient } from "../mcp/StdIoMCPClient";
 import { registerErrorHandler } from "./errorHandler";
 import { registerHealthRoutes } from "./routes/health";
@@ -59,6 +61,7 @@ declare module "fastify" {
     promptStackService: PromptStackService;
     chatOrchestrator: ChatOrchestrator;
     chatRunRepository: ChatRunRepository;
+    llmDiagnosticsService: LLMConnectionDiagnosticsService;
     historyConfigService: HistoryConfigService;
     promptBuilder: PromptBuilder;
     mcpClient: MCPClient;
@@ -118,6 +121,11 @@ export async function buildApp() {
     promptPresetRepository,
   );
   const llmClient = new OpenAILLMClient();
+  const llmAdminClient = new OpenAIAdminClient();
+  const llmDiagnosticsService = new LLMConnectionDiagnosticsService(
+    llmConnectionService,
+    llmAdminClient,
+  );
   const promptBuilder = new DefaultPromptBuilder(
     chatService,
     characterService,
@@ -166,6 +174,7 @@ export async function buildApp() {
   app.decorate("promptStackService", promptStackService);
   app.decorate("chatOrchestrator", chatOrchestrator);
   app.decorate("chatRunRepository", chatRunRepository);
+  app.decorate("llmDiagnosticsService", llmDiagnosticsService);
   app.decorate("historyConfigService", historyConfigService);
   app.decorate("promptBuilder", promptBuilder);
   app.decorate("mcpClient", mcpClient);

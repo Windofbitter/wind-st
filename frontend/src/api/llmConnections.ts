@@ -1,6 +1,7 @@
 import { http, unwrap } from "./httpClient";
 
 export type LLMProvider = "openai_compatible";
+export type LLMConnectionStatus = "unknown" | "ok" | "error";
 
 export interface LLMConnection {
   id: string;
@@ -10,6 +11,9 @@ export interface LLMConnection {
   defaultModel: string;
   apiKey: string;
   isEnabled: boolean;
+  status: LLMConnectionStatus;
+  lastTestedAt: string | null;
+  modelsAvailable: number | null;
 }
 
 export interface CreateLLMConnectionRequest {
@@ -19,6 +23,9 @@ export interface CreateLLMConnectionRequest {
   defaultModel: string;
   apiKey: string;
   isEnabled?: boolean;
+  status?: LLMConnectionStatus;
+  lastTestedAt?: string | null;
+  modelsAvailable?: number | null;
 }
 
 export type UpdateLLMConnectionRequest =
@@ -55,5 +62,36 @@ export async function deleteLLMConnection(id: string): Promise<void> {
   await unwrap(
     http.delete<void>(`/llm-connections/${id}`),
   );
+}
+
+export interface LLMConnectionTestResult {
+  state: "ok" | "error";
+  modelsAvailable?: number;
+  error?: string;
+  checkedAt: string;
+  status?: LLMConnectionStatus;
+}
+
+export async function testLLMConnection(
+  id: string,
+): Promise<LLMConnectionTestResult> {
+  return unwrap(http.get<LLMConnectionTestResult>(`/llm-connections/${id}/test`));
+}
+
+export async function testLLMConnectionDraft(
+  payload: CreateLLMConnectionRequest,
+): Promise<LLMConnectionTestResult> {
+  return unwrap(
+    http.post<LLMConnectionTestResult>("/llm-connections/test", payload),
+  );
+}
+
+export async function listLLMModels(
+  id: string,
+): Promise<string[]> {
+  const res = await unwrap(
+    http.get<{ models: string[] }>(`/llm-connections/${id}/models`),
+  );
+  return res.models;
 }
 

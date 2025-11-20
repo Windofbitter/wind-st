@@ -71,6 +71,9 @@ function ensureCreateMCPServerPayload(
     args: value.args,
     env,
     isEnabled: value.isEnabled ?? true,
+    status: "unknown",
+    lastCheckedAt: null,
+    toolCount: null,
   };
 }
 
@@ -132,6 +135,33 @@ function ensureUpdateMCPServerPayload(
       );
     }
     patch.isEnabled = value.isEnabled;
+  }
+  if (value.status !== undefined) {
+    if (value.status !== "unknown" && value.status !== "ok" && value.status !== "error") {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid MCP server patch: status must be unknown|ok|error",
+      );
+    }
+    patch.status = value.status;
+  }
+  if (value.lastCheckedAt !== undefined) {
+    if (typeof value.lastCheckedAt !== "string" && value.lastCheckedAt !== null) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid MCP server patch: lastCheckedAt must be string or null",
+      );
+    }
+    patch.lastCheckedAt = value.lastCheckedAt;
+  }
+  if (value.toolCount !== undefined) {
+    if (typeof value.toolCount !== "number" && value.toolCount !== null) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid MCP server patch: toolCount must be number or null",
+      );
+    }
+    patch.toolCount = value.toolCount;
   }
 
   return patch;
@@ -213,7 +243,14 @@ export function registerMCPServerRoutes(app: FastifyInstance): void {
       timeoutMs: timeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS,
     });
 
-    return { serverId: server.id, ...result };
+    const checkedAt = new Date().toISOString();
+    await app.mcpServerService.updateServer(id, {
+      status: result.status,
+      lastCheckedAt: checkedAt,
+      toolCount: result.toolCount ?? null,
+    });
+
+    return { serverId: server.id, ...result, checkedAt };
   });
 }
 

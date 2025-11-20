@@ -1,4 +1,5 @@
 export type LLMProvider = "openai_compatible";
+export type LLMConnectionStatus = "unknown" | "ok" | "error";
 
 export interface LLMConnection {
   id: string;
@@ -8,4 +9,7 @@ export interface LLMConnection {
   defaultModel: string;
   apiKey: string;
   isEnabled: boolean;
+  status: LLMConnectionStatus;
+  lastTestedAt: string | null;
+  modelsAvailable: number | null;
 }

@@ -9,28 +9,9 @@ import type {
   LLMClient,
 } from "../../core/ports/LLMClient";
 import { AppError } from "../../application/errors/AppError";
+import { createOpenAIClient } from "./openAIClientFactory";
 
 export class OpenAILLMClient implements LLMClient {
-  private async createClient(
-    baseUrl: string,
-    apiKeyFromConnection?: string,
-  ): Promise<any> {
-    if (!apiKeyFromConnection) {
-      throw new AppError(
-        "EXTERNAL_LLM_ERROR",
-        "LLMConnection.apiKey is required for this provider",
-      );
-    }
-
-    const mod = await import("openai");
-    const OpenAIConstructor = (mod as any).default;
-
-    return new OpenAIConstructor({
-      apiKey: apiKeyFromConnection,
-      baseURL: baseUrl,
-    });
-  }
-
   async completeChat(
     request: LLMChatCompletionRequest,
   ): Promise<LLMChatCompletionResponse> {
@@ -50,7 +31,7 @@ export class OpenAILLMClient implements LLMClient {
       );
     }
 
-    const client = await this.createClient(connection.baseUrl, connection.apiKey);
+    const client = await createOpenAIClient(connection.baseUrl, connection.apiKey);
 
     const response: any = await client.chat.completions.create({
       model: model || connection.defaultModel,

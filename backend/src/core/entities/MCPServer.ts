@@ -5,5 +5,8 @@ export interface MCPServer {
   args: string[];
   env: Record<string, string>;
   isEnabled: boolean;
+  status: "unknown" | "ok" | "error";
+  lastCheckedAt: string | null;
+  toolCount: number | null;
 }
 

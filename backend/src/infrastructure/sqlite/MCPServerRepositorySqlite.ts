@@ -8,6 +8,9 @@ import type {
 import type { SqliteDatabase } from "./db";
 
 function mapRowToMCPServer(row: any): MCPServer {
+  const rawStatus = row.status as MCPServer["status"];
+  const status =
+    rawStatus === "ok" || rawStatus === "error" ? rawStatus : "unknown";
   return {
     id: row.id,
     name: row.name,
@@ -15,6 +18,12 @@ function mapRowToMCPServer(row: any): MCPServer {
     args: JSON.parse(row.args) as string[],
     env: JSON.parse(row.env) as Record<string, string>,
     isEnabled: row.is_enabled === 1,
+    status,
+    lastCheckedAt: row.last_checked_at ?? null,
+    toolCount:
+      row.tool_count === null || row.tool_count === undefined
+        ? null
+        : Number(row.tool_count),
   };
 }
 
@@ -24,6 +33,9 @@ export class MCPServerRepositorySqlite implements MCPServerRepository {
   async create(data: CreateMCPServerInput): Promise<MCPServer> {
     const id = crypto.randomUUID();
     const isEnabled = data.isEnabled ?? true;
+    const status = data.status ?? "unknown";
+    const lastCheckedAt = data.lastCheckedAt ?? null;
+    const toolCount = data.toolCount ?? null;
 
     const stmt = this.db.prepare(
       `
@@ -33,9 +45,12 @@ export class MCPServerRepositorySqlite implements MCPServerRepository {
         command,
         args,
         env,
-        is_enabled
+        is_enabled,
+        status,
+        last_checked_at,
+        tool_count
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -46,6 +61,9 @@ export class MCPServerRepositorySqlite implements MCPServerRepository {
       JSON.stringify(data.args),
       JSON.stringify(data.env),
       isEnabled ? 1 : 0,
+      status,
+      lastCheckedAt,
+      toolCount,
     );
 
     return {
@@ -55,6 +73,9 @@ export class MCPServerRepositorySqlite implements MCPServerRepository {
       args: data.args,
       env: data.env,
       isEnabled,
+      status,
+      lastCheckedAt,
+      toolCount,
     };
   }
 
@@ -67,7 +88,10 @@ export class MCPServerRepositorySqlite implements MCPServerRepository {
         command,
         args,
         env,
-        is_enabled
+        is_enabled,
+        status,
+        last_checked_at,
+        tool_count
       FROM mcp_servers
       WHERE id = ?
     `.trim(),
@@ -87,7 +111,10 @@ export class MCPServerRepositorySqlite implements MCPServerRepository {
         command,
         args,
         env,
-        is_enabled
+        is_enabled,
+        status,
+        last_checked_at,
+        tool_count
       FROM mcp_servers
       ORDER BY name ASC
     `.trim(),
@@ -123,6 +150,18 @@ export class MCPServerRepositorySqlite implements MCPServerRepository {
     if (patch.isEnabled !== undefined) {
       sets.push("is_enabled = ?");
       params.push(patch.isEnabled ? 1 : 0);
+    }
+    if (patch.status !== undefined) {
+      sets.push("status = ?");
+      params.push(patch.status);
+    }
+    if (patch.lastCheckedAt !== undefined) {
+      sets.push("last_checked_at = ?");
+      params.push(patch.lastCheckedAt);
+    }
+    if (patch.toolCount !== undefined) {
+      sets.push("tool_count = ?");
+      params.push(patch.toolCount);
     }
 
     if (sets.length === 0) {

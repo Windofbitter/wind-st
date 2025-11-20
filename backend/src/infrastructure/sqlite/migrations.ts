@@ -118,7 +118,10 @@ export function runMigrations(db: SqliteDatabase): void {
       command TEXT NOT NULL,
       args TEXT NOT NULL,
       env TEXT NOT NULL,
-      is_enabled INTEGER NOT NULL
+      is_enabled INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'unknown',
+      last_checked_at TEXT,
+      tool_count INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS character_mcp_servers (
@@ -139,7 +142,10 @@ export function runMigrations(db: SqliteDatabase): void {
       base_url TEXT NOT NULL,
       default_model TEXT NOT NULL,
       api_key TEXT NOT NULL,
-      is_enabled INTEGER NOT NULL
+      is_enabled INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'unknown',
+      last_tested_at TEXT,
+      models_available INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS chat_llm_configs (
@@ -186,4 +192,11 @@ export function runMigrations(db: SqliteDatabase): void {
   ensureColumn(db, "messages", "tool_call_id", "TEXT");
   ensureColumn(db, "chat_llm_configs", "max_tool_iterations", "INTEGER NOT NULL DEFAULT 3");
   ensureColumn(db, "chat_llm_configs", "tool_call_timeout_ms", "INTEGER NOT NULL DEFAULT 15000");
+  ensureColumn(db, "llm_connections", "status", "TEXT NOT NULL DEFAULT 'unknown'");
+  ensureColumn(db, "llm_connections", "last_tested_at", "TEXT");
+  ensureColumn(db, "llm_connections", "models_available", "INTEGER");
+
+  ensureColumn(db, "mcp_servers", "status", "TEXT NOT NULL DEFAULT 'unknown'");
+  ensureColumn(db, "mcp_servers", "last_checked_at", "TEXT");
+  ensureColumn(db, "mcp_servers", "tool_count", "INTEGER");
 }

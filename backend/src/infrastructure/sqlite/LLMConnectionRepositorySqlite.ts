@@ -12,6 +12,9 @@ import type { SqliteDatabase } from "./db";
 import { AppError } from "../../application/errors/AppError";
 
 function mapRowToLLMConnection(row: any): LLMConnection {
+  const rawStatus = row.status as LLMConnection["status"];
+  const status =
+    rawStatus === "ok" || rawStatus === "error" ? rawStatus : "unknown";
   return {
     id: row.id,
     name: row.name,
@@ -20,6 +23,12 @@ function mapRowToLLMConnection(row: any): LLMConnection {
     defaultModel: row.default_model,
     apiKey: row.api_key,
     isEnabled: row.is_enabled === 1,
+    status,
+    lastTestedAt: row.last_tested_at ?? null,
+    modelsAvailable:
+      row.models_available === null || row.models_available === undefined
+        ? null
+        : Number(row.models_available),
   };
 }
 
@@ -30,6 +39,10 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
     const id = crypto.randomUUID();
     const isEnabled = data.isEnabled ?? true;
     const apiKey = data.apiKey;
+    const status = data.status ?? "unknown";
+    const lastTestedAt = data.lastTestedAt ?? null;
+    const modelsAvailable =
+      data.modelsAvailable === undefined ? null : data.modelsAvailable;
 
     const stmt = this.db.prepare(
       `
@@ -40,9 +53,12 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
         base_url,
         default_model,
         api_key,
-        is_enabled
+        is_enabled,
+        status,
+        last_tested_at,
+        models_available
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -54,6 +70,7 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
       data.defaultModel,
       apiKey,
       isEnabled ? 1 : 0,
+      status,
     );
 
     return {
@@ -64,6 +81,9 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
       defaultModel: data.defaultModel,
       apiKey,
       isEnabled,
+      status,
+      lastTestedAt,
+    modelsAvailable,
     };
   }
 
@@ -77,7 +97,10 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
         base_url,
         default_model,
         api_key,
-        is_enabled
+        is_enabled,
+        status,
+        last_tested_at,
+        models_available
       FROM llm_connections
       WHERE id = ?
     `.trim(),
@@ -98,7 +121,10 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
         base_url,
         default_model,
         api_key,
-        is_enabled
+        is_enabled,
+        status,
+        last_tested_at,
+        models_available
       FROM llm_connections
       ORDER BY name ASC
     `.trim(),
@@ -134,6 +160,18 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
     if (patch.isEnabled !== undefined) {
       sets.push("is_enabled = ?");
       params.push(patch.isEnabled ? 1 : 0);
+    }
+    if (patch.status !== undefined) {
+      sets.push("status = ?");
+      params.push(patch.status);
+    }
+    if (patch.lastTestedAt !== undefined) {
+      sets.push("last_tested_at = ?");
+      params.push(patch.lastTestedAt);
+    }
+    if (patch.modelsAvailable !== undefined) {
+      sets.push("models_available = ?");
+      params.push(patch.modelsAvailable);
     }
 
     if (sets.length === 0) {
