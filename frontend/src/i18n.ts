@@ -347,7 +347,6 @@ const resources = {
         statusLastChecked: "Last checked: {{timestamp}}",
         statusToolCount: "{{count}} tool(s)",
         commandExample: "Example: npx",
-        argsHint: "One argument per line.",
         argsExample:
           "Example:\n-y\n@upstash/context7-mcp\n--transport\nstdio",
       },
@@ -713,7 +712,6 @@ const resources = {
         statusLastChecked: "上次检查: {{timestamp}}",
         statusToolCount: "{{count}} 个工具",
         commandExample: "示例：npx",
-        argsHint: "每行一个参数。",
         argsExample:
           "示例：\n-y\n@upstash/context7-mcp\n--transport\nstdio",
       },

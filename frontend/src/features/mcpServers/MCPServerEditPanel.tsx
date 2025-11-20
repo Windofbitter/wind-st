@@ -125,11 +125,6 @@ export function MCPServerEditPanel({
           }}
           placeholder={t("mcpServers.argsExample")}
         />
-        <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem", whiteSpace: "pre-wrap" }}>
-          {t("mcpServers.argsHint")}
-          {"\n"}
-          {t("mcpServers.argsExample")}
-        </div>
       </div>
       <div className="input-group">
         <label htmlFor="edit-env">{t("mcpServers.editEnvLabel")}</label>

@@ -122,11 +122,6 @@ export function CreateMCPServerForm({ onCreated }: CreateMCPServerFormProps) {
             }}
             placeholder={t("mcpServers.argsExample")}
           />
-          <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem", whiteSpace: "pre-wrap" }}>
-            {t("mcpServers.argsHint")}
-            {"\n"}
-            {t("mcpServers.argsExample")}
-          </div>
         </div>
         <div className="input-group">
           <label htmlFor="mcp-env">{t("mcpServers.newEnvLabel")}</label>
