@@ -92,6 +92,7 @@ export function CreateMCPServerForm({ onCreated }: CreateMCPServerFormProps) {
           <input
             id="mcp-command"
             type="text"
+            placeholder={t("mcpServers.commandExample")}
             value={form.command}
             onChange={(e) =>
               setForm({
@@ -101,6 +102,9 @@ export function CreateMCPServerForm({ onCreated }: CreateMCPServerFormProps) {
             }
             required
           />
+          <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
+            {t("mcpServers.commandExample")}
+          </div>
         </div>
         <div className="input-group">
           <label htmlFor="mcp-args">{t("mcpServers.newArgsLabel")}</label>
@@ -116,8 +120,13 @@ export function CreateMCPServerForm({ onCreated }: CreateMCPServerFormProps) {
                 args: parseArgs(value),
               });
             }}
-            placeholder="One argument per line"
+            placeholder={t("mcpServers.argsExample")}
           />
+          <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem", whiteSpace: "pre-wrap" }}>
+            {t("mcpServers.argsHint")}
+            {"\n"}
+            {t("mcpServers.argsExample")}
+          </div>
         </div>
         <div className="input-group">
           <label htmlFor="mcp-env">{t("mcpServers.newEnvLabel")}</label>

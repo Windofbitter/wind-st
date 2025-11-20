@@ -101,9 +101,13 @@ export function MCPServerEditPanel({
         <input
           id="edit-command"
           type="text"
+          placeholder={t("mcpServers.commandExample")}
           value={form.command ?? ""}
           onChange={(e) => setForm({ ...form, command: e.target.value })}
         />
+        <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
+          {t("mcpServers.commandExample")}
+        </div>
       </div>
       <div className="input-group">
         <label htmlFor="edit-args">{t("mcpServers.editArgsLabel")}</label>
@@ -119,8 +123,13 @@ export function MCPServerEditPanel({
               args: parseArgs(value),
             });
           }}
-          placeholder="One argument per line"
+          placeholder={t("mcpServers.argsExample")}
         />
+        <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem", whiteSpace: "pre-wrap" }}>
+          {t("mcpServers.argsHint")}
+          {"\n"}
+          {t("mcpServers.argsExample")}
+        </div>
       </div>
       <div className="input-group">
         <label htmlFor="edit-env">{t("mcpServers.editEnvLabel")}</label>
