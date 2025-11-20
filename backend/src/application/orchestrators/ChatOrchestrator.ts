@@ -113,6 +113,11 @@ export class ChatOrchestrator {
         );
       }
 
+      await this.messageService.pruneAfterUserMessage(
+        chatId,
+        userMessageId,
+      );
+
       const run = await this.createRun(chatId, userMessageId);
       this.chatEvents.publishRun(chatId, run);
 
@@ -258,6 +263,7 @@ export class ChatOrchestrator {
 
       const toolMessages = await this.handleToolCalls(
         chatId,
+        run,
         toolCalls,
         toolMap,
         toolCallTimeoutMs,
@@ -311,6 +317,7 @@ export class ChatOrchestrator {
 
   private async handleToolCalls(
     chatId: string,
+    run: ChatRun,
     toolCalls: LLMToolCall[],
     toolMap: Map<string, ResolvedTool>,
     timeoutMs: number,

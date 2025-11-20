@@ -58,7 +58,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
   min-height: 0;
 }
 
@@ -81,7 +81,7 @@
 .content-body {
   flex: 1;
   padding: 1.5rem 1.75rem;
-  overflow: hidden;
+  overflow-y: auto;
   min-height: 0;
 }
 
