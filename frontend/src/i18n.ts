@@ -346,10 +346,10 @@ const resources = {
         statusChecking: "Checking…",
         statusLastChecked: "Last checked: {{timestamp}}",
         statusToolCount: "{{count}} tool(s)",
-        commandExample:
-          "Example: npx -y @upstash/context7-mcp --transport stdio",
+        commandExample: "Example: npx",
         argsHint: "One argument per line.",
-        argsExample: "Example:\n--transport stdio\n--api-key $API_KEY",
+        argsExample:
+          "Example:\n-y\n@upstash/context7-mcp\n--transport\nstdio",
       },
       runs: {
         filterTitle: "Filter",
@@ -712,10 +712,10 @@ const resources = {
         statusChecking: "正在检查…",
         statusLastChecked: "上次检查: {{timestamp}}",
         statusToolCount: "{{count}} 个工具",
-        commandExample:
-          "示例：npx -y @upstash/context7-mcp --transport stdio",
+        commandExample: "示例：npx",
         argsHint: "每行一个参数。",
-        argsExample: "示例：\n--transport stdio\n--api-key $API_KEY",
+        argsExample:
+          "示例：\n-y\n@upstash/context7-mcp\n--transport\nstdio",
       },
       runs: {
         filterTitle: "筛选",
