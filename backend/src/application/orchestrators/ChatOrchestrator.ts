@@ -11,6 +11,7 @@ import type {
 import type { PromptBuilder, PromptToolSpec } from "../../core/ports/PromptBuilder";
 import type { MCPClient } from "../../core/ports/MCPClient";
 import type { MCPServer } from "../../core/entities/MCPServer";
+import { ChatEventService } from "../services/ChatEventService";
 import { ChatService } from "../services/ChatService";
 import { MessageService } from "../services/MessageService";
 import { LLMConnectionService } from "../services/LLMConnectionService";
@@ -49,6 +50,7 @@ export class ChatOrchestrator {
     private readonly promptBuilder: PromptBuilder,
     private readonly mcpClient: MCPClient,
     private readonly mcpServerService: MCPServerService,
+    private readonly chatEvents: ChatEventService,
   ) {}
 
   async handleUserMessage(
@@ -67,18 +69,23 @@ export class ChatOrchestrator {
         role: "user",
         content: userContent,
       });
+      this.chatEvents.publishMessage(chatId, userMessage);
 
       const run = await this.createRun(chatId, userMessage.id);
+      this.chatEvents.publishRun(chatId, run);
 
       try {
         return await this.performTurn(chatId, run);
       } catch (err) {
         const finishedAt = nowIso();
-        await this.chatRunRepo.update(run.id, {
+        const updatedRun = await this.chatRunRepo.update(run.id, {
           status: "failed",
           finishedAt,
           error: err instanceof Error ? err.message : String(err),
         });
+        if (updatedRun) {
+          this.chatEvents.publishRun(chatId, updatedRun);
+        }
         throw err;
       }
     } finally {
@@ -174,6 +181,7 @@ export class ChatOrchestrator {
         toolCalls: completion.message.toolCalls ?? null,
         tokenCount: completion.usage?.completionTokens ?? null,
       });
+      this.chatEvents.publishMessage(chatId, latestAssistant);
 
       const assistantMessage: LLMChatMessage = {
         role: "assistant",
@@ -187,7 +195,14 @@ export class ChatOrchestrator {
 
       const toolCalls = completion.message.toolCalls ?? [];
       if (toolCalls.length === 0) {
-        await this.finishRunSuccess(run, latestAssistant.id, usageTotals);
+        const finishedRun = await this.finishRunSuccess(
+          run,
+          latestAssistant.id,
+          usageTotals,
+        );
+        if (finishedRun) {
+          this.chatEvents.publishRun(chatId, finishedRun);
+        }
         return latestAssistant;
       }
 
@@ -287,13 +302,14 @@ export class ChatOrchestrator {
         }
       }
 
-      await this.messageService.appendMessage({
+      const toolMessage = await this.messageService.appendMessage({
         chatId,
         role: "tool",
         content,
         toolCallId: call.id,
         toolResults,
       });
+      this.chatEvents.publishMessage(chatId, toolMessage);
 
       toolMessages.push({
         role: "tool",
@@ -346,12 +362,12 @@ export class ChatOrchestrator {
     run: ChatRun,
     assistantMessageId: string,
     usage: UsageTotals,
-  ): Promise<void> {
+  ): Promise<ChatRun | null> {
     const finishedAt = nowIso();
     const hasUsage =
       usage.prompt > 0 || usage.completion > 0 || usage.total > 0;
 
-    await this.chatRunRepo.update(run.id, {
+    return this.chatRunRepo.update(run.id, {
       status: "completed",
       assistantMessageId,
       finishedAt,

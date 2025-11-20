@@ -24,10 +24,25 @@ import { listLLMConnections, listLLMModels } from "../../api/llmConnections";
 import type { PromptPreset } from "../../api/promptStack";
 import { getPromptStack } from "../../api/promptStack";
 import { ApiError } from "../../api/httpClient";
+import { connectToChatEvents } from "../../api/chatEvents";
 
 export interface LoadState {
   loading: boolean;
   error: string | null;
+}
+
+function upsertMessage(
+  messages: Message[],
+  next: Message,
+): Message[] {
+  const existingIndex = messages.findIndex((m) => m.id === next.id);
+  if (existingIndex === -1) {
+    return [...messages, next];
+  }
+
+  const updated = [...messages];
+  updated[existingIndex] = next;
+  return updated;
 }
 
 export function useChatController() {
@@ -146,6 +161,7 @@ export function useChatController() {
       setChatHistoryConfig(null);
       setPromptPreview(null);
       setPromptPreviewState({ loading: false, error: null });
+      setMessagesState({ loading: false, error: null });
       return;
     }
     void loadMessages(selectedChatId);
@@ -158,6 +174,45 @@ export function useChatController() {
     setModelOptions([]);
     setModelOptionsState({ loading: false, error: null });
   }, [chatConfig?.llmConnectionId]);
+
+  useEffect(() => {
+    if (!selectedChatId) return;
+
+    const disconnect = connectToChatEvents(selectedChatId, {
+      onEvent: (event) => {
+        if (event.type === "message") {
+          setMessages((prev) => upsertMessage(prev, event.message));
+        } else if (event.type === "run") {
+          if (event.run.status === "running") {
+            setIsSending(true);
+          }
+          if (
+            event.run.status === "completed" ||
+            event.run.status === "failed" ||
+            event.run.status === "canceled"
+          ) {
+            setIsSending(false);
+            if (event.run.status === "failed" && event.run.error) {
+              setGlobalError(event.run.error);
+            }
+          }
+        }
+      },
+      onError: (message) => {
+        setMessagesState((state) => ({
+          ...state,
+          error: state.error ?? message,
+        }));
+      },
+      onOpen: () => {
+        setMessagesState((state) => ({ ...state, error: null }));
+      },
+    });
+
+    return () => {
+      disconnect();
+    };
+  }, [selectedChatId]);
 
   async function loadCharacters() {
     setCharactersState({ loading: true, error: null });

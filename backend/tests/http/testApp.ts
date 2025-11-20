@@ -39,6 +39,8 @@ import {
   FakeChatRunRepository,
   FakeLLMClient,
 } from "../services/fakeOrchestration";
+import { ChatEventService } from "../../src/application/services/ChatEventService";
+import { registerChatEventRoutes } from "../../src/infrastructure/http/routes/chatEvents";
 
 export interface TestAppContext {
   app: FastifyInstance;
@@ -139,6 +141,7 @@ export async function createTestApp(
   const historyConfigService = new HistoryConfigService(
     historyConfigRepository,
   );
+  const chatEvents = new ChatEventService();
 
   const llmClient = overrides.llmClient ?? new FakeLLMClient();
   const mcpClient: MCPClient = {
@@ -163,6 +166,7 @@ export async function createTestApp(
     promptBuilder,
     mcpClient,
     mcpServerService,
+    chatEvents,
   );
 
   const app = Fastify({ logger: false });
@@ -179,6 +183,7 @@ export async function createTestApp(
   app.decorate("chatRunRepository", chatRunRepository);
   app.decorate("historyConfigService", historyConfigService);
   app.decorate("promptBuilder", promptBuilder);
+  app.decorate("chatEventService", chatEvents);
 
   registerHealthRoutes(app);
   registerCharacterRoutes(app);
@@ -189,6 +194,7 @@ export async function createTestApp(
   registerPromptStackRoutes(app);
   registerLLMConnectionRoutes(app);
   registerMCPServerRoutes(app);
+  registerChatEventRoutes(app);
   registerErrorHandler(app);
 
   return { app, chatRunRepository, llmClient };

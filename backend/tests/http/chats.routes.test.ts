@@ -95,7 +95,8 @@ describe("Chat routes", () => {
 
     const calls = (llmClient.calls as LLMChatCompletionRequest[]);
     expect(calls).toHaveLength(1);
-    expect(calls[0].messages.at(-1)?.content).toBe("Hi");
+    const lastUser = calls[0].messages.filter((m) => m.role === "user").at(-1);
+    expect(lastUser?.content).toBe("Hi");
 
     const runsResponse = await app.inject({
       method: "GET",

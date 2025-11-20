@@ -126,6 +126,7 @@ export function registerMessageRoutes(app: FastifyInstance): void {
     const { chatId } = request.params as { chatId: string };
     const input = ensureAppendMessagePayload(chatId, request.body);
     const created = await app.messageService.appendMessage(input);
+    app.chatEventService.publishMessage(chatId, created);
     void reply.status(201);
     return created;
   });

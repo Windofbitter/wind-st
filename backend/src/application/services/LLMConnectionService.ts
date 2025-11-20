@@ -34,7 +34,7 @@ export class LLMConnectionService {
     if (all.length === 0) return null;
 
     const firstEnabled = all.find((c) => c.isEnabled);
-    return firstEnabled ?? all[0];
+    return firstEnabled ?? all[0] ?? null;
   }
 
   async updateConnection(

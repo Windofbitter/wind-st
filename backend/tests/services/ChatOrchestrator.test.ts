@@ -8,6 +8,7 @@ import { MessageService } from "../../src/application/services/MessageService";
 import { LLMConnectionService } from "../../src/application/services/LLMConnectionService";
 import { HistoryConfigService } from "../../src/application/services/HistoryConfigService";
 import { MCPServerService } from "../../src/application/services/MCPServerService";
+import { ChatEventService } from "../../src/application/services/ChatEventService";
 import {
   FakeChatRepository,
   FakeChatLLMConfigRepository,
@@ -64,6 +65,7 @@ function createEnvironment(customClient?: LLMClient) {
   const messageService = new MessageService(messageRepo);
   const mcpServerService = new MCPServerService(mcpServerRepo);
   const chatRunRepo = new FakeChatRunRepository();
+  const chatEvents = new ChatEventService();
   const historyConfigService = new HistoryConfigService({
     async create(data) {
       return { chatId: data.chatId, historyEnabled: data.historyEnabled, messageLimit: data.messageLimit };
@@ -108,6 +110,7 @@ function createEnvironment(customClient?: LLMClient) {
     promptBuilder,
     mcpClient,
     mcpServerService,
+    chatEvents,
   );
 
   return {
@@ -118,6 +121,7 @@ function createEnvironment(customClient?: LLMClient) {
     llmClient,
     mcpServerService,
     mcpClient,
+    chatEvents,
     orchestrator,
   };
 }
@@ -179,7 +183,10 @@ describe("ChatOrchestrator", () => {
 
     const llmClient = env.llmClient as FakeLLMClient;
     expect(llmClient.calls).toHaveLength(1);
-    expect(llmClient.calls[0].messages[llmClient.calls[0].messages.length - 1].content).toBe("Hi?");
+    const lastUser = llmClient.calls[0].messages
+      .filter((m) => m.role === "user")
+      .at(-1);
+    expect(lastUser?.content).toBe("Hi?");
   });
 
   it("rejects a second turn while a chat is busy", async () => {

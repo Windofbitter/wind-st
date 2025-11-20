@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import type { ChatRunRepository } from "../../core/ports/ChatRunRepository";
 import type { PromptBuilder } from "../../core/ports/PromptBuilder";
 import { CharacterService } from "../../application/services/CharacterService";
+import { ChatEventService } from "../../application/services/ChatEventService";
 import { ChatService } from "../../application/services/ChatService";
 import { MessageService } from "../../application/services/MessageService";
 import { LLMConnectionService } from "../../application/services/LLMConnectionService";
@@ -46,6 +47,7 @@ import { registerLLMConnectionRoutes } from "./routes/llmConnections";
 import { registerMCPServerRoutes } from "./routes/mcpServers";
 import { registerCharacterLorebookRoutes } from "./routes/characterLorebooks";
 import { registerCharacterMCPServerRoutes } from "./routes/characterMcpServers";
+import { registerChatEventRoutes } from "./routes/chatEvents";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -65,6 +67,7 @@ declare module "fastify" {
     historyConfigService: HistoryConfigService;
     promptBuilder: PromptBuilder;
     mcpClient: MCPClient;
+    chatEventService: ChatEventService;
   }
 }
 
@@ -142,6 +145,7 @@ export async function buildApp() {
     historyConfigService,
     messageService,
   );
+  const chatEventService = new ChatEventService();
   const chatOrchestrator = new ChatOrchestrator(
     chatService,
     messageService,
@@ -151,6 +155,7 @@ export async function buildApp() {
     promptBuilder,
     mcpClient,
     mcpServerService,
+    chatEventService,
   );
 
   const app = Fastify({
@@ -182,6 +187,7 @@ export async function buildApp() {
   app.decorate("historyConfigService", historyConfigService);
   app.decorate("promptBuilder", promptBuilder);
   app.decorate("mcpClient", mcpClient);
+  app.decorate("chatEventService", chatEventService);
 
   registerHealthRoutes(app);
   registerCharacterRoutes(app);
@@ -194,6 +200,7 @@ export async function buildApp() {
   registerLLMConnectionRoutes(app);
   registerMCPServerRoutes(app);
   registerCharacterMCPServerRoutes(app);
+  registerChatEventRoutes(app);
   registerErrorHandler(app);
 
   return app;
