@@ -45,8 +45,8 @@ export function ConnectionsTable({
             <th>
               {t("llmConnections.listTableDefaultModel")}
             </th>
-            <th>{t("llmConnections.listTableEnabled")}</th>
             <th>{t("llmConnections.listTableStatus")}</th>
+            <th>{t("llmConnections.listTableEnabled")}</th>
             <th>{t("llmConnections.listTableActions")}</th>
           </tr>
         </thead>
@@ -58,6 +58,14 @@ export function ConnectionsTable({
               <td>{conn.baseUrl}</td>
               <td>{conn.defaultModel}</td>
               <td>
+                <LLMConnectionStatusBadge
+                  status={conn.status}
+                  lastTestedAt={conn.lastTestedAt}
+                  checking={testingId === conn.id}
+                  modelsAvailable={conn.modelsAvailable}
+                />
+              </td>
+              <td>
                 <label>
                   <input
                     type="checkbox"
@@ -65,22 +73,14 @@ export function ConnectionsTable({
                     onChange={(e) =>
                       void onToggleEnabled(conn.id, e.target.checked)
                     }
-                    />
-                  </label>
-                </td>
-                <td>
-                  <LLMConnectionStatusBadge
-                    status={conn.status}
-                    lastTestedAt={conn.lastTestedAt}
-                    checking={testingId === conn.id}
-                    modelsAvailable={conn.modelsAvailable}
                   />
-                </td>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
+                </label>
+              </td>
+              <td>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
                     flexWrap: "wrap",
                   }}
                 >

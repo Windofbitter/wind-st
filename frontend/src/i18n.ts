@@ -681,7 +681,7 @@ const resources = {
         listYes: "是",
         listNo: "否",
         testButton: "测试",
-        testDraftButton: "测试草稿",
+        testDraftButton: "测试连接",
         statusUnknown: "未知",
         statusOk: "正常",
         statusFailing: "失败",
