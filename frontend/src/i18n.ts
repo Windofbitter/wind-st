@@ -68,6 +68,8 @@ const resources = {
         saveConfigButton: "Save Config",
         saveConfigButtonSaving: "Saving…",
         historyEnabledLabel: "Include conversation history",
+        historyEnabledOptionOn: "Include history",
+        historyEnabledOptionOff: "No history",
         historyMessageLimitLabel: "History messages to keep",
         promptStackTitle: "Prompt Stack Preview",
         promptStackSelectCharacter:
@@ -458,6 +460,8 @@ const resources = {
         saveConfigButton: "保存配置",
         saveConfigButtonSaving: "正在保存…",
         historyEnabledLabel: "包含会话历史",
+        historyEnabledOptionOn: "包含历史",
+        historyEnabledOptionOff: "不包含历史",
         historyMessageLimitLabel: "保留的历史消息数",
         promptStackTitle: "提示栈预览",
         promptStackSelectCharacter: "选择一个角色查看提示栈。",

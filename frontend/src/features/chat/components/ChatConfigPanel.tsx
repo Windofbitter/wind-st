@@ -205,16 +205,24 @@ export function ChatConfigPanel({
             <label htmlFor="history-enabled">
               {t("chat.historyEnabledLabel")}
             </label>
-            <input
+            <select
               id="history-enabled"
-              type="checkbox"
-              checked={chatHistoryConfig.historyEnabled}
+              value={
+                chatHistoryConfig.historyEnabled ? "true" : "false"
+              }
               onChange={(e) =>
                 onHistoryConfigChange({
-                  historyEnabled: e.target.checked,
+                  historyEnabled: e.target.value === "true",
                 })
               }
-            />
+            >
+              <option value="true">
+                {t("chat.historyEnabledOptionOn")}
+              </option>
+              <option value="false">
+                {t("chat.historyEnabledOptionOff")}
+              </option>
+            </select>
           </div>
           <div className="input-group">
             <label htmlFor="history-limit">
@@ -224,6 +232,7 @@ export function ChatConfigPanel({
               id="history-limit"
               type="number"
               min="1"
+              disabled={!chatHistoryConfig.historyEnabled}
               value={chatHistoryConfig.messageLimit}
               onChange={(e) =>
                 onHistoryConfigChange({
