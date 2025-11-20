@@ -1,11 +1,15 @@
+import { useState } from "react";
+import type { Chat } from "../../api/chats";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { ChatMain } from "./components/ChatMain";
 import { ChatConfigPanel } from "./components/ChatConfigPanel";
 import { PromptStackCard } from "./components/PromptStackCard";
 import { PromptPreviewCard } from "./components/PromptPreviewCard";
+import { RenameChatModal } from "./components/RenameChatModal";
 import { useChatController } from "./useChatController";
 
 export function ChatPage() {
+  const [renameTarget, setRenameTarget] = useState<Chat | null>(null);
   const {
     characters,
     charactersState,
@@ -48,6 +52,8 @@ export function ChatPage() {
     fetchModelsForConnection,
   } = useChatController();
 
+  const renameModalOpen = renameTarget !== null;
+
   return (
     <div className="chat-layout">
       <ChatSidebar
@@ -61,7 +67,7 @@ export function ChatPage() {
         onSelectChat={(id) => setSelectedChatId(id)}
         onCreateChat={handleCreateChat}
         onDeleteChat={handleDeleteChat}
-        onRenameChat={handleRenameChat}
+        onStartRenameChat={(chat) => setRenameTarget(chat)}
       />
 
       <ChatMain
@@ -108,6 +114,12 @@ export function ChatPage() {
           promptPreviewState={promptPreviewState}
         />
       </aside>
+      <RenameChatModal
+        chat={renameTarget}
+        isOpen={renameModalOpen}
+        onClose={() => setRenameTarget(null)}
+        onSave={handleRenameChat}
+      />
     </div>
   );
 }

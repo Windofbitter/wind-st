@@ -433,7 +433,10 @@ export function useChatController() {
     }
   }
 
-  async function handleRenameChat(chatId: string, title: string) {
+  async function handleRenameChat(
+    chatId: string,
+    title: string,
+  ): Promise<{ ok: boolean; error?: string }> {
     setChatsState((s) => ({ ...s, error: null }));
     try {
       const updated = await updateChatTitle(chatId, title);
@@ -445,14 +448,17 @@ export function useChatController() {
       if (selectedChatId === chatId) {
         setSelectedChatId(chatId);
       }
+      return { ok: true };
     } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Failed to rename chat";
       setChatsState((s) => ({
         ...s,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to rename chat",
+        error: message,
       }));
+      return { ok: false, error: message };
     }
   }
 

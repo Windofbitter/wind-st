@@ -167,13 +167,16 @@ export function LorebooksPage() {
         <h3 style={{ marginTop: 0 }}>
           {t("lorebooks.listTitle")}
         </h3>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
+        <div className="input-group">
+          <label htmlFor="lorebook-search">
+            {t("lorebooks.listFilterSearchLabel", "Search lorebooks")}
+          </label>
           <input
+            id="lorebook-search"
             type="text"
             placeholder={t("lorebooks.listFilterSearchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1, minWidth: "200px" }}
           />
         </div>
         {state.loading && (
