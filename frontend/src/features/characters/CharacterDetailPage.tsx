@@ -160,12 +160,12 @@ export function CharacterDetailPage() {
           <div>{t("characters.detailLoading")}</div>
         )}
         {state.error && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {state.error}
           </div>
         )}
         {saveError && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {saveError}
           </div>
         )}

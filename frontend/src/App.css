@@ -323,3 +323,9 @@
   font-size: 0.8rem;
   background-color: var(--border-color);
 }
+
+.badge-error {
+  background-color: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+}

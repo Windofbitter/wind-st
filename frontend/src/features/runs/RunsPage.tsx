@@ -102,7 +102,10 @@ export function RunsPage() {
           </button>
         </form>
         {state.error && (
-          <div className="badge" style={{ marginTop: "0.5rem" }}>
+          <div
+            className="badge badge-error"
+            style={{ marginTop: "0.5rem" }}
+          >
             {t("common.errorPrefix")} {state.error}
           </div>
         )}

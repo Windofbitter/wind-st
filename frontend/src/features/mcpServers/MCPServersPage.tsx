@@ -170,7 +170,7 @@ export function MCPServersPage() {
         <h3 style={{ marginTop: 0 }}>{t("mcpServers.listTitle")}</h3>
         {state.loading && <div>{t("mcpServers.listLoading")}</div>}
         {state.error && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {state.error}
           </div>
         )}

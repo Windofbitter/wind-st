@@ -129,7 +129,10 @@ export function EditConnectionCard({
         {t("llmConnections.editCancelButton")}
       </button>
       {error && (
-        <div className="badge" style={{ marginTop: "0.5rem" }}>
+        <div
+          className="badge badge-error"
+          style={{ marginTop: "0.5rem" }}
+        >
           {t("common.errorPrefix")} {error}
         </div>
       )}

@@ -409,7 +409,10 @@ export function PromptBuilderTab({
             : t("promptBuilder.quickPersonaSaveButton")}
         </button>
         {personaError && (
-          <div className="badge" style={{ marginTop: "0.5rem" }}>
+          <div
+            className="badge badge-error"
+            style={{ marginTop: "0.5rem" }}
+          >
             {t("common.errorPrefix")} {personaError}
           </div>
         )}
@@ -430,7 +433,7 @@ export function PromptBuilderTab({
             <div>{t("promptBuilder.paletteLoading")}</div>
           )}
           {presetsError && (
-            <div className="badge">
+            <div className="badge badge-error">
               {t("common.errorPrefix")} {presetsError}
             </div>
           )}
@@ -499,12 +502,12 @@ export function PromptBuilderTab({
             <div>{t("promptBuilder.stackLoading")}</div>
           )}
           {stackError && (
-            <div className="badge">
+            <div className="badge badge-error">
               {t("common.errorPrefix")} {stackError}
             </div>
           )}
           {attachError && (
-            <div className="badge">
+            <div className="badge badge-error">
               {t("common.errorPrefix")} {attachError}
             </div>
           )}

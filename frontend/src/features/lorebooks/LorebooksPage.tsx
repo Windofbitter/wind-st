@@ -153,7 +153,10 @@ export function LorebooksPage() {
               : t("lorebooks.listCreateButton")}
           </button>
           {createError && (
-            <div className="badge" style={{ marginTop: "0.5rem" }}>
+            <div
+              className="badge badge-error"
+              style={{ marginTop: "0.5rem" }}
+            >
               {t("common.errorPrefix")} {createError}
             </div>
           )}
@@ -177,7 +180,7 @@ export function LorebooksPage() {
           <div>{t("lorebooks.listLoading")}</div>
         )}
         {state.error && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {state.error}
           </div>
         )}

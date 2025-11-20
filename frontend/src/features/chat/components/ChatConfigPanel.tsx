@@ -53,17 +53,17 @@ export function ChatConfigPanel({
         {t("chat.llmConfigTitle")}
       </h3>
       {chatConfigState.error && (
-        <div className="badge">
+        <div className="badge badge-error">
           {t("common.errorPrefix")} {chatConfigState.error}
         </div>
       )}
       {chatHistoryState.error && (
-        <div className="badge">
+        <div className="badge badge-error">
           {t("common.errorPrefix")} {chatHistoryState.error}
         </div>
       )}
       {llmState.error && (
-        <div className="badge">
+        <div className="badge badge-error">
           {t("common.errorLoadingConnections")} {llmState.error}
         </div>
       )}
@@ -102,12 +102,12 @@ export function ChatConfigPanel({
             </select>
           </div>
           {selectedConnection && !selectedConnection.isEnabled && (
-            <div className="badge">
+            <div className="badge badge-error">
               {t("chat.connectionDisabledError")}
             </div>
           )}
           {enabledConnections.length === 0 && (
-            <div className="badge">
+            <div className="badge badge-error">
               {t("chat.noEnabledConnections")}
             </div>
           )}
@@ -147,7 +147,10 @@ export function ChatConfigPanel({
               </button>
             </div>
             {modelOptionsState.error && (
-              <div className="badge" style={{ marginTop: "0.25rem" }}>
+              <div
+                className="badge badge-error"
+                style={{ marginTop: "0.25rem" }}
+              >
                 {t("common.errorPrefix")} {modelOptionsState.error}
               </div>
             )}

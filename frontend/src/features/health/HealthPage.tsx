@@ -45,7 +45,7 @@ export function HealthPage() {
       <h3 style={{ marginTop: 0 }}>{t("health.title")}</h3>
       {state.loading && <div>{t("health.checking")}</div>}
       {state.error && (
-        <div className="badge">
+        <div className="badge badge-error">
           {t("common.errorPrefix")} {state.error}
         </div>
       )}

@@ -30,7 +30,7 @@ export function PromptPreviewCard({
         <div>{t("chat.promptPreviewLoading")}</div>
       )}
       {activeChat && promptPreviewState.error && (
-        <div className="badge">
+        <div className="badge badge-error">
           {t("common.errorPrefix")} {promptPreviewState.error}
         </div>
       )}

@@ -59,7 +59,7 @@ export function ChatSidebar({
           </select>
         </div>
         {charactersState.error && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {charactersState.error}
           </div>
         )}
@@ -77,7 +77,7 @@ export function ChatSidebar({
           </button>
         </div>
         {chatsState.error && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {chatsState.error}
           </div>
         )}

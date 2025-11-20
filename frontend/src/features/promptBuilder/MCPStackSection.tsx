@@ -43,7 +43,7 @@ export function MCPStackSection({
         <div>{t("mcpServers.listLoading")}</div>
       )}
       {error && (
-        <div className="badge">
+        <div className="badge badge-error">
           {t("common.errorPrefix")} {error}
         </div>
       )}

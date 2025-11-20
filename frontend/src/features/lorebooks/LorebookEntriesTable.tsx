@@ -69,7 +69,7 @@ export function LorebookEntriesTable({
         <div>{t("lorebooks.entriesLoading")}</div>
       )}
       {error && (
-        <div className="badge">
+        <div className="badge badge-error">
           {t("common.errorPrefix")} {error}
         </div>
       )}
@@ -267,4 +267,3 @@ function SortableEntryRow({
     </tr>
   );
 }
-

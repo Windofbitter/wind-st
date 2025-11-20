@@ -315,7 +315,10 @@ export function PresetsPage() {
               : t("presets.newCreateButton")}
           </button>
           {createError && (
-            <div className="badge" style={{ marginTop: "0.5rem" }}>
+            <div
+              className="badge badge-error"
+              style={{ marginTop: "0.5rem" }}
+            >
               {t("common.errorPrefix")} {createError}
             </div>
           )}
@@ -330,7 +333,7 @@ export function PresetsPage() {
           <div>{t("presets.listLoading")}</div>
         )}
         {state.error && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {state.error}
           </div>
         )}
@@ -470,7 +473,10 @@ export function PresetsPage() {
               {t("presets.editCancelButton")}
             </button>
             {editError && (
-              <div className="badge" style={{ marginTop: "0.5rem" }}>
+              <div
+                className="badge badge-error"
+                style={{ marginTop: "0.5rem" }}
+              >
                 {t("common.errorPrefix")} {editError}
               </div>
             )}

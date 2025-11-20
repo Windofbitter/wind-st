@@ -62,7 +62,7 @@ export function ChatMain({
             <div>{t("chat.messagesLoading")}</div>
           )}
           {messagesState.error && (
-            <div className="badge">
+            <div className="badge badge-error">
               {t("common.errorPrefix")} {messagesState.error}
             </div>
           )}
@@ -112,7 +112,7 @@ export function ChatMain({
       </div>
       {globalError && (
         <div className="card">
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {globalError}
           </div>
         </div>

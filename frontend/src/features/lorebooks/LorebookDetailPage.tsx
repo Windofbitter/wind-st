@@ -290,7 +290,7 @@ export function LorebookDetailPage() {
           <div>{t("lorebooks.detailLoadingLorebook")}</div>
         )}
         {lorebookState.error && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {lorebookState.error}
           </div>
         )}
@@ -398,7 +398,10 @@ export function LorebookDetailPage() {
               : t("lorebooks.newEntryCreateButton")}
           </button>
           {entryError && (
-            <div className="badge" style={{ marginTop: "0.5rem" }}>
+            <div
+              className="badge badge-error"
+              style={{ marginTop: "0.5rem" }}
+            >
               {t("common.errorPrefix")} {entryError}
             </div>
           )}
@@ -497,7 +500,10 @@ export function LorebookDetailPage() {
             {t("lorebooks.editEntryCancelButton")}
           </button>
           {entryError && (
-            <div className="badge" style={{ marginTop: "0.5rem" }}>
+            <div
+              className="badge badge-error"
+              style={{ marginTop: "0.5rem" }}
+            >
               {t("common.errorPrefix")} {entryError}
             </div>
           )}

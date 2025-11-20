@@ -32,7 +32,7 @@ export function ConnectionsTable({
       </h3>
       {loading && <div>{t("llmConnections.listLoading")}</div>}
       {error && (
-        <div className="badge">
+        <div className="badge badge-error">
           {t("common.errorPrefix")} {error}
         </div>
       )}

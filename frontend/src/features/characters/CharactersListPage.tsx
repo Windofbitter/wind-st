@@ -196,7 +196,10 @@ export function CharactersListPage() {
               : t("characters.listCreateButton")}
           </button>
           {createError && (
-            <div className="badge" style={{ marginTop: "0.5rem" }}>
+            <div
+              className="badge badge-error"
+              style={{ marginTop: "0.5rem" }}
+            >
               {t("common.errorPrefix")} {createError}
             </div>
           )}
@@ -211,7 +214,7 @@ export function CharactersListPage() {
           <div>{t("characters.listLoading")}</div>
         )}
         {state.error && (
-          <div className="badge">
+          <div className="badge badge-error">
             {t("common.errorPrefix")} {state.error}
           </div>
         )}

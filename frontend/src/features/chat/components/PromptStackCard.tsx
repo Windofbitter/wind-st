@@ -26,7 +26,7 @@ export function PromptStackCard({
         {t("chat.promptStackTitle")}
       </h3>
       {promptStackState.error && (
-        <div className="badge">
+        <div className="badge badge-error">
           Error: {promptStackState.error}
         </div>
       )}
