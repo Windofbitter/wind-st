@@ -79,12 +79,14 @@ class SimplePromptBuilder implements PromptBuilder {
 export async function createTestApp(
   overrides: Partial<{
     llmClient: LLMClient;
+    chatRunRepository: ChatRunRepository;
   }> = {},
 ): Promise<TestAppContext> {
   const characterRepository = new FakeCharacterRepository();
   const chatRepository = new FakeChatRepository();
   const chatConfigRepository = new FakeChatLLMConfigRepository();
-  const chatRunRepository = new FakeChatRunRepository();
+  const chatRunRepository =
+    overrides.chatRunRepository ?? new FakeChatRunRepository();
   const messageRepository = new FakeMessageRepository();
   const llmConnectionRepository = new FakeLLMConnectionRepository();
   const lorebookRepository = new FakeLorebookRepository();
@@ -126,7 +128,10 @@ export async function createTestApp(
     chatConfigRepository,
     llmConnectionService,
   );
-  const messageService = new MessageService(messageRepository);
+  const messageService = new MessageService(
+    messageRepository,
+    chatRunRepository,
+  );
   const lorebookService = new LorebookService(
     lorebookRepository,
     lorebookEntryRepository,

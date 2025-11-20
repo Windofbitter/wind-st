@@ -19,13 +19,19 @@ import {
   updateChatHistoryConfig,
 } from "../../api/historyConfig";
 import type { Message } from "../../api/messages";
-import { listMessages } from "../../api/messages";
+import {
+  deleteMessage as deleteMessageApi,
+  listMessages,
+  retryMessage as retryMessageApi,
+} from "../../api/messages";
 import type { LLMConnection } from "../../api/llmConnections";
 import { listLLMConnections, listLLMModels } from "../../api/llmConnections";
 import type { PromptPreset } from "../../api/promptStack";
 import { getPromptStack } from "../../api/promptStack";
 import { ApiError } from "../../api/httpClient";
 import { connectToChatEvents } from "../../api/chatEvents";
+import type { ChatRun } from "../../api/runs";
+import { listChatRuns } from "../../api/runs";
 
 export interface LoadState {
   loading: boolean;
@@ -42,6 +48,17 @@ function upsertMessage(
   }
 
   const updated = [...messages];
+  updated[existingIndex] = next;
+  return updated;
+}
+
+function upsertRun(runs: ChatRun[], next: ChatRun): ChatRun[] {
+  const existingIndex = runs.findIndex((r) => r.id === next.id);
+  if (existingIndex === -1) {
+    return [...runs, next];
+  }
+
+  const updated = [...runs];
   updated[existingIndex] = next;
   return updated;
 }
@@ -67,6 +84,12 @@ export function useChatController() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesState, setMessagesState] = useState<LoadState>({
+    loading: false,
+    error: null,
+  });
+
+  const [runs, setRuns] = useState<ChatRun[]>([]);
+  const [runsState, setRunsState] = useState<LoadState>({
     loading: false,
     error: null,
   });
@@ -158,14 +181,17 @@ export function useChatController() {
   useEffect(() => {
     if (!selectedChatId) {
       setMessages([]);
+      setRuns([]);
       setChatConfig(null);
       setChatHistoryConfig(null);
       setPromptPreview(null);
       setPromptPreviewState({ loading: false, error: null });
       setMessagesState({ loading: false, error: null });
+      setRunsState({ loading: false, error: null });
       return;
     }
     void loadMessages(selectedChatId);
+    void loadRuns(selectedChatId);
     void loadChatConfig(selectedChatId);
     void loadChatHistoryConfig(selectedChatId);
     void loadPromptPreview(selectedChatId);
@@ -184,7 +210,11 @@ export function useChatController() {
         if (event.type === "message") {
           setMessages((prev) => upsertMessage(prev, event.message));
         } else if (event.type === "run") {
-          if (event.run.status === "running") {
+          setRuns((prev) => upsertRun(prev, event.run));
+          if (
+            event.run.status === "running" ||
+            event.run.status === "pending"
+          ) {
             setIsSending(true);
           }
           if (
@@ -276,6 +306,24 @@ export function useChatController() {
       return;
     }
     setMessagesState({ loading: false, error: null });
+  }
+
+  async function loadRuns(chatId: string) {
+    setRunsState({ loading: true, error: null });
+    try {
+      const data = await listChatRuns(chatId);
+      setRuns(data);
+    } catch (err) {
+      setRunsState({
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to load runs",
+      });
+      return;
+    }
+    setRunsState({ loading: false, error: null });
   }
 
   async function loadLlmConnections() {
@@ -483,6 +531,45 @@ export function useChatController() {
     }
   }
 
+  async function handleRetryMessage(messageId: string) {
+    if (!activeChat) return;
+
+    setIsSending(true);
+    setGlobalError(null);
+    try {
+      await retryMessageApi(activeChat.id, messageId);
+      await loadMessages(activeChat.id);
+      await loadRuns(activeChat.id);
+      await loadPromptPreview(activeChat.id);
+    } catch (err) {
+      setGlobalError(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to retry message",
+      );
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  async function handleDeleteMessage(messageId: string) {
+    if (!activeChat) return;
+
+    setGlobalError(null);
+    try {
+      await deleteMessageApi(activeChat.id, messageId);
+      await loadMessages(activeChat.id);
+      await loadRuns(activeChat.id);
+      await loadPromptPreview(activeChat.id);
+    } catch (err) {
+      setGlobalError(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to delete message",
+      );
+    }
+  }
+
   async function handleChatConfigChange(
     patch: Partial<ChatLLMConfig>,
   ) {
@@ -562,6 +649,8 @@ export function useChatController() {
     handleRenameChat,
     messages,
     messagesState,
+    runs,
+    runsState,
     composerText,
     setComposerText,
     isSending,
@@ -586,6 +675,8 @@ export function useChatController() {
     handleCreateChat,
     handleDeleteChat,
     handleSendMessage,
+    handleRetryMessage,
+    handleDeleteMessage,
     handleChatConfigChange,
     handleHistoryConfigChange,
     handleSaveChatConfig,

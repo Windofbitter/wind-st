@@ -169,6 +169,9 @@ export class DefaultPromptBuilder implements PromptBuilder {
       : history.slice(-1);
 
     for (const msg of effectiveHistory) {
+      if (msg.state && msg.state !== "ok") {
+        continue;
+      }
       const llmMessage: LLMChatMessage = {
         role: msg.role,
         content: msg.content,

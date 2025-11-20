@@ -1,6 +1,7 @@
 import { http, unwrap } from "./httpClient";
 
 export type MessageRole = "user" | "assistant" | "system" | "tool";
+export type MessageState = "ok" | "failed" | "pending";
 
 export interface Message {
   id: string;
@@ -11,6 +12,9 @@ export interface Message {
   toolCalls: unknown | null;
   toolResults: unknown | null;
   tokenCount: number | null;
+  runId: string | null;
+  state: MessageState;
+  createdAt: string;
 }
 
 export interface ListMessagesParams {
@@ -42,6 +46,27 @@ export async function appendMessage(
 ): Promise<Message> {
   return unwrap(
     http.post<Message>(`/chats/${chatId}/messages`, payload),
+  );
+}
+
+export async function deleteMessage(
+  chatId: string,
+  messageId: string,
+): Promise<void> {
+  await unwrap(
+    http.delete<void>(`/chats/${chatId}/messages/${messageId}`),
+  );
+}
+
+export async function retryMessage(
+  chatId: string,
+  messageId: string,
+): Promise<Message> {
+  return unwrap(
+    http.post<Message>(
+      `/chats/${chatId}/messages/${messageId}/retry`,
+      {},
+    ),
   );
 }
 

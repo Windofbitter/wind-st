@@ -60,6 +60,27 @@ export class FakeChatRunRepository implements ChatRunRepository {
     this.items.set(id, updated);
     return updated;
   }
+
+  async deleteByIds(ids: string[]): Promise<void> {
+    ids.forEach((id) => this.items.delete(id));
+  }
+
+  async deleteByMessageIds(
+    chatId: string,
+    messageIds: string[],
+  ): Promise<void> {
+    const set = new Set(messageIds);
+    for (const [id, run] of this.items.entries()) {
+      if (
+        run.chatId === chatId &&
+        (set.has(run.userMessageId) ||
+          (run.assistantMessageId !== null &&
+            set.has(run.assistantMessageId)))
+      ) {
+        this.items.delete(id);
+      }
+    }
+  }
 }
 
 export class FakeLLMClient implements LLMClient {

@@ -156,5 +156,33 @@ export class ChatRunRepositorySqlite implements ChatRunRepository {
     }
     return this.getById(id);
   }
+
+  async deleteByIds(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    const placeholders = ids.map(() => "?").join(",");
+    const stmt = this.db.prepare(
+      `DELETE FROM chat_runs WHERE id IN (${placeholders})`,
+    );
+    stmt.run(...ids);
+  }
+
+  async deleteByMessageIds(
+    chatId: string,
+    messageIds: string[],
+  ): Promise<void> {
+    if (messageIds.length === 0) return;
+    const placeholders = messageIds.map(() => "?").join(",");
+    const stmt = this.db.prepare(
+      `
+        DELETE FROM chat_runs
+        WHERE chat_id = ?
+          AND (
+            user_message_id IN (${placeholders})
+            OR assistant_message_id IN (${placeholders})
+          )
+      `.trim(),
+    );
+    stmt.run(chatId, ...messageIds, ...messageIds);
+  }
 }
 

@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import type { Message, MessageRole } from "../../core/entities/Message";
+import type { Message, MessageRole, MessageState } from "../../core/entities/Message";
 import type {
   CreateMessageInput,
   ListMessagesOptions,
@@ -19,6 +19,9 @@ function mapRowToMessage(row: any): Message {
       ? (JSON.parse(row.tool_results) as unknown)
       : null,
     tokenCount: row.token_count ?? null,
+    runId: row.run_id ?? null,
+    state: (row.state as MessageState | null) ?? "ok",
+    createdAt: row.created_at ?? new Date().toISOString(),
   };
 }
 
@@ -27,6 +30,8 @@ export class MessageRepositorySqlite implements MessageRepository {
 
   async append(data: CreateMessageInput): Promise<Message> {
     const id = crypto.randomUUID();
+    const createdAt = data.createdAt ?? new Date().toISOString();
+    const state: MessageState = data.state ?? "ok";
 
     const stmt = this.db.prepare(
       `
@@ -38,9 +43,12 @@ export class MessageRepositorySqlite implements MessageRepository {
         tool_call_id,
         tool_calls,
         tool_results,
-        token_count
+        token_count,
+        run_id,
+        state,
+        created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -57,6 +65,9 @@ export class MessageRepositorySqlite implements MessageRepository {
         ? null
         : JSON.stringify(data.toolResults),
       data.tokenCount ?? null,
+      data.runId ?? null,
+      state,
+      createdAt,
     );
 
     return {
@@ -68,6 +79,9 @@ export class MessageRepositorySqlite implements MessageRepository {
       toolCalls: data.toolCalls ?? null,
       toolResults: data.toolResults ?? null,
       tokenCount: data.tokenCount ?? null,
+      runId: data.runId ?? null,
+      state,
+      createdAt,
     };
   }
 
@@ -99,14 +113,26 @@ export class MessageRepositorySqlite implements MessageRepository {
         tool_call_id,
         tool_calls,
         tool_results,
-        token_count
+        token_count,
+        run_id,
+        state,
+        created_at
       FROM messages
       WHERE chat_id = ?
-      ORDER BY rowid ASC
+      ORDER BY created_at ASC, rowid ASC
     `.trim() + limitOffsetClause;
 
     const stmt = this.db.prepare(sql);
     const rows = stmt.all(chatId);
     return rows.map(mapRowToMessage);
+  }
+
+  async deleteMany(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    const placeholders = ids.map(() => "?").join(",");
+    const stmt = this.db.prepare(
+      `DELETE FROM messages WHERE id IN (${placeholders})`,
+    );
+    stmt.run(...ids);
   }
 }

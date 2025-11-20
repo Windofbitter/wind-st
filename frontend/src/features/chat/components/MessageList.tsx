@@ -1,11 +1,15 @@
 import { useMemo } from "react";
 import type { Message } from "../../../api/messages";
+import type { ChatRun } from "../../../api/runs";
 import { ToolResultContent } from "./ToolResultContent";
 import { MarkdownMessage } from "./MarkdownMessage";
 
 interface MessageListProps {
   messages: Message[];
   characterName: string | null;
+  runs: ChatRun[];
+  onRetryMessage: (messageId: string) => void;
+  onDeleteMessage: (messageId: string) => void;
 }
 
 const ROLE_LABEL: Record<Message["role"], string> = {
@@ -60,10 +64,12 @@ function MessageItem({
   message,
   characterName,
   toolMeta,
+  onDelete,
 }: {
   message: Message;
   characterName: string | null;
   toolMeta: Map<string, ToolCallMeta>;
+  onDelete: () => void;
 }) {
   const roleLabel =
     message.role === "assistant"
@@ -83,21 +89,31 @@ function MessageItem({
     <div className={`message ${message.role}`}>
       <div className="message-header">
         <span className="message-role">{roleLabel}</span>
-        {isTool && (
-          <div className="message-meta">
-            <span className="badge badge-subtle">MCP</span>
-            {toolInfo?.method && (
-              <span className="badge badge-subtle">
-                {toolInfo.method}
-              </span>
-            )}
-            {callId && (
-              <span className="badge badge-subtle">
-                Call {callId}
-              </span>
-            )}
-          </div>
-        )}
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <button
+            className="btn btn-ghost"
+            type="button"
+            style={{ padding: "0.1rem 0.35rem", fontSize: "0.8rem" }}
+            onClick={onDelete}
+          >
+            Delete
+          </button>
+          {isTool && (
+            <div className="message-meta">
+              <span className="badge badge-subtle">MCP</span>
+              {toolInfo?.method && (
+                <span className="badge badge-subtle">
+                  {toolInfo.method}
+                </span>
+              )}
+              {callId && (
+                <span className="badge badge-subtle">
+                  Call {callId}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       <div className="message-body">
         {isTool ? (
@@ -110,22 +126,120 @@ function MessageItem({
   );
 }
 
-export function MessageList({ messages, characterName }: MessageListProps) {
+function AssistantPlaceholder({
+  run,
+  characterName,
+  onRetry,
+}: {
+  run: ChatRun;
+  characterName: string | null;
+  onRetry: () => void;
+}) {
+  const retryable = run.status === "failed" && !run.assistantMessageId;
+  const label = characterName ?? "Assistant";
+
+  return (
+    <div className="message assistant">
+      <div className="message-header">
+        <span className="message-role">{label}</span>
+      </div>
+      <div className="message-body">
+        {retryable ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <div className="badge badge-error" style={{ alignSelf: "flex-start" }}>
+              {run.error ?? "Generation failed."}
+            </div>
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={onRetry}
+              style={{ alignSelf: "flex-start" }}
+            >
+              Retry this turn
+            </button>
+          </div>
+        ) : (
+          <div style={{ opacity: 0.8 }}>
+            {run.status === "running" || run.status === "pending"
+              ? "Assistant is thinking..."
+              : "Awaiting response."}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function latestRunsByUser(runs: ChatRun[]): Map<string, ChatRun> {
+  const sorted = [...runs].sort((a, b) =>
+    a.startedAt.localeCompare(b.startedAt),
+  );
+  const map = new Map<string, ChatRun>();
+  for (const run of sorted) {
+    map.set(run.userMessageId, run);
+  }
+  return map;
+}
+
+export function MessageList({
+  messages,
+  characterName,
+  runs,
+  onRetryMessage,
+  onDeleteMessage,
+}: MessageListProps) {
   const toolMeta = useMemo(
     () => extractToolCallMeta(messages),
     [messages],
   );
 
+  const runsByUser = useMemo(() => latestRunsByUser(runs), [runs]);
+  const items: Array<
+    | { type: "message"; message: Message }
+    | { type: "placeholder"; key: string; run: ChatRun; userMessageId: string }
+  > = [];
+
+  for (const msg of messages) {
+    items.push({ type: "message", message: msg });
+    if (msg.role === "user") {
+      const run = runsByUser.get(msg.id);
+      const needsAssistant =
+        run && !run.assistantMessageId && (run.status === "failed" || run.status === "running" || run.status === "pending");
+      if (run && needsAssistant) {
+        items.push({
+          type: "placeholder",
+          key: `run-${run.id}`,
+          run,
+          userMessageId: msg.id,
+        });
+      }
+    }
+  }
+
   return (
     <>
-      {messages.map((message) => (
-        <MessageItem
-          key={message.id}
-          message={message}
-          characterName={characterName}
-          toolMeta={toolMeta}
-        />
-      ))}
+      {items.map((item) => {
+        if (item.type === "message") {
+          return (
+            <MessageItem
+              key={item.message.id}
+              message={item.message}
+              characterName={characterName}
+              toolMeta={toolMeta}
+              onDelete={() => onDeleteMessage(item.message.id)}
+            />
+          );
+        }
+
+        return (
+          <AssistantPlaceholder
+            key={item.key}
+            run={item.run}
+            characterName={characterName}
+            onRetry={() => onRetryMessage(item.userMessageId)}
+          />
+        );
+      })}
     </>
   );
 }

@@ -93,6 +93,48 @@ export class ChatOrchestrator {
     }
   }
 
+  async retryUserMessage(
+    chatId: string,
+    userMessageId: string,
+  ): Promise<Message> {
+    if (this.locks.has(chatId)) {
+      throw new AppError("CHAT_BUSY", "Chat is busy");
+    }
+
+    this.locks.add(chatId);
+
+    try {
+      const messages = await this.messageService.listMessages(chatId);
+      const target = messages.find((m) => m.id === userMessageId);
+      if (!target || target.role !== "user") {
+        throw new AppError(
+          "MESSAGE_NOT_FOUND",
+          "Only user messages can be retried",
+        );
+      }
+
+      const run = await this.createRun(chatId, userMessageId);
+      this.chatEvents.publishRun(chatId, run);
+
+      try {
+        return await this.performTurn(chatId, run);
+      } catch (err) {
+        const finishedAt = nowIso();
+        const updatedRun = await this.chatRunRepo.update(run.id, {
+          status: "failed",
+          finishedAt,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        if (updatedRun) {
+          this.chatEvents.publishRun(chatId, updatedRun);
+        }
+        throw err;
+      }
+    } finally {
+      this.locks.delete(chatId);
+    }
+  }
+
   private async createRun(chatId: string, userMessageId: string): Promise<ChatRun> {
     const startedAt = nowIso();
     return this.chatRunRepo.create({
@@ -180,6 +222,7 @@ export class ChatOrchestrator {
         content: completion.message.content,
         toolCalls: completion.message.toolCalls ?? null,
         tokenCount: completion.usage?.completionTokens ?? null,
+        runId: run.id,
       });
       this.chatEvents.publishMessage(chatId, latestAssistant);
 
@@ -308,6 +351,7 @@ export class ChatOrchestrator {
         content,
         toolCallId: call.id,
         toolResults,
+        runId: run.id,
       });
       this.chatEvents.publishMessage(chatId, toolMessage);
 

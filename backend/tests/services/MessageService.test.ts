@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { MessageService } from "../../src/application/services/MessageService";
 import { FakeMessageRepository } from "./fakeRepositories";
+import { FakeChatRunRepository } from "./fakeOrchestration";
 
 function createService() {
   const messageRepo = new FakeMessageRepository();
-  const service = new MessageService(messageRepo);
+  const chatRunRepo = new FakeChatRunRepository();
+  const service = new MessageService(messageRepo, chatRunRepo);
   return { messageRepo, service };
 }
 

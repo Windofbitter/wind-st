@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { Chat } from "../../../api/chats";
 import type { Character } from "../../../api/characters";
 import type { Message } from "../../../api/messages";
+import type { ChatRun } from "../../../api/runs";
 import { MessageList } from "./MessageList";
 
 interface LoadState {
@@ -14,9 +15,12 @@ interface Props {
   selectedCharacter: Character | null;
   messages: Message[];
   messagesState: LoadState;
+  runs: ChatRun[];
   composerText: string;
   onComposerChange: (value: string) => void;
   onSend: () => void;
+  onRetryMessage: (messageId: string) => void;
+  onDeleteMessage: (messageId: string) => void;
   isSending: boolean;
   globalError: string | null;
 }
@@ -26,9 +30,12 @@ export function ChatMain({
   selectedCharacter,
   messages,
   messagesState,
+  runs,
   composerText,
   onComposerChange,
   onSend,
+  onRetryMessage,
+  onDeleteMessage,
   isSending,
   globalError,
 }: Props) {
@@ -77,6 +84,9 @@ export function ChatMain({
           <MessageList
             messages={messages}
             characterName={selectedCharacter?.name ?? null}
+            runs={runs}
+            onRetryMessage={onRetryMessage}
+            onDeleteMessage={onDeleteMessage}
           />
         </div>
         <div className="composer">

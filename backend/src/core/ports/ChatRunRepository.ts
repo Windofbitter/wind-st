@@ -24,5 +24,7 @@ export interface ChatRunRepository {
   getById(id: string): Promise<ChatRun | null>;
   listByChat(chatId: string): Promise<ChatRun[]>;
   update(id: string, patch: UpdateChatRunInput): Promise<ChatRun | null>;
+  deleteByIds(ids: string[]): Promise<void>;
+  deleteByMessageIds(chatId: string, messageIds: string[]): Promise<void>;
 }
 

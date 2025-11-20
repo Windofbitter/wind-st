@@ -1,4 +1,4 @@
-import type { Message, MessageRole } from "../entities/Message";
+import type { Message, MessageRole, MessageState } from "../entities/Message";
 
 export interface CreateMessageInput {
   chatId: string;
@@ -8,6 +8,9 @@ export interface CreateMessageInput {
   toolCalls?: unknown | null;
   toolResults?: unknown | null;
   tokenCount?: number | null;
+  runId?: string | null;
+  state?: MessageState;
+  createdAt?: string;
 }
 
 export interface ListMessagesOptions {
@@ -18,5 +21,6 @@ export interface ListMessagesOptions {
 export interface MessageRepository {
   append(data: CreateMessageInput): Promise<Message>;
   listForChat(chatId: string, options?: ListMessagesOptions): Promise<Message[]>;
+  deleteMany(ids: string[]): Promise<void>;
 }
 

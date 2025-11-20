@@ -435,6 +435,9 @@ export class FakeMessageRepository implements MessageRepository {
       toolCalls: data.toolCalls ?? null,
       toolResults: data.toolResults ?? null,
       tokenCount: data.tokenCount ?? null,
+      runId: data.runId ?? null,
+      state: data.state ?? "ok",
+      createdAt: data.createdAt ?? new Date().toISOString(),
     };
     this.items.push(message);
     return message;
@@ -444,10 +447,17 @@ export class FakeMessageRepository implements MessageRepository {
     chatId: string,
     options?: ListMessagesOptions,
   ): Promise<Message[]> {
-    let filtered = this.items.filter((m) => m.chatId === chatId);
+    let filtered = this.items
+      .filter((m) => m.chatId === chatId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     const offset = options?.offset ?? 0;
     const limit = options?.limit ?? filtered.length;
     return filtered.slice(offset, offset + limit);
+  }
+
+  async deleteMany(ids: string[]): Promise<void> {
+    const toDelete = new Set(ids);
+    this.items = this.items.filter((m) => !toDelete.has(m.id));
   }
 }
 

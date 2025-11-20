@@ -1,5 +1,7 @@
 export type MessageRole = "user" | "assistant" | "system" | "tool";
 
+export type MessageState = "ok" | "failed" | "pending";
+
 export interface Message {
   id: string;
   chatId: string;
@@ -9,5 +11,8 @@ export interface Message {
   toolCalls: unknown | null;
   toolResults: unknown | null;
   tokenCount: number | null;
+  runId: string | null;
+  state: MessageState;
+  createdAt: string;
 }
 

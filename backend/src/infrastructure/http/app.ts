@@ -101,7 +101,10 @@ export async function buildApp() {
     chatConfigRepository,
     llmConnectionService,
   );
-  const messageService = new MessageService(messageRepository);
+  const messageService = new MessageService(
+    messageRepository,
+    chatRunRepository,
+  );
   const lorebookService = new LorebookService(
     lorebookRepository,
     lorebookEntryRepository,

@@ -130,5 +130,34 @@ export function registerMessageRoutes(app: FastifyInstance): void {
     void reply.status(201);
     return created;
   });
+
+  app.delete(
+    "/chats/:chatId/messages/:messageId",
+    async (request, reply) => {
+      const { chatId, messageId } = request.params as {
+        chatId: string;
+        messageId: string;
+      };
+
+      await app.messageService.deleteMessageCascade(chatId, messageId);
+      void reply.status(204).send();
+    },
+  );
+
+  app.post(
+    "/chats/:chatId/messages/:messageId/retry",
+    async (request) => {
+      const { chatId, messageId } = request.params as {
+        chatId: string;
+        messageId: string;
+      };
+
+      const assistantMessage = await app.chatOrchestrator.retryUserMessage(
+        chatId,
+        messageId,
+      );
+      return assistantMessage;
+    },
+  );
 }
 

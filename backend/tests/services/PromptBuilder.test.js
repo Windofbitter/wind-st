@@ -23,6 +23,7 @@ import {
   FakePresetRepository,
   FakePromptPresetRepository,
 } from "./fakeRepositories";
+import { FakeChatRunRepository } from "./fakeOrchestration";
 
 class InMemoryHistoryConfigRepository {
   constructor() {
@@ -139,6 +140,7 @@ function createEnvironment() {
   const llmConnectionRepo = new FakeLLMConnectionRepository();
   const mcpServerRepo = new FakeMCPServerRepository();
   const messageRepo = new FakeMessageRepository();
+  const chatRunRepo = new FakeChatRunRepository();
   const presetRepo = new FakePresetRepository();
   const promptPresetRepo = new FakePromptPresetRepository();
   const historyConfigRepo = new InMemoryHistoryConfigRepository();
@@ -178,7 +180,10 @@ function createEnvironment() {
   const historyConfigService = new HistoryConfigService(
     historyConfigRepo,
   );
-  const messageService = new MessageService(messageRepo);
+  const messageService = new MessageService(
+    messageRepo,
+    chatRunRepo,
+  );
 
   const promptBuilder = new DefaultPromptBuilder(
     chatService,

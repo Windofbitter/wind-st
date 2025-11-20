@@ -21,6 +21,7 @@ export function ChatPage() {
     setSelectedChatId,
     messages,
     messagesState,
+    runs,
     composerText,
     setComposerText,
     isSending,
@@ -46,6 +47,8 @@ export function ChatPage() {
     handleDeleteChat,
     handleRenameChat,
     handleSendMessage,
+    handleRetryMessage,
+    handleDeleteMessage,
     handleChatConfigChange,
     handleHistoryConfigChange,
     handleSaveChatConfig,
@@ -75,9 +78,12 @@ export function ChatPage() {
         selectedCharacter={selectedCharacter}
         messages={messages}
         messagesState={messagesState}
+        runs={runs}
         composerText={composerText}
         onComposerChange={setComposerText}
         onSend={() => void handleSendMessage()}
+        onRetryMessage={(id) => void handleRetryMessage(id)}
+        onDeleteMessage={(id) => void handleDeleteMessage(id)}
         isSending={isSending}
         globalError={globalError}
       />

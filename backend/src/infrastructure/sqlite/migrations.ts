@@ -106,6 +106,9 @@ export function runMigrations(db: SqliteDatabase): void {
       tool_calls TEXT,
       tool_results TEXT,
       token_count INTEGER,
+      run_id TEXT,
+      state TEXT NOT NULL DEFAULT 'ok',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
     );
 
@@ -190,6 +193,9 @@ export function runMigrations(db: SqliteDatabase): void {
 
   // Add new columns for existing databases without failing when they already exist.
   ensureColumn(db, "messages", "tool_call_id", "TEXT");
+  ensureColumn(db, "messages", "run_id", "TEXT");
+  ensureColumn(db, "messages", "state", "TEXT NOT NULL DEFAULT 'ok'");
+  ensureColumn(db, "messages", "created_at", "TEXT NOT NULL DEFAULT (datetime('now'))");
   ensureColumn(db, "chat_llm_configs", "max_tool_iterations", "INTEGER NOT NULL DEFAULT 3");
   ensureColumn(db, "chat_llm_configs", "tool_call_timeout_ms", "INTEGER NOT NULL DEFAULT 15000");
   ensureColumn(db, "llm_connections", "status", "TEXT NOT NULL DEFAULT 'unknown'");
@@ -199,4 +205,9 @@ export function runMigrations(db: SqliteDatabase): void {
   ensureColumn(db, "mcp_servers", "status", "TEXT NOT NULL DEFAULT 'unknown'");
   ensureColumn(db, "mcp_servers", "last_checked_at", "TEXT");
   ensureColumn(db, "mcp_servers", "tool_count", "INTEGER");
+
+  db.exec(
+    `CREATE INDEX IF NOT EXISTS idx_messages_chat_created_at
+      ON messages(chat_id, created_at)`,
+  );
 }
