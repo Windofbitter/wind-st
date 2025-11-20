@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { Chat } from "../../../api/chats";
 import type { Character } from "../../../api/characters";
 import type { Message } from "../../../api/messages";
+import { MessageList } from "./MessageList";
 
 interface LoadState {
   loading: boolean;
@@ -66,20 +67,10 @@ export function ChatMain({
               {t("common.errorPrefix")} {messagesState.error}
             </div>
           )}
-          {messages.map((msg) => (
-            <div key={msg.id} className={`message ${msg.role}`}>
-              <div
-                style={{
-                  fontSize: "0.75rem",
-                  opacity: 0.7,
-                  marginBottom: "0.25rem",
-                }}
-              >
-                {msg.role.toUpperCase()}
-              </div>
-              <div>{msg.content}</div>
-            </div>
-          ))}
+          <MessageList
+            messages={messages}
+            characterName={selectedCharacter?.name ?? null}
+          />
         </div>
         <div className="composer">
           <textarea
