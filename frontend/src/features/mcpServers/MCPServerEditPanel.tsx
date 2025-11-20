@@ -1,0 +1,157 @@
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { MCPServer, UpdateMCPServerRequest } from "../../api/mcpServers";
+import { updateMCPServer } from "../../api/mcpServers";
+import { ApiError } from "../../api/httpClient";
+
+interface MCPServerEditPanelProps {
+  server: MCPServer;
+  onSaved(): Promise<void> | void;
+  onClose(): void;
+}
+
+export function MCPServerEditPanel({
+  server,
+  onSaved,
+  onClose,
+}: MCPServerEditPanelProps) {
+  const { t } = useTranslation();
+  const [form, setForm] = useState<UpdateMCPServerRequest>(() => ({
+    name: server.name,
+    command: server.command,
+    args: server.args,
+    env: server.env,
+    isEnabled: server.isEnabled,
+  }));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setForm({
+      name: server.name,
+      command: server.command,
+      args: server.args,
+      env: server.env,
+      isEnabled: server.isEnabled,
+    });
+  }, [server]);
+
+  function parseArgs(value: string): string[] {
+    return value
+      .split(" ")
+      .map((a) => a.trim())
+      .filter(Boolean);
+  }
+
+  function parseEnv(value: string): Record<string, string> {
+    const env: Record<string, string> = {};
+    value
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .forEach((pair) => {
+        const [k, v] = pair.split("=").map((s) => s.trim());
+        if (k && v !== undefined) env[k] = v;
+      });
+    return env;
+  }
+
+  function stringifyEnv(env: Record<string, string>): string {
+    return Object.entries(env)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(", ");
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    try {
+      await updateMCPServer(server.id, form);
+      await onSaved();
+      onClose();
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to update MCP server",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}>
+      <h4 style={{ marginTop: 0 }}>{t("mcpServers.editTitle")}</h4>
+      <div className="input-group">
+        <label htmlFor="edit-name">{t("mcpServers.editNameLabel")}</label>
+        <input
+          id="edit-name"
+          type="text"
+          value={form.name ?? ""}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
+      </div>
+      <div className="input-group">
+        <label htmlFor="edit-command">{t("mcpServers.editCommandLabel")}</label>
+        <input
+          id="edit-command"
+          type="text"
+          value={form.command ?? ""}
+          onChange={(e) => setForm({ ...form, command: e.target.value })}
+        />
+      </div>
+      <div className="input-group">
+        <label htmlFor="edit-args">{t("mcpServers.editArgsLabel")}</label>
+        <input
+          id="edit-args"
+          type="text"
+          value={(form.args ?? []).join(" ")}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              args: parseArgs(e.target.value),
+            })
+          }
+        />
+      </div>
+      <div className="input-group">
+        <label htmlFor="edit-env">{t("mcpServers.editEnvLabel")}</label>
+        <input
+          id="edit-env"
+          type="text"
+          value={stringifyEnv(form.env ?? {})}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              env: parseEnv(e.target.value),
+            })
+          }
+        />
+      </div>
+      <button
+        type="button"
+        className="btn btn-primary"
+        disabled={saving}
+        onClick={() => void handleSave()}
+      >
+        {saving
+          ? t("mcpServers.editSaveButtonSaving")
+          : t("mcpServers.editSaveButton")}
+      </button>
+      <button
+        type="button"
+        className="btn"
+        style={{ marginLeft: "0.5rem" }}
+        onClick={onClose}
+      >
+        {t("mcpServers.editCancelButton")}
+      </button>
+      {error && (
+        <div className="badge" style={{ marginTop: "0.5rem" }}>
+          {t("common.errorPrefix")} {error}
+        </div>
+      )}
+    </div>
+  );
+}

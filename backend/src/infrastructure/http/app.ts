@@ -14,6 +14,7 @@ import { PromptStackService } from "../../application/services/PromptStackServic
 import { ChatOrchestrator } from "../../application/orchestrators/ChatOrchestrator";
 import { HistoryConfigService } from "../../application/services/HistoryConfigService";
 import { DefaultPromptBuilder } from "../../application/services/PromptBuilder";
+import type { MCPClient } from "../../core/ports/MCPClient";
 import { openDatabase } from "../sqlite/db";
 import { CharacterRepositorySqlite } from "../sqlite/CharacterRepositorySqlite";
 import { ChatRepositorySqlite } from "../sqlite/ChatRepositorySqlite";
@@ -60,6 +61,7 @@ declare module "fastify" {
     chatRunRepository: ChatRunRepository;
     historyConfigService: HistoryConfigService;
     promptBuilder: PromptBuilder;
+    mcpClient: MCPClient;
   }
 }
 
@@ -166,6 +168,7 @@ export async function buildApp() {
   app.decorate("chatRunRepository", chatRunRepository);
   app.decorate("historyConfigService", historyConfigService);
   app.decorate("promptBuilder", promptBuilder);
+  app.decorate("mcpClient", mcpClient);
 
   registerHealthRoutes(app);
   registerCharacterRoutes(app);

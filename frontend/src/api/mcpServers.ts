@@ -15,6 +15,13 @@ export interface CharacterMCPServer {
   mcpServerId: string;
 }
 
+export interface MCPServerStatusResponse {
+  serverId: string;
+  status: "ok" | "error";
+  toolCount?: number;
+  error?: string;
+}
+
 export interface CreateMCPServerRequest {
   name: string;
   command: string;
@@ -51,6 +58,19 @@ export async function updateMCPServer(
 
 export async function deleteMCPServer(id: string): Promise<void> {
   await unwrap(http.delete<void>(`/mcp-servers/${id}`));
+}
+
+export async function getMCPServerStatus(
+  id: string,
+  options?: { reset?: boolean; timeoutMs?: number },
+): Promise<MCPServerStatusResponse> {
+  const params = new URLSearchParams();
+  if (options?.reset) params.set("reset", "true");
+  if (options?.timeoutMs) params.set("timeoutMs", String(options.timeoutMs));
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return unwrap(
+    http.get<MCPServerStatusResponse>(`/mcp-servers/${id}/status${suffix}`),
+  );
 }
 
 export async function listCharacterMCPServers(

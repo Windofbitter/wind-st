@@ -1,4 +1,4 @@
-import type { LLMChatMessage } from "../../core/ports/LLMClient";
+import type { LLMChatMessage, LLMToolCall } from "../../core/ports/LLMClient";
 import type { PromptBuilder, PromptBuilderResult, PromptToolSpec } from "../../core/ports/PromptBuilder";
 import { AppError } from "../errors/AppError";
 import type { ChatService } from "./ChatService";
@@ -174,8 +174,9 @@ export class DefaultPromptBuilder implements PromptBuilder {
         content: msg.content,
       };
 
-      if (msg.toolCalls) {
-        llmMessage.toolCalls = msg.toolCalls as unknown as LLMChatMessage["toolCalls"];
+      if (Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0) {
+        llmMessage.toolCalls =
+          msg.toolCalls as unknown as LLMToolCall[];
       }
 
       if (msg.toolCallId) {

@@ -162,11 +162,15 @@ export class ChatOrchestrator {
         tokenCount: completion.usage?.completionTokens ?? null,
       });
 
-      conversation.push({
+      const assistantMessage: LLMChatMessage = {
         role: "assistant",
         content: completion.message.content,
-        toolCalls: completion.message.toolCalls,
-      });
+      };
+      if (completion.message.toolCalls && completion.message.toolCalls.length > 0) {
+        assistantMessage.toolCalls = completion.message.toolCalls;
+      }
+
+      conversation.push(assistantMessage);
 
       const toolCalls = completion.message.toolCalls ?? [];
       if (toolCalls.length === 0) {

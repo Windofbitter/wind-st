@@ -1,6 +1,7 @@
 import { AppError } from "../../application/errors/AppError";
 import type {
   MCPClient,
+  MCPProbeResult,
   MCPToolDefinition,
   MCPToolResult,
 } from "../../core/ports/MCPClient";
@@ -25,8 +26,11 @@ export class StdIoMCPClient implements MCPClient {
     private readonly clientVersion = "1.0.0",
   ) {}
 
-  async listTools(server: MCPServer): Promise<MCPToolDefinition[]> {
-    const connection = await this.getConnection(server);
+  async listTools(
+    server: MCPServer,
+    options?: { signal?: AbortSignal },
+  ): Promise<MCPToolDefinition[]> {
+    const connection = await this.getConnection(server, options?.signal);
 
     try {
       const response = await connection.client.listTools();
@@ -118,8 +122,20 @@ export class StdIoMCPClient implements MCPClient {
   ): Promise<ServerConnection> {
     let promise = this.connections.get(server.id);
     if (!promise) {
-      promise = this.createConnection(server);
-      this.connections.set(server.id, promise);
+      let wrapped: Promise<ServerConnection>;
+      wrapped = this.createConnection(server).then(
+        (connection) => connection,
+        (err) => {
+          // Remove failed connection promises so we can retry later.
+          if (this.connections.get(server.id) === wrapped) {
+            this.connections.delete(server.id);
+          }
+          throw err;
+        },
+      );
+
+      this.connections.set(server.id, wrapped);
+      promise = wrapped;
     }
 
     if (!signal) {
@@ -167,10 +183,10 @@ export class StdIoMCPClient implements MCPClient {
   private async createConnection(server: MCPServer): Promise<ServerConnection> {
     try {
       const clientModule = (await import(
-        "@modelcontextprotocol/sdk/client/index.js"
+        "@modelcontextprotocol/sdk/client"
       )) as any;
       const transportModule = (await import(
-        "@modelcontextprotocol/sdk/client/stdio.js"
+        "@modelcontextprotocol/sdk/client/stdio"
       )) as any;
 
       const TransportCtor = transportModule.StdioClientTransport;
@@ -222,6 +238,34 @@ export class StdIoMCPClient implements MCPClient {
     } catch {
       // Best-effort cleanup; ignore close errors.
     }
+  }
+
+  async probe(
+    server: MCPServer,
+    options?: { reset?: boolean; timeoutMs?: number; signal?: AbortSignal },
+  ): Promise<MCPProbeResult> {
+    const timeoutMs = Math.max(1000, options?.timeoutMs ?? 5000);
+    const controller = new AbortController();
+    const signal = options?.signal ?? controller.signal;
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      if (options?.reset) {
+        await this.resetConnection(server.id);
+      }
+
+      const tools = await this.listTools(server, { signal });
+      return { status: "ok", toolCount: tools.length };
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      return { status: "error", error };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async resetConnection(serverId: string): Promise<void> {
+    await this.dropConnection(serverId);
   }
 
   private formatToolResult(result: any): MCPToolResult {
@@ -290,4 +334,3 @@ export class StdIoMCPClient implements MCPClient {
     });
   }
 }
-

@@ -74,8 +74,10 @@ export class OpenAILLMClient implements LLMClient {
     const message: LLMChatMessage = {
       role: "assistant",
       content: content ?? "",
-      toolCalls: toolCalls && toolCalls.length > 0 ? toolCalls : undefined,
     };
+    if (toolCalls && toolCalls.length > 0) {
+      message.toolCalls = toolCalls;
+    }
 
     const usage: LLMChatCompletionUsage | undefined = response.usage
       ? {

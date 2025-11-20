@@ -5,6 +5,8 @@ import type {
 } from "../../../core/ports/MCPServerRepository";
 import { AppError } from "../../../application/errors/AppError";
 
+const DEFAULT_PROBE_TIMEOUT_MS = 5000;
+
 function ensureEnvObject(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object") {
     throw new AppError(
@@ -135,6 +137,25 @@ function ensureUpdateMCPServerPayload(
   return patch;
 }
 
+function parseStatusQuery(query: unknown): {
+  reset: boolean;
+  timeoutMs?: number;
+} {
+  if (!query || typeof query !== "object") {
+    return { reset: false };
+  }
+
+  const value = query as { reset?: string; timeoutMs?: string };
+  const reset = value.reset === "true" || value.reset === "1";
+  const timeoutMs = value.timeoutMs ? Number(value.timeoutMs) : undefined;
+
+  if (timeoutMs !== undefined && Number.isFinite(timeoutMs) && timeoutMs > 0) {
+    return { reset, timeoutMs };
+  }
+
+  return { reset };
+}
+
 export function registerMCPServerRoutes(app: FastifyInstance): void {
   app.get("/mcp-servers", async () => {
     const servers = await app.mcpServerService.listServers();
@@ -164,13 +185,35 @@ export function registerMCPServerRoutes(app: FastifyInstance): void {
     if (!updated) {
       throw new AppError("MCP_SERVER_NOT_FOUND", "MCP server not found");
     }
+    await app.mcpClient.resetConnection(id);
     return updated;
   });
 
   app.delete("/mcp-servers/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
     await app.mcpServerService.deleteServer(id);
+    await app.mcpClient.resetConnection(id);
     void reply.status(204).send();
+  });
+
+  app.get("/mcp-servers/:id/status", async (request) => {
+    const { id } = request.params as { id: string };
+    const { reset, timeoutMs } = parseStatusQuery(request.query);
+    const server = await app.mcpServerService.getServer(id);
+    if (!server) {
+      throw new AppError("MCP_SERVER_NOT_FOUND", "MCP server not found");
+    }
+
+    if (!server.isEnabled) {
+      return { serverId: server.id, status: "error", error: "Server is disabled" };
+    }
+
+    const result = await app.mcpClient.probe(server, {
+      reset,
+      timeoutMs: timeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS,
+    });
+
+    return { serverId: server.id, ...result };
   });
 }
 

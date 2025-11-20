@@ -1,6 +1,7 @@
 import { AppError } from "../../application/errors/AppError";
 import type {
   MCPClient,
+  MCPProbeResult,
   MCPToolDefinition,
   MCPToolResult,
 } from "../../core/ports/MCPClient";
@@ -12,7 +13,10 @@ import type { MCPServer } from "../../core/entities/MCPServer";
  * with a deterministic error.
  */
 export class NoopMCPClient implements MCPClient {
-  async listTools(_server: MCPServer): Promise<MCPToolDefinition[]> {
+  async listTools(
+    _server: MCPServer,
+    _options?: { signal?: AbortSignal },
+  ): Promise<MCPToolDefinition[]> {
     return [];
   }
 
@@ -22,5 +26,13 @@ export class NoopMCPClient implements MCPClient {
     _args: unknown,
   ): Promise<MCPToolResult> {
     throw new AppError("EXTERNAL_LLM_ERROR", `MCP tool '${toolName}' cannot be executed: client not configured`);
+  }
+
+  async probe(_server: MCPServer): Promise<MCPProbeResult> {
+    return { status: "error", error: "MCP client not configured" };
+  }
+
+  async resetConnection(_serverId: string): Promise<void> {
+    return;
   }
 }
