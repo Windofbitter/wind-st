@@ -10,10 +10,13 @@ export function MarkdownMessage({ content }: MarkdownMessageProps) {
     <div className="markdown-body">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        linkTarget="_blank"
         components={{
           a: ({ node, ...props }) => (
-            <a {...props} rel="noreferrer noopener" />
+            <a
+              {...props}
+              target="_blank"
+              rel="noreferrer noopener"
+            />
           ),
           code: ({ inline, ...props }) =>
             inline ? (
