@@ -71,6 +71,13 @@ export class ChatService {
     return this.chatRepo.list(filter);
   }
 
+  async updateChat(
+    id: string,
+    patch: Partial<Omit<CreateChatInput, "characterId">>,
+  ): Promise<Chat | null> {
+    return this.chatRepo.update(id, patch);
+  }
+
   async deleteChat(id: string): Promise<void> {
     await this.chatRepo.delete(id);
     await this.chatConfigRepo.deleteByChatId(id);

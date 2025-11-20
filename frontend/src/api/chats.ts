@@ -87,6 +87,13 @@ export async function createChat(
   return unwrap(http.post<CreateChatResponse>("/chats", payload));
 }
 
+export async function updateChatTitle(
+  chatId: string,
+  title: string,
+): Promise<Chat> {
+  return unwrap(http.patch<Chat>(`/chats/${chatId}`, { title }));
+}
+
 export async function deleteChat(id: string): Promise<void> {
   await unwrap(http.delete<void>(`/chats/${id}`));
 }

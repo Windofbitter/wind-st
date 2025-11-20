@@ -109,6 +109,44 @@ describe("Chat routes", () => {
     expect(runs[0].status).toBe("completed");
   });
 
+  it("renames an existing chat", async () => {
+    const ctx = await createTestApp();
+    app = ctx.app;
+
+    const character = await createCharacter();
+    const connection = await createLLMConnection();
+
+    const createChatResponse = await app.inject({
+      method: "POST",
+      url: "/chats",
+      payload: {
+        characterId: character.id,
+        title: "Original",
+        initialConfig: {
+          llmConnectionId: connection.id,
+          model: "gpt-4.1",
+          temperature: 0.7,
+          maxOutputTokens: 128,
+          maxToolIterations: 3,
+          toolCallTimeoutMs: 15000,
+        },
+      },
+    });
+
+    const created = createChatResponse.json() as { chat: { id: string } };
+
+    const renameResponse = await app.inject({
+      method: "PATCH",
+      url: `/chats/${created.chat.id}`,
+      payload: { title: "Renamed chat" },
+    });
+
+    expect(renameResponse.statusCode).toBe(200);
+    const renamed = renameResponse.json() as { title: string; id: string };
+    expect(renamed.title).toBe("Renamed chat");
+    expect(renamed.id).toBe(created.chat.id);
+  });
+
   it("validates chat creation payload", async () => {
     const ctx = await createTestApp();
     app = ctx.app;

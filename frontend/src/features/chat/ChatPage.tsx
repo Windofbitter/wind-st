@@ -40,6 +40,7 @@ export function ChatPage() {
     selectedConnection,
     handleCreateChat,
     handleDeleteChat,
+    handleRenameChat,
     handleSendMessage,
     handleChatConfigChange,
     handleHistoryConfigChange,
@@ -60,6 +61,7 @@ export function ChatPage() {
         onSelectChat={(id) => setSelectedChatId(id)}
         onCreateChat={handleCreateChat}
         onDeleteChat={handleDeleteChat}
+        onRenameChat={handleRenameChat}
       />
 
       <ChatMain

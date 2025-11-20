@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Character } from "../../../api/characters";
 import type { Chat } from "../../../api/chats";
@@ -18,6 +19,7 @@ interface Props {
   onSelectChat: (id: string) => void;
   onCreateChat: () => void;
   onDeleteChat: (id: string) => void;
+  onRenameChat: (id: string, title: string) => void;
 }
 
 export function ChatSidebar({
@@ -31,8 +33,28 @@ export function ChatSidebar({
   onSelectChat,
   onCreateChat,
   onDeleteChat,
+  onRenameChat,
 }: Props) {
   const { t } = useTranslation();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+
+  function startEditing(chat: Chat) {
+    setEditingId(chat.id);
+    setDraftTitle(chat.title);
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setDraftTitle("");
+  }
+
+  function submitRename(chatId: string) {
+    const next = draftTitle.trim();
+    if (!next) return;
+    onRenameChat(chatId, next);
+    cancelEditing();
+  }
 
   return (
     <section className="chat-sidebar">
@@ -104,18 +126,81 @@ export function ChatSidebar({
                     : "transparent",
               }}
             >
-              <span>{chat.title}</span>
-              <button
-                type="button"
-                className="btn btn-danger"
-                style={{ padding: "0.1rem 0.4rem" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteChat(chat.id);
-                }}
-              >
-                ×
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", flex: 1 }}>
+                {editingId === chat.id ? (
+                  <input
+                    autoFocus
+                    value={draftTitle}
+                    onChange={(e) => setDraftTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        submitRename(chat.id);
+                      } else if (e.key === "Escape") {
+                        e.preventDefault();
+                        cancelEditing();
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ flex: 1 }}
+                  />
+                ) : (
+                  <span>{chat.title}</span>
+                )}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                {editingId === chat.id ? (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ padding: "0.1rem 0.4rem" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        submitRename(chat.id);
+                      }}
+                    >
+                      {t("common.save")}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{ padding: "0.1rem 0.4rem" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cancelEditing();
+                      }}
+                    >
+                      {t("common.cancel")}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{ padding: "0.1rem 0.4rem" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditing(chat);
+                      }}
+                    >
+                      ✎
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      style={{ padding: "0.1rem 0.4rem" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteChat(chat.id);
+                      }}
+                    >
+                      ×
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           ))}
           {chatsState.loading && (

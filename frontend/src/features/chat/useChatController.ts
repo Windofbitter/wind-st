@@ -10,6 +10,7 @@ import {
   getChatConfig,
   getPromptPreview,
   listChats,
+  updateChatTitle,
   updateChatConfig,
 } from "../../api/chats";
 import type { ChatHistoryConfig } from "../../api/historyConfig";
@@ -432,6 +433,29 @@ export function useChatController() {
     }
   }
 
+  async function handleRenameChat(chatId: string, title: string) {
+    setChatsState((s) => ({ ...s, error: null }));
+    try {
+      const updated = await updateChatTitle(chatId, title);
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === chatId ? { ...chat, title: updated.title } : chat,
+        ),
+      );
+      if (selectedChatId === chatId) {
+        setSelectedChatId(chatId);
+      }
+    } catch (err) {
+      setChatsState((s) => ({
+        ...s,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to rename chat",
+      }));
+    }
+  }
+
   async function handleSendMessage() {
     if (!activeChat) return;
     const content = composerText.trim();
@@ -529,6 +553,7 @@ export function useChatController() {
     chatsState,
     selectedChatId,
     setSelectedChatId,
+    handleRenameChat,
     messages,
     messagesState,
     composerText,

@@ -26,6 +26,10 @@ interface CreateTurnBody {
   content: string;
 }
 
+interface UpdateChatBody {
+  title?: string;
+}
+
 interface UpdateHistoryConfigBody {
   historyEnabled?: boolean;
   messageLimit?: number;
@@ -212,6 +216,37 @@ function ensureUpdateChatConfigPayload(
   return patch;
 }
 
+function ensureUpdateChatPayload(body: unknown): UpdateChatBody {
+  if (!body || typeof body !== "object") {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Invalid chat patch: expected object",
+    );
+  }
+
+  const value = body as UpdateChatBody;
+  const patch: UpdateChatBody = {};
+
+  if (value.title !== undefined) {
+    if (typeof value.title !== "string" || value.title.trim() === "") {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid chat patch: title must be non-empty string",
+      );
+    }
+    patch.title = value.title.trim();
+  }
+
+  if (Object.keys(patch).length === 0) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Invalid chat patch: no fields to update",
+    );
+  }
+
+  return patch;
+}
+
 function ensureUpdateHistoryConfigPayload(
   body: unknown,
 ): UpdateChatHistoryConfigInput {
@@ -308,6 +343,16 @@ export function registerChatRoutes(app: FastifyInstance): void {
     const { id } = request.params as { id: string };
     await app.chatService.deleteChat(id);
     void reply.status(204).send();
+  });
+
+  app.patch("/chats/:id", async (request) => {
+    const { id } = request.params as { id: string };
+    const patch = ensureUpdateChatPayload(request.body);
+    const updated = await app.chatService.updateChat(id, patch);
+    if (!updated) {
+      throw new AppError("CHAT_NOT_FOUND", "Chat not found");
+    }
+    return updated;
   });
 
   app.get("/chats/:id/config", async (request) => {
