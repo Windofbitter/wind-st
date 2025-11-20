@@ -34,9 +34,14 @@ function toDisplayString(value: unknown): { text: string; isJson: boolean } {
 
 function buildPreview(text: string): { preview: string; truncated: boolean } {
   const lines = text.split(/\r?\n/);
-  if (lines.length > PREVIEW_LINE_LIMIT) {
+  if (lines.length > 1) {
+    const sliced = lines.slice(0, PREVIEW_LINE_LIMIT).join("\n");
+    const clipped =
+      sliced.length > PREVIEW_CHAR_LIMIT
+        ? sliced.slice(0, PREVIEW_CHAR_LIMIT)
+        : sliced;
     return {
-      preview: lines.slice(0, PREVIEW_LINE_LIMIT).join("\n"),
+      preview: clipped,
       truncated: true,
     };
   }
