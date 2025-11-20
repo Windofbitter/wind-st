@@ -65,11 +65,15 @@ function MessageItem({
   characterName,
   toolMeta,
   onDelete,
+  onRetry,
+  showRetry,
 }: {
   message: Message;
   characterName: string | null;
   toolMeta: Map<string, ToolCallMeta>;
   onDelete: () => void;
+  onRetry?: () => void;
+  showRetry?: boolean;
 }) {
   const roleLabel =
     message.role === "assistant"
@@ -89,14 +93,26 @@ function MessageItem({
     <div className={`message ${message.role}`}>
       <div className="message-header">
         <span className="message-role">{roleLabel}</span>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+          {showRetry && (
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Retry turn"
+              onClick={onRetry}
+              title="Retry this turn"
+            >
+              ⟳
+            </button>
+          )}
           <button
-            className="btn btn-ghost"
+            className="icon-button"
             type="button"
-            style={{ padding: "0.1rem 0.35rem", fontSize: "0.8rem" }}
+            aria-label="Delete message"
             onClick={onDelete}
+            title="Delete message"
           >
-            Delete
+            🗑️
           </button>
           {isTool && (
             <div className="message-meta">
@@ -194,6 +210,15 @@ export function MessageList({
   );
 
   const runsByUser = useMemo(() => latestRunsByUser(runs), [runs]);
+  const latestUserId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === "user") {
+        return messages[i].id;
+      }
+    }
+    return null;
+  }, [messages]);
+
   const items: Array<
     | { type: "message"; message: Message }
     | { type: "placeholder"; key: string; run: ChatRun; userMessageId: string }
@@ -220,6 +245,9 @@ export function MessageList({
     <>
       {items.map((item) => {
         if (item.type === "message") {
+          const isLatestUser =
+            item.message.role === "user" &&
+            latestUserId === item.message.id;
           return (
             <MessageItem
               key={item.message.id}
@@ -227,6 +255,12 @@ export function MessageList({
               characterName={characterName}
               toolMeta={toolMeta}
               onDelete={() => onDeleteMessage(item.message.id)}
+              onRetry={
+                isLatestUser
+                  ? () => onRetryMessage(item.message.id)
+                  : undefined
+              }
+              showRetry={isLatestUser}
             />
           );
         }
