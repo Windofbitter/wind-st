@@ -141,7 +141,20 @@ export class ChatOrchestrator {
     let latestAssistant: Message | null = null;
 
     for (let iteration = 0; iteration <= maxToolIterations; iteration++) {
-      const llmMessages = [...conversation];
+      const remainingIterations = Math.max(
+        0,
+        maxToolIterations - iteration,
+      );
+
+      const llmMessages: LLMChatMessage[] = [...conversation];
+      if (maxToolIterations > 0) {
+        llmMessages.push({
+          role: "system",
+          content:
+            `You can use tools for this task. Tool iteration budget: ${remainingIterations} remaining (max ${maxToolIterations}). ` +
+            "Avoid unnecessary tool calls; stop once the user is satisfied.",
+        });
+      }
 
       const completion = await this.llmClient.completeChat({
         connection,

@@ -202,6 +202,23 @@ export function ChatConfigPanel({
             />
           </div>
           <div className="input-group">
+            <label htmlFor="max-tool-iterations">
+              {t("chat.maxToolIterationsLabel")}
+            </label>
+            <input
+              id="max-tool-iterations"
+              type="number"
+              min="0"
+              max="20"
+              value={chatConfig.maxToolIterations}
+              onChange={(e) =>
+                onChatConfigChange({
+                  maxToolIterations: Number(e.target.value),
+                })
+              }
+            />
+          </div>
+          <div className="input-group">
             <label htmlFor="history-enabled">
               {t("chat.historyEnabledLabel")}
             </label>
