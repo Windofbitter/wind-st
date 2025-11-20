@@ -24,3 +24,4 @@ The goal is to let creators build rich character experiences by composing reusab
 - Data entities: `docs/entities.md`
 - Tech stack overview: `docs/tech-stack.md`
 - Backend design (including ChatRun and ChatOrchestrator): `docs/backend-design.md`
+- Frontend docs index (architecture, API shapes, critical flows): `docs/frontend/README.md`
