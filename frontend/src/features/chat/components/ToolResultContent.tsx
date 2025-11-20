@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import type { Message } from "../../../api/messages";
 
-const PREVIEW_LINE_LIMIT = 12;
-const PREVIEW_CHAR_LIMIT = 1200;
+const PREVIEW_LINE_LIMIT = 20;
+const PREVIEW_CHAR_LIMIT = 2400;
 
 function toDisplayString(value: unknown): { text: string; isJson: boolean } {
   if (value === null || value === undefined) {
