@@ -32,6 +32,9 @@ describe("LLMConnectionRepositorySqlite", () => {
     const list = await repo.list();
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe("Primary");
+    expect(list[0].status).toBe("unknown");
+    expect(list[0].lastTestedAt).toBeNull();
+    expect(list[0].modelsAvailable).toBeNull();
 
     const fetched = await repo.getById(created.id);
     expect(fetched).not.toBeNull();
@@ -43,11 +46,17 @@ describe("LLMConnectionRepositorySqlite", () => {
       defaultModel: "gpt-4.2",
       apiKey: "sk-updated",
       isEnabled: false,
+      status: "ok",
+      lastTestedAt: "2024-01-01T00:00:00.000Z",
+      modelsAvailable: 4,
     });
     expect(updated).not.toBeNull();
     expect(updated?.baseUrl).toBe("http://example.com");
     expect(updated?.apiKey).toBe("sk-updated");
     expect(updated?.isEnabled).toBe(false);
+    expect(updated?.status).toBe("ok");
+    expect(updated?.lastTestedAt).toBe("2024-01-01T00:00:00.000Z");
+    expect(updated?.modelsAvailable).toBe(4);
 
     await repo.delete(created.id);
     const afterDelete = await repo.getById(created.id);

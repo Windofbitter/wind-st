@@ -31,6 +31,9 @@ describe("MCPServerRepositorySqlite", () => {
     expect(list[0].args).toEqual(["server.js", "--port", "3000"]);
     expect(list[0].env).toEqual({ NODE_ENV: "test", FOO: "bar" });
     expect(list[0].isEnabled).toBe(true);
+    expect(list[0].status).toBe("unknown");
+    expect(list[0].lastCheckedAt).toBeNull();
+    expect(list[0].toolCount).toBeNull();
 
     const fetched = await repo.getById(created.id);
     expect(fetched).not.toBeNull();
@@ -40,11 +43,17 @@ describe("MCPServerRepositorySqlite", () => {
       args: ["server.js"],
       env: { NODE_ENV: "production" },
       isEnabled: false,
+      status: "ok",
+      lastCheckedAt: "2024-01-02T00:00:00.000Z",
+      toolCount: 5,
     });
     expect(updated).not.toBeNull();
     expect(updated?.args).toEqual(["server.js"]);
     expect(updated?.env).toEqual({ NODE_ENV: "production" });
     expect(updated?.isEnabled).toBe(false);
+    expect(updated?.status).toBe("ok");
+    expect(updated?.lastCheckedAt).toBe("2024-01-02T00:00:00.000Z");
+    expect(updated?.toolCount).toBe(5);
 
     await repo.delete(created.id);
     const afterDelete = await repo.getById(created.id);

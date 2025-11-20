@@ -114,7 +114,7 @@ export function ConnectionsTable({
           ))}
           {connections.length === 0 && !loading && (
             <tr>
-              <td colSpan={6}>
+              <td colSpan={7}>
                 <span style={{ opacity: 0.8 }}>
                   {t("llmConnections.listEmpty")}
                 </span>

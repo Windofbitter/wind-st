@@ -83,10 +83,17 @@ export function ChatSidebar({
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
           {chats.map((chat) => (
-            <button
+            <div
               key={chat.id}
-              type="button"
               onClick={() => onSelectChat(chat.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectChat(chat.id);
+                }
+              }}
+              role="button"
+              tabIndex={0}
               className="nav-link"
               style={{
                 justifyContent: "space-between",
@@ -109,7 +116,7 @@ export function ChatSidebar({
               >
                 ×
               </button>
-            </button>
+            </div>
           ))}
           {chatsState.loading && (
             <div>{t("chat.chatsLoading")}</div>

@@ -71,6 +71,8 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
       apiKey,
       isEnabled ? 1 : 0,
       status,
+      lastTestedAt,
+      modelsAvailable,
     );
 
     return {
@@ -83,7 +85,7 @@ export class LLMConnectionRepositorySqlite implements LLMConnectionRepository {
       isEnabled,
       status,
       lastTestedAt,
-    modelsAvailable,
+      modelsAvailable,
     };
   }
 

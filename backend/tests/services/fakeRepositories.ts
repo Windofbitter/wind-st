@@ -317,6 +317,9 @@ export class FakeLLMConnectionRepository implements LLMConnectionRepository {
       defaultModel: data.defaultModel,
       apiKey: data.apiKey,
       isEnabled: data.isEnabled ?? true,
+      status: data.status ?? "unknown",
+      lastTestedAt: data.lastTestedAt ?? null,
+      modelsAvailable: data.modelsAvailable ?? null,
     };
     this.items.set(id, connection);
     return connection;
@@ -342,6 +345,15 @@ export class FakeLLMConnectionRepository implements LLMConnectionRepository {
       apiKey: patch.apiKey !== undefined ? patch.apiKey : existing.apiKey,
       isEnabled:
         patch.isEnabled !== undefined ? patch.isEnabled : existing.isEnabled,
+      status: patch.status ?? existing.status,
+      lastTestedAt:
+        patch.lastTestedAt !== undefined
+          ? patch.lastTestedAt
+          : existing.lastTestedAt,
+      modelsAvailable:
+        patch.modelsAvailable !== undefined
+          ? patch.modelsAvailable
+          : existing.modelsAvailable,
     };
     this.items.set(id, updated);
     return updated;
@@ -364,6 +376,9 @@ export class FakeMCPServerRepository implements MCPServerRepository {
       args: data.args,
       env: data.env,
       isEnabled: data.isEnabled ?? true,
+      status: data.status ?? "unknown",
+      lastCheckedAt: data.lastCheckedAt ?? null,
+      toolCount: data.toolCount ?? null,
     };
     this.items.set(id, server);
     return server;
@@ -390,6 +405,13 @@ export class FakeMCPServerRepository implements MCPServerRepository {
       args: patch.args ?? existing.args,
       isEnabled:
         patch.isEnabled !== undefined ? patch.isEnabled : existing.isEnabled,
+      status: patch.status ?? existing.status,
+      lastCheckedAt:
+        patch.lastCheckedAt !== undefined
+          ? patch.lastCheckedAt
+          : existing.lastCheckedAt,
+      toolCount:
+        patch.toolCount !== undefined ? patch.toolCount : existing.toolCount,
     };
     this.items.set(id, updated);
     return updated;
