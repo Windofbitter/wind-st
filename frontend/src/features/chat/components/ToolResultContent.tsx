@@ -1,10 +1,6 @@
 import { useMemo, useState } from "react";
 import type { Message } from "../../../api/messages";
 
-const PREVIEW_LINE_LIMIT = 20;
-const PREVIEW_CHAR_LIMIT = 2400;
-const PREVIEW_COLLAPSE_MIN_LINES = 1;
-
 function toDisplayString(value: unknown): { text: string; isJson: boolean } {
   if (value === null || value === undefined) {
     return { text: "", isJson: false };
@@ -33,30 +29,6 @@ function toDisplayString(value: unknown): { text: string; isJson: boolean } {
   }
 }
 
-function buildPreview(text: string): { preview: string; truncated: boolean } {
-  const lines = text.split(/\r?\n/);
-  if (lines.length > PREVIEW_COLLAPSE_MIN_LINES) {
-    const sliced = lines.slice(0, PREVIEW_LINE_LIMIT).join("\n");
-    const clipped =
-      sliced.length > PREVIEW_CHAR_LIMIT
-        ? sliced.slice(0, PREVIEW_CHAR_LIMIT)
-        : sliced;
-    return {
-      preview: clipped,
-      truncated: true,
-    };
-  }
-
-  if (text.length > PREVIEW_CHAR_LIMIT) {
-    return {
-      preview: text.slice(0, PREVIEW_CHAR_LIMIT),
-      truncated: true,
-    };
-  }
-
-  return { preview: text, truncated: false };
-}
-
 interface ToolResultContentProps {
   message: Message;
 }
@@ -69,29 +41,35 @@ export function ToolResultContent({ message }: ToolResultContentProps) {
     return toDisplayString(raw);
   }, [message.content, message.toolResults]);
 
-  const preview = useMemo(
-    () => buildPreview(display.text),
-    [display.text],
-  );
-
-  const body = expanded || !preview.truncated ? display.text : preview.preview;
-
   return (
     <div className="tool-result">
-      <pre className="tool-output">{body}</pre>
-      {preview.truncated && (
+      {expanded ? (
+        <>
+          <pre className="tool-output">{display.text}</pre>
+          <div className="tool-actions">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setExpanded(false)}
+            >
+              Collapse
+            </button>
+            <span className="tool-hint">
+              {display.isJson ? "Pretty JSON view." : "Full output shown."}
+            </span>
+          </div>
+        </>
+      ) : (
         <div className="tool-actions">
           <button
             type="button"
             className="btn btn-ghost"
-            onClick={() => setExpanded((v) => !v)}
+            onClick={() => setExpanded(true)}
           >
-            {expanded ? "Collapse" : "Show full"}
+            Show result
           </button>
           <span className="tool-hint">
-            {display.isJson
-              ? "Pretty JSON view; expanded for full output."
-              : "Showing preview; expand to see everything."}
+            Tool output hidden; expand to view the full content.
           </span>
         </div>
       )}
