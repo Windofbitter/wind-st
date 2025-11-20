@@ -3,6 +3,7 @@ import type { Message } from "../../../api/messages";
 
 const PREVIEW_LINE_LIMIT = 20;
 const PREVIEW_CHAR_LIMIT = 2400;
+const PREVIEW_COLLAPSE_MIN_LINES = 1;
 
 function toDisplayString(value: unknown): { text: string; isJson: boolean } {
   if (value === null || value === undefined) {
@@ -34,7 +35,7 @@ function toDisplayString(value: unknown): { text: string; isJson: boolean } {
 
 function buildPreview(text: string): { preview: string; truncated: boolean } {
   const lines = text.split(/\r?\n/);
-  if (lines.length > 1) {
+  if (lines.length > PREVIEW_COLLAPSE_MIN_LINES) {
     const sliced = lines.slice(0, PREVIEW_LINE_LIMIT).join("\n");
     const clipped =
       sliced.length > PREVIEW_CHAR_LIMIT
