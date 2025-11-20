@@ -53,7 +53,7 @@ describe("Preset routes", () => {
 
     expect(response.statusCode).toBe(400);
     const body = response.json() as any;
-    expect(body.error.code).toBe("VALIDATION_ERROR");
+    expect(body.code).toBe("VALIDATION_ERROR");
   });
 
   it("validates preset payload", async () => {
@@ -72,7 +72,7 @@ describe("Preset routes", () => {
 
     expect(response.statusCode).toBe(400);
     const body = response.json() as any;
-    expect(body.error.code).toBe("VALIDATION_ERROR");
+    expect(body.code).toBe("VALIDATION_ERROR");
   });
 });
 

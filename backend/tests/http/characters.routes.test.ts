@@ -53,7 +53,7 @@ describe("Character routes", () => {
 
     expect(response.statusCode).toBe(400);
     const body = response.json() as any;
-    expect(body.error.code).toBe("VALIDATION_ERROR");
+    expect(body.code).toBe("VALIDATION_ERROR");
   });
 
   it("returns 404 for missing character", async () => {
@@ -67,7 +67,7 @@ describe("Character routes", () => {
 
     expect(response.statusCode).toBe(404);
     const body = response.json() as any;
-    expect(body.error.code).toBe("CHARACTER_NOT_FOUND");
+    expect(body.code).toBe("CHARACTER_NOT_FOUND");
   });
 });
 

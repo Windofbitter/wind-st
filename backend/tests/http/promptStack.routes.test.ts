@@ -113,7 +113,7 @@ describe("Prompt stack routes", () => {
     });
     expect(badAttach.statusCode).toBe(400);
     const attachBody = badAttach.json() as any;
-    expect(attachBody.error.code).toBe("VALIDATION_ERROR");
+    expect(attachBody.code).toBe("VALIDATION_ERROR");
 
     const badReorder = await app.inject({
       method: "POST",
@@ -124,7 +124,7 @@ describe("Prompt stack routes", () => {
     });
     expect(badReorder.statusCode).toBe(400);
     const reorderBody = badReorder.json() as any;
-    expect(reorderBody.error.code).toBe("VALIDATION_ERROR");
+    expect(reorderBody.code).toBe("VALIDATION_ERROR");
   });
 });
 

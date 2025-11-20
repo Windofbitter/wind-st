@@ -13,6 +13,11 @@ export const http = axios.create({
 export interface ApiErrorPayload {
   code?: string;
   message?: string;
+  error?: {
+    code?: string;
+    message?: string;
+    details?: unknown;
+  };
 }
 
 export class ApiError extends Error {
@@ -31,11 +36,13 @@ export async function unwrap<T>(promise: Promise<{ data: T }>): Promise<T> {
   } catch (err) {
     if (axios.isAxiosError(err)) {
       const payload = err.response?.data as ApiErrorPayload | undefined;
+      const nested = payload?.error;
       const message =
+        nested?.message ??
         payload?.message ??
         err.message ??
         "Unknown error while calling backend API";
-      const code = payload?.code;
+      const code = nested?.code ?? payload?.code;
       throw new ApiError(message, code);
     }
     throw err;

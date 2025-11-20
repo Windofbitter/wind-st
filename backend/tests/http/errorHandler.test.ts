@@ -33,9 +33,9 @@ describe("registerErrorHandler", () => {
 
     expect(response.statusCode).toBe(400);
     const body = response.json() as any;
-    expect(body.error.code).toBe("VALIDATION_ERROR");
-    expect(body.error.message).toBe("Payload is invalid");
-    expect(body.error.details).toEqual([{ field: "name" }]);
+    expect(body.code).toBe("VALIDATION_ERROR");
+    expect(body.message).toBe("Payload is invalid");
+    expect(body.details).toEqual([{ field: "name" }]);
   });
 
   it("maps generic errors to INTERNAL_ERROR", async () => {
@@ -53,8 +53,8 @@ describe("registerErrorHandler", () => {
 
     expect(response.statusCode).toBe(500);
     const body = response.json() as any;
-    expect(body.error.code).toBe("INTERNAL_ERROR");
-    expect(body.error.message).toBe("Internal server error");
+    expect(body.code).toBe("INTERNAL_ERROR");
+    expect(body.message).toBe("Internal server error");
   });
 
   it("maps unknown routes to NOT_FOUND", async () => {
@@ -68,6 +68,6 @@ describe("registerErrorHandler", () => {
 
     expect(response.statusCode).toBe(404);
     const body = response.json() as any;
-    expect(body.error.code).toBe("NOT_FOUND");
+    expect(body.code).toBe("NOT_FOUND");
   });
 });

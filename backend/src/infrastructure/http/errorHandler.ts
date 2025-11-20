@@ -2,22 +2,18 @@ import type { FastifyError, FastifyInstance } from "fastify";
 import { AppError, isAppError } from "../../application/errors/AppError";
 
 interface ApiErrorBody {
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
+  code: string;
+  message: string;
+  details?: unknown;
 }
 
 export function registerErrorHandler(app: FastifyInstance): void {
   app.setErrorHandler((err, request, reply) => {
     if (isAppError(err)) {
       const body: ApiErrorBody = {
-        error: {
-          code: err.code,
-          message: err.message,
-          ...(err.details !== undefined ? { details: err.details } : {}),
-        },
+        code: err.code,
+        message: err.message,
+        ...(err.details !== undefined ? { details: err.details } : {}),
       };
 
       const status = err.status || 500;
@@ -37,11 +33,9 @@ export function registerErrorHandler(app: FastifyInstance): void {
 
     if (fastifyError.validation) {
       const body: ApiErrorBody = {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: fastifyError.message,
-          details: fastifyError.validation,
-        },
+        code: "VALIDATION_ERROR",
+        message: fastifyError.message,
+        details: fastifyError.validation,
       };
 
       void reply.status(400).send(body);
@@ -51,10 +45,8 @@ export function registerErrorHandler(app: FastifyInstance): void {
     request.log.error({ err }, "Unhandled error");
 
     const body: ApiErrorBody = {
-      error: {
-        code: "INTERNAL_ERROR",
-        message: "Internal server error",
-      },
+      code: "INTERNAL_ERROR",
+      message: "Internal server error",
     };
 
     void reply.status(500).send(body);
@@ -62,10 +54,8 @@ export function registerErrorHandler(app: FastifyInstance): void {
 
   app.setNotFoundHandler((request, reply) => {
     const body: ApiErrorBody = {
-      error: {
-        code: "NOT_FOUND",
-        message: "Route not found",
-      },
+      code: "NOT_FOUND",
+      message: "Route not found",
     };
 
     void reply.status(404).send(body);
