@@ -259,6 +259,13 @@ export class FakeLorebookRepository implements LorebookRepository {
 export class FakeLorebookEntryRepository implements LorebookEntryRepository {
   private items = new Map<string, LorebookEntry>();
 
+  setAll(entries: LorebookEntry[]): void {
+    this.items.clear();
+    for (const entry of entries) {
+      this.items.set(entry.id, entry);
+    }
+  }
+
   async create(data: CreateLorebookEntryInput): Promise<LorebookEntry> {
     const id = nextId("lbe");
     const entry: LorebookEntry = {

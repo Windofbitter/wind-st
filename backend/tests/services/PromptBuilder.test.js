@@ -204,6 +204,7 @@ function createEnvironment() {
     promptStackService,
     presetService,
     lorebookService,
+    lorebookEntryRepo,
     characterLorebookService,
     mcpServerService,
     characterMcpServerService,
@@ -282,6 +283,7 @@ describe("DefaultPromptBuilder", () => {
       chatService,
       lorebookService,
       characterLorebookService,
+      messageService,
       promptBuilder,
     } = createEnvironment();
 
@@ -309,16 +311,22 @@ describe("DefaultPromptBuilder", () => {
     );
 
     await lorebookService.createLorebookEntry(lorebook.id, {
+      keywords: ["b"],
+      content: "First",
+      insertionOrder: 1,
+      isEnabled: true,
+    });
+    await lorebookService.createLorebookEntry(lorebook.id, {
       keywords: ["a"],
       content: "Second",
       insertionOrder: 2,
       isEnabled: true,
     });
-    await lorebookService.createLorebookEntry(lorebook.id, {
-      keywords: ["b"],
-      content: "First",
-      insertionOrder: 1,
-      isEnabled: true,
+
+    await messageService.appendMessage({
+      chatId: chat.id,
+      role: "user",
+      content: "b stuff then a stuff",
     });
 
     const result = await promptBuilder.buildPromptForChat(chat.id);
@@ -326,6 +334,175 @@ describe("DefaultPromptBuilder", () => {
     const msg = result.messages[0];
     expect(msg.role).toBe("system");
     expect(msg.content).toBe("First\n\nSecond");
+  });
+
+  it("skips lore entries when no keywords match recent messages", async () => {
+    const {
+      characterService,
+      chatService,
+      lorebookService,
+      characterLorebookService,
+      messageService,
+      promptBuilder,
+    } = createEnvironment();
+
+    const character = await characterService.createCharacter({
+      name: "Test",
+      description: "desc",
+      persona: "",
+      avatarPath: "",
+      creatorNotes: null,
+    });
+
+    const { chat } = await chatService.createChat({
+      characterId: character.id,
+      title: "Chat",
+    });
+
+    const lorebook = await lorebookService.createLorebook({
+      name: "World",
+      description: "",
+    });
+
+    await characterLorebookService.attachLorebook(
+      character.id,
+      lorebook.id,
+    );
+
+    await lorebookService.createLorebookEntry(lorebook.id, {
+      keywords: ["dragon"],
+      content: "Lore that should not appear",
+      insertionOrder: 1,
+      isEnabled: true,
+    });
+
+    await messageService.appendMessage({
+      chatId: chat.id,
+      role: "user",
+      content: "hello there",
+    });
+
+    const result = await promptBuilder.buildPromptForChat(chat.id);
+    const contents = result.messages.map((m) => m.content);
+    expect(contents).not.toContain("Lore that should not appear");
+  });
+
+  it("caps injected lore entries and preserves insertion order", async () => {
+    const {
+      characterService,
+      chatService,
+      lorebookService,
+      characterLorebookService,
+      messageService,
+      promptBuilder,
+    } = createEnvironment();
+
+    const character = await characterService.createCharacter({
+      name: "Test",
+      description: "desc",
+      persona: "",
+      avatarPath: "",
+      creatorNotes: null,
+    });
+
+    const { chat } = await chatService.createChat({
+      characterId: character.id,
+      title: "Chat",
+    });
+
+    const lorebook = await lorebookService.createLorebook({
+      name: "World",
+      description: "",
+    });
+
+    await characterLorebookService.attachLorebook(
+      character.id,
+      lorebook.id,
+    );
+
+    for (let i = 0; i < 10; i += 1) {
+      await lorebookService.createLorebookEntry(lorebook.id, {
+        keywords: ["key"],
+        content: `Content ${i}`,
+        insertionOrder: i + 1,
+        isEnabled: true,
+      });
+    }
+
+    await messageService.appendMessage({
+      chatId: chat.id,
+      role: "user",
+      content: "mention key to trigger all",
+    });
+
+    const result = await promptBuilder.buildPromptForChat(chat.id);
+    const systemMsg = result.messages.find((m) => m.role === "system");
+    expect(systemMsg).toBeDefined();
+    const parts = systemMsg.content.split("\n\n");
+    expect(parts).toHaveLength(8); // capped
+    expect(parts[0]).toBe("Content 0");
+    expect(parts[7]).toBe("Content 7");
+    expect(systemMsg.content).not.toContain("Content 8");
+  });
+
+  it("ignores lore matches that only appear outside the recent history window", async () => {
+    const {
+      characterService,
+      chatService,
+      lorebookService,
+      characterLorebookService,
+      messageService,
+      promptBuilder,
+    } = createEnvironment();
+
+    const character = await characterService.createCharacter({
+      name: "Test",
+      description: "desc",
+      persona: "",
+      avatarPath: "",
+      creatorNotes: null,
+    });
+
+    const { chat } = await chatService.createChat({
+      characterId: character.id,
+      title: "Chat",
+    });
+
+    const lorebook = await lorebookService.createLorebook({
+      name: "World",
+      description: "",
+    });
+
+    await characterLorebookService.attachLorebook(
+      character.id,
+      lorebook.id,
+    );
+
+    await lorebookService.createLorebookEntry(lorebook.id, {
+      keywords: ["ancient"],
+      content: "Old lore",
+      insertionOrder: 1,
+      isEnabled: true,
+    });
+
+    // Add 21 messages so the first one falls outside the 20-message window.
+    await messageService.appendMessage({
+      chatId: chat.id,
+      role: "user",
+      content: "ancient keyword here",
+    });
+
+    for (let i = 0; i < 21; i += 1) {
+      await messageService.appendMessage({
+        chatId: chat.id,
+        role: "assistant",
+        content: `noise ${i}`,
+      });
+    }
+
+    const result = await promptBuilder.buildPromptForChat(chat.id);
+    const contents = result.messages.map((m) => m.content);
+    expect(contents).not.toContain("Old lore");
   });
 
   it("applies history config when slicing messages", async () => {
