@@ -15,6 +15,9 @@ import type { PromptPreset } from "../../core/entities/PromptPreset";
 import type { Preset } from "../../core/entities/Preset";
 
 export class DefaultPromptBuilder implements PromptBuilder {
+  private static readonly MAX_LOREBOOK_ENTRIES = 8;
+  private static readonly RECENT_MESSAGES_WINDOW = 20;
+
   constructor(
     private readonly chatService: ChatService,
     private readonly characterService: CharacterService,
@@ -45,7 +48,7 @@ export class DefaultPromptBuilder implements PromptBuilder {
 
     this.appendPersona(messages, character.persona);
     await this.appendPresets(messages, character.id);
-    await this.appendLorebooks(messages, character.id);
+    await this.appendLorebooks(messages, character.id, chat.id);
     await this.appendHistory(messages, chatId);
 
     const tools = await this.buildTools(character.id);
@@ -120,6 +123,7 @@ export class DefaultPromptBuilder implements PromptBuilder {
   private async appendLorebooks(
     messages: LLMChatMessage[],
     characterId: string,
+    chatId: string,
   ): Promise<void> {
     const mappings =
       await this.characterLorebookService.listForCharacter(
@@ -127,9 +131,26 @@ export class DefaultPromptBuilder implements PromptBuilder {
       );
     if (mappings.length === 0) return;
 
-    const worldInfo: string[] = [];
+    const lorebookById = await this.loadLorebooksById(mappings);
+    const sortedMappings = [...mappings].sort((a, b) => {
+      const aLore = lorebookById.get(a.lorebookId);
+      const bLore = lorebookById.get(b.lorebookId);
+      const nameA = aLore?.name?.toLowerCase() ?? "";
+      const nameB = bLore?.name?.toLowerCase() ?? "";
+      if (nameA !== nameB) return nameA.localeCompare(nameB);
+      return a.lorebookId.localeCompare(b.lorebookId);
+    });
 
-    for (const mapping of mappings) {
+    const recentTexts = await this.getRecentMessageTexts(chatId);
+    if (recentTexts.length === 0) return;
+
+    const includedEntryIds = new Set<string>();
+    const collected: string[] = [];
+
+    for (const mapping of sortedMappings) {
+      const lorebook = lorebookById.get(mapping.lorebookId);
+      if (!lorebook) continue;
+
       const entries =
         await this.lorebookService.listLorebookEntries(
           mapping.lorebookId,
@@ -141,19 +162,92 @@ export class DefaultPromptBuilder implements PromptBuilder {
         );
 
       for (const entry of enabled) {
-        const content = entry.content.trim();
-        if (content) {
-          worldInfo.push(content);
+        if (includedEntryIds.size >= DefaultPromptBuilder.MAX_LOREBOOK_ENTRIES) {
+          break;
         }
+
+        if (includedEntryIds.has(entry.id)) continue;
+        if (!this.entryMatches(entry.keywords ?? [], recentTexts)) {
+          continue;
+        }
+
+        const content = entry.content.trim();
+        if (!content) continue;
+
+        includedEntryIds.add(entry.id);
+        collected.push(content);
+      }
+
+      if (includedEntryIds.size >= DefaultPromptBuilder.MAX_LOREBOOK_ENTRIES) {
+        break;
       }
     }
 
-    if (worldInfo.length === 0) return;
+    if (collected.length === 0) return;
 
     messages.push({
       role: "system",
-      content: worldInfo.join("\n\n"),
+      content: collected.join("\n\n"),
     });
+  }
+
+  private async loadLorebooksById(
+    mappings: { lorebookId: string }[],
+  ): Promise<Map<string, { id: string; name: string }>> {
+    const byId = new Map<string, { id: string; name: string }>();
+
+    await Promise.all(
+      mappings.map(async (m) => {
+        if (byId.has(m.lorebookId)) return;
+        const lorebook =
+          await this.lorebookService.getLorebook(m.lorebookId);
+        if (lorebook) {
+          byId.set(lorebook.id, lorebook);
+        }
+      }),
+    );
+
+    return byId;
+  }
+
+  private async getRecentMessageTexts(chatId: string): Promise<string[]> {
+    const history = await this.messageService.listMessages(chatId);
+    if (history.length === 0) return [];
+
+    const recent = history.slice(
+      Math.max(0, history.length - DefaultPromptBuilder.RECENT_MESSAGES_WINDOW),
+    );
+
+    return recent
+      .filter((m) => m.state === "ok")
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .map((m) => m.content?.toLowerCase() ?? "")
+      .filter((c) => c.trim() !== "");
+  }
+
+  private entryMatches(
+    keywords: string[],
+    texts: string[],
+  ): boolean {
+    if (!Array.isArray(keywords) || keywords.length === 0) {
+      return false;
+    }
+
+    const normalizedKeywords = keywords
+      .map((k) => k?.toLowerCase().trim())
+      .filter((k): k is string => !!k);
+
+    if (normalizedKeywords.length === 0) return false;
+
+    for (const text of texts) {
+      for (const keyword of normalizedKeywords) {
+        if (keyword.length === 0) continue;
+        if (text.includes(keyword)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private async appendHistory(
