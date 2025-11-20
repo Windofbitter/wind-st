@@ -17,6 +17,7 @@ import {
   deleteLorebookEntry,
 } from "../../api/lorebooks";
 import { ApiError } from "../../api/httpClient";
+import { LorebookEntriesTable } from "./LorebookEntriesTable";
 
 interface LoadState {
   loading: boolean;
@@ -235,28 +236,39 @@ export function LorebookDetailPage() {
     }
   }
 
-  // Move entry up/down by delta (-1 or +1) and persist sequential order
-  async function moveEntry(entryId: string, delta: -1 | 1) {
-    const idx = entries.findIndex((e) => e.id === entryId);
-    if (idx < 0) return;
-    const newIndex = idx + delta;
-    if (newIndex < 0 || newIndex >= entries.length) return;
+  async function reorderEntriesByIds(ids: string[]) {
+    if (ids.length !== entries.length) return;
 
-    const reordered = entries.slice();
-    const [item] = reordered.splice(idx, 1);
-    reordered.splice(newIndex, 0, item);
+    const byId = new Map(entries.map((e) => [e.id, e]));
+    const reordered: LorebookEntry[] = [];
 
-    // optimistic UI
-    setEntries(reordered.map((e, i) => ({ ...e, insertionOrder: i })));
+    for (const id of ids) {
+      const entry = byId.get(id);
+      if (!entry) {
+        return;
+      }
+      reordered.push(entry);
+    }
+
+    const withOrder = reordered.map((e, index) => ({
+      ...e,
+      insertionOrder: index,
+    }));
+
+    setEntries(withOrder);
     try {
       await Promise.all(
-        reordered.map((e, i) => updateLorebookEntry(e.id, { insertionOrder: i })),
+        withOrder.map((e) =>
+          updateLorebookEntry(e.id, { insertionOrder: e.insertionOrder }),
+        ),
       );
     } catch (err) {
       setEntriesState((s) => ({
         ...s,
         error:
-          err instanceof ApiError ? err.message : "Failed to reorder entries",
+          err instanceof ApiError
+            ? err.message
+            : "Failed to reorder entries",
       }));
       if (lorebookId) {
         await loadEntries(lorebookId);
@@ -393,206 +405,104 @@ export function LorebookDetailPage() {
         </form>
       </div>
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>
-          {t("lorebooks.entriesTitle")}
-        </h3>
-        {entriesState.loading && (
-          <div>{t("lorebooks.entriesLoading")}</div>
-        )}
-        {entriesState.error && (
-          <div className="badge">
-            {t("common.errorPrefix")} {entriesState.error}
-          </div>
-        )}
-        <table className="table">
-          <thead>
-            <tr>
-              <th>{t("lorebooks.entriesTableKeywords")}</th>
-              <th>{t("lorebooks.entriesTableContent")}</th>
-              <th>{t("lorebooks.entriesTableOrder")}</th>
-              <th>{t("lorebooks.entriesTableActive")}</th>
-              <th>{t("lorebooks.entriesTableActions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry, index) => (
-              <tr key={entry.id}>
-                <td>
-                  {entry.keywords.map((k) => (
-                    <span
-                      key={k}
-                      className="badge"
-                      style={{ marginRight: "0.25rem" }}
-                    >
-                      {k}
-                    </span>
-                  ))}
-                </td>
-                <td>
-                  {entry.content.split("\n")[0] ?? ""}
-                  {entry.content.includes("\n") ? "…" : ""}
-                </td>
-                <td>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                    <span>#{index + 1}</span>
-                    <div style={{ display: "flex", gap: "0.25rem", marginLeft: "0.5rem" }}>
-                      <button
-                        type="button"
-                        className="btn"
-                        disabled={index === 0}
-                        title={t("lorebooks.entriesMoveUpTitle")}
-                        onClick={() => void moveEntry(entry.id, -1)}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        className="btn"
-                        disabled={index === entries.length - 1}
-                        title={t("lorebooks.entriesMoveDownTitle")}
-                        onClick={() => void moveEntry(entry.id, +1)}
-                      >
-                        ↓
-                      </button>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={entry.isEnabled}
-                      onChange={(e) => void toggleEntryEnabled(entry.id, e.target.checked)}
-                    />
-                  </label>
-                </td>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => startEdit(entry)}
-                    >
-                      {t("lorebooks.entriesEditButton")}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={() => void deleteEntry(entry.id)}
-                    >
-                      {t("lorebooks.entriesDeleteButton")}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {entries.length === 0 && !entriesState.loading && (
-              <tr>
-                <td colSpan={5}>
-                  <span style={{ opacity: 0.8 }}>
-                    {t("lorebooks.entriesEmpty")}
-                  </span>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <LorebookEntriesTable
+        entries={entries}
+        loading={entriesState.loading}
+        error={entriesState.error}
+        onReorder={(ids) => void reorderEntriesByIds(ids)}
+        onToggleEnabled={(id, enabled) =>
+          void toggleEntryEnabled(id, enabled)
+        }
+        onEdit={startEdit}
+        onDelete={(id) => void deleteEntry(id)}
+      />
 
-        {editingEntryId && (
-          <div
-            className="card"
-            style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
-          >
-            <h4 style={{ marginTop: 0 }}>
-              {t("lorebooks.editEntryTitle")}
-            </h4>
-            <div className="input-group">
-              <label htmlFor="edit-keywords">
-                {t("lorebooks.editEntryKeywordsLabel")}
-              </label>
-              <input
-                id="edit-keywords"
-                type="text"
-                value={(editEntryForm.keywords ?? []).join(", ")}
-                onChange={(e) =>
-                  setEditEntryForm({
-                    ...editEntryForm,
-                    keywords: e.target.value
-                      .split(",")
-                      .map((k) => k.trim())
-                      .filter(Boolean),
-                  })
-                }
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="edit-content">
-                {t("lorebooks.editEntryContentLabel")}
-              </label>
-              <textarea
-                id="edit-content"
-                rows={4}
-                value={editEntryForm.content ?? ""}
-                onChange={(e) =>
-                  setEditEntryForm({
-                    ...editEntryForm,
-                    content: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="input-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={editEntryForm.isEnabled ?? true}
-                  onChange={(e) =>
-                    setEditEntryForm({
-                      ...editEntryForm,
-                      isEnabled: e.target.checked,
-                    })
-                  }
-                />{" "}
-                {t("lorebooks.editEntryEnabledLabel")}
-              </label>
-            </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={savingEntry}
-              onClick={() => void saveEntryEdit()}
-            >
-              {savingEntry
-                ? t("lorebooks.editEntrySaveButtonSaving")
-                : t("lorebooks.editEntrySaveButton")}
-            </button>
-            <button
-              type="button"
-              className="btn"
-              style={{ marginLeft: "0.5rem" }}
-              onClick={() => {
-                setEditingEntryId(null);
-                setEditEntryForm({});
-              }}
-            >
-              {t("lorebooks.editEntryCancelButton")}
-            </button>
-            {entryError && (
-              <div className="badge" style={{ marginTop: "0.5rem" }}>
-                {t("common.errorPrefix")} {entryError}
-              </div>
-            )}
+      {editingEntryId && (
+        <div
+          className="card"
+          style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
+        >
+          <h4 style={{ marginTop: 0 }}>
+            {t("lorebooks.editEntryTitle")}
+          </h4>
+          <div className="input-group">
+            <label htmlFor="edit-keywords">
+              {t("lorebooks.editEntryKeywordsLabel")}
+            </label>
+            <input
+              id="edit-keywords"
+              type="text"
+              value={(editEntryForm.keywords ?? []).join(", ")}
+              onChange={(e) =>
+                setEditEntryForm({
+                  ...editEntryForm,
+                  keywords: e.target.value
+                    .split(",")
+                    .map((k) => k.trim())
+                    .filter(Boolean),
+                })
+              }
+            />
           </div>
-        )}
-      </div>
+          <div className="input-group">
+            <label htmlFor="edit-content">
+              {t("lorebooks.editEntryContentLabel")}
+            </label>
+            <textarea
+              id="edit-content"
+              rows={4}
+              value={editEntryForm.content ?? ""}
+              onChange={(e) =>
+                setEditEntryForm({
+                  ...editEntryForm,
+                  content: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="input-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={editEntryForm.isEnabled ?? true}
+                onChange={(e) =>
+                  setEditEntryForm({
+                    ...editEntryForm,
+                    isEnabled: e.target.checked,
+                  })
+                }
+              />{" "}
+              {t("lorebooks.editEntryEnabledLabel")}
+            </label>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={savingEntry}
+            onClick={() => void saveEntryEdit()}
+          >
+            {savingEntry
+              ? t("lorebooks.editEntrySaveButtonSaving")
+              : t("lorebooks.editEntrySaveButton")}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{ marginLeft: "0.5rem" }}
+            onClick={() => {
+              setEditingEntryId(null);
+              setEditEntryForm({});
+            }}
+          >
+            {t("lorebooks.editEntryCancelButton")}
+          </button>
+          {entryError && (
+            <div className="badge" style={{ marginTop: "0.5rem" }}>
+              {t("common.errorPrefix")} {entryError}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
-
-
