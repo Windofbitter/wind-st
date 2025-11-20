@@ -57,7 +57,14 @@ export function ChatMain({
           </div>
         </div>
       </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+        }}
+      >
         <div className="message-list">
           {messagesState.loading && (
             <div>{t("chat.messagesLoading")}</div>
