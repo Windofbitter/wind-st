@@ -23,6 +23,9 @@ export function MCPServerEditPanel({
     env: server.env,
     isEnabled: server.isEnabled,
   }));
+  const [argsText, setArgsText] = useState(() =>
+    (server.args ?? []).join("\n"),
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,11 +37,12 @@ export function MCPServerEditPanel({
       env: server.env,
       isEnabled: server.isEnabled,
     });
+    setArgsText((server.args ?? []).join("\n"));
   }, [server]);
 
   function parseArgs(value: string): string[] {
     return value
-      .split(" ")
+      .split(/\r?\n/)
       .map((a) => a.trim())
       .filter(Boolean);
   }
@@ -103,16 +107,19 @@ export function MCPServerEditPanel({
       </div>
       <div className="input-group">
         <label htmlFor="edit-args">{t("mcpServers.editArgsLabel")}</label>
-        <input
+        <textarea
           id="edit-args"
-          type="text"
-          value={(form.args ?? []).join(" ")}
-          onChange={(e) =>
+          rows={4}
+          value={argsText}
+          onChange={(e) => {
+            const value = e.target.value;
+            setArgsText(value);
             setForm({
               ...form,
-              args: parseArgs(e.target.value),
-            })
-          }
+              args: parseArgs(value),
+            });
+          }}
+          placeholder="One argument per line"
         />
       </div>
       <div className="input-group">

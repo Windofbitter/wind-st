@@ -87,10 +87,28 @@
 .btn {
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  border: none;
+  border: 1px solid var(--btn-secondary-border);
   cursor: pointer;
   font-size: 0.9rem;
   color: var(--text-color);
+  background-color: var(--btn-secondary-bg);
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.btn:hover {
+  background-color: var(--btn-secondary-hover);
+  border-color: var(--btn-secondary-border);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 1px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn.tab-button {

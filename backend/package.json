@@ -14,10 +14,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
     "better-sqlite3": "^12.4.1",
     "fastify": "^5.6.2",
-    "openai": "^4.0.0",
-    "@modelcontextprotocol/sdk": "^1.22.0"
+    "openai": "^4.0.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

@@ -20,12 +20,13 @@ interface CreateMCPServerFormProps {
 export function CreateMCPServerForm({ onCreated }: CreateMCPServerFormProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<CreateMCPServerRequest>(emptyForm);
+  const [argsText, setArgsText] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function parseArgs(value: string): string[] {
     return value
-      .split(" ")
+      .split(/\r?\n/)
       .map((a) => a.trim())
       .filter(Boolean);
   }
@@ -59,6 +60,7 @@ export function CreateMCPServerForm({ onCreated }: CreateMCPServerFormProps) {
     try {
       await createMCPServer({ ...form, args: form.args, env: form.env });
       setForm(emptyForm);
+      setArgsText("");
       await onCreated();
     } catch (err) {
       setError(
@@ -102,16 +104,19 @@ export function CreateMCPServerForm({ onCreated }: CreateMCPServerFormProps) {
         </div>
         <div className="input-group">
           <label htmlFor="mcp-args">{t("mcpServers.newArgsLabel")}</label>
-          <input
+          <textarea
             id="mcp-args"
-            type="text"
-            value={form.args.join(" ")}
-            onChange={(e) =>
+            rows={4}
+            value={argsText}
+            onChange={(e) => {
+              const value = e.target.value;
+              setArgsText(value);
               setForm({
                 ...form,
-                args: parseArgs(e.target.value),
-              })
-            }
+                args: parseArgs(value),
+              });
+            }}
+            placeholder="One argument per line"
           />
         </div>
         <div className="input-group">

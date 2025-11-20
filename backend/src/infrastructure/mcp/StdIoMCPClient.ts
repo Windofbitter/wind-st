@@ -183,10 +183,10 @@ export class StdIoMCPClient implements MCPClient {
   private async createConnection(server: MCPServer): Promise<ServerConnection> {
     try {
       const clientModule = (await import(
-        "@modelcontextprotocol/sdk/client"
+        "@modelcontextprotocol/sdk/client/index.js"
       )) as any;
       const transportModule = (await import(
-        "@modelcontextprotocol/sdk/client/stdio"
+        "@modelcontextprotocol/sdk/client/stdio.js"
       )) as any;
 
       const TransportCtor = transportModule.StdioClientTransport;
@@ -202,6 +202,7 @@ export class StdIoMCPClient implements MCPClient {
         command: server.command,
         args: server.args,
         env: server.env,
+        stderr: "pipe",
       });
 
       const client = new ClientCtor({
@@ -209,10 +210,26 @@ export class StdIoMCPClient implements MCPClient {
         version: this.clientVersion,
       });
 
+      // Capture early stderr so failures report real cause
+      const stderr = transport.stderr;
+      stderr?.on("data", (chunk: Buffer) => {
+        const text = chunk.toString();
+        if (text.trim().length > 0) {
+          // eslint-disable-next-line no-console
+          console.error(
+            `[mcp:${server.name}] stderr: ${text.replace(/\s+$/u, "")}`,
+          );
+        }
+      });
+
       await client.connect(transport);
 
       return { server, client, transport };
     } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[mcp:${server.name}] failed to start. command='${server.command}' args=${JSON.stringify(server.args)} error=${err instanceof Error ? err.message : String(err)}`,
+      );
       throw this.wrapError(
         `Failed to start MCP server '${server.name}' with command '${server.command}'`,
         err,

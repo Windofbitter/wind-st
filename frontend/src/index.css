@@ -4,6 +4,9 @@
   --text-color: #cccccc;
   --accent-color: #007acc;
   --border-color: #333333;
+  --btn-secondary-bg: #2f3b4e;
+  --btn-secondary-border: #3f5f80;
+  --btn-secondary-hover: #36526a;
   --header-height: 60px;
   --sidebar-width: 250px;
 
