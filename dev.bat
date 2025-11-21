@@ -6,6 +6,9 @@ cd /d "%~dp0"
 set BACKEND_PORT=3000
 set FRONTEND_PORT=5173
 
+if not "%~1"=="" set BACKEND_PORT=%~1
+if not "%~2"=="" set FRONTEND_PORT=%~2
+
 echo [wind-st] Resetting backend deps...
 pushd backend
 if not exist "package.json" (
