@@ -65,17 +65,68 @@ export class DefaultPromptBuilder implements PromptBuilder {
       history,
       historyConfig.loreScanTokenLimit,
     );
+    const stack =
+      await this.promptStackService.getPromptStackForCharacter(
+        character.id,
+      );
+    const presetsById = await this.loadPresetsById(stack);
+    const sortedStack = [...stack].sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    );
     const messages: LLMChatMessage[] = [];
     this.appendPersona(messages, character.persona, templateContext);
     this.appendUserPersonaPrompt(messages, userPersona, templateContext);
-    await this.appendPresets(messages, character.id, templateContext);
-    await this.appendLorebooks(
-      messages,
-      character.id,
-      loreScanTexts,
-    );
-    await this.appendHistory(messages, historyConfig, history);
-    const tools = await this.buildTools(character.id);
+    let historyAdded = false;
+    let includeTools = false;
+    for (const item of sortedStack) {
+      const preset = presetsById.get(item.presetId);
+      if (!preset) continue;
+      if (preset.kind === "static_text") {
+        const content = preset.content?.trim();
+        if (content) {
+          messages.push({
+            role: item.role,
+            content: this.renderTemplate(content, templateContext),
+          });
+        }
+        continue;
+      }
+      if (preset.kind === "lorebook") {
+        await this.appendLorebookBlock(
+          messages,
+          preset,
+          item.role,
+          loreScanTexts,
+        );
+        continue;
+      }
+      if (preset.kind === "history") {
+        if (!historyAdded) {
+          await this.appendHistory(
+            messages,
+            historyConfig,
+            history,
+          );
+          historyAdded = true;
+        }
+        continue;
+      }
+      if (preset.kind === "mcp_tools") {
+        includeTools = true;
+      }
+    }
+
+    if (!historyAdded) {
+      await this.appendHistory(messages, historyConfig, history);
+    }
+
+    const tools =
+      includeTools || !sortedStack.some((pp) => {
+        const preset = presetsById.get(pp.presetId);
+        return preset?.kind === "mcp_tools";
+      })
+        ? await this.buildTools(character.id)
+        : [];
     return { messages, tools };
   }
   private appendPersona(
@@ -102,34 +153,6 @@ export class DefaultPromptBuilder implements PromptBuilder {
       content: this.renderTemplate(prompt, context),
     });
   }
-  private async appendPresets(
-    messages: LLMChatMessage[],
-    characterId: string,
-    context: TemplateContext,
-  ): Promise<void> {
-    const stack = await this.promptStackService.getPromptStackForCharacter(
-      characterId,
-    );
-    if (stack.length === 0) return;
-    const presetsById = await this.loadPresetsById(stack);
-    const sorted = [...stack].sort(
-      (a, b) => a.sortOrder - b.sortOrder,
-    );
-    for (const pp of sorted) {
-      const preset = presetsById.get(pp.presetId);
-      if (!preset) continue;
-      if (
-        preset.kind === "static_text" &&
-        preset.content &&
-        preset.content.trim() !== ""
-      ) {
-        messages.push({
-          role: pp.role,
-          content: this.renderTemplate(preset.content, context),
-        });
-      }
-    }
-  }
   private async loadPresetsById(
     stack: PromptPreset[],
   ): Promise<Map<string, Preset>> {
@@ -147,6 +170,41 @@ export class DefaultPromptBuilder implements PromptBuilder {
     );
     return presetsById;
   }
+  private async appendLorebookBlock(
+    messages: LLMChatMessage[],
+    preset: Preset,
+    role: PromptPreset["role"],
+    loreScanTexts: string[],
+  ): Promise<void> {
+    if (!Array.isArray(loreScanTexts) || loreScanTexts.length === 0) {
+      return;
+    }
+    const config = preset.config ?? {};
+    const lorebookId = (config as { lorebookId?: unknown }).lorebookId;
+    if (typeof lorebookId !== "string") return;
+
+    const entries =
+      await this.lorebookService.listLorebookEntries(lorebookId);
+    const enabled = entries
+      .filter((e) => e.isEnabled)
+      .sort((a, b) => a.insertionOrder - b.insertionOrder);
+
+    const collected: string[] = [];
+    for (const entry of enabled) {
+      if (!this.entryMatches(entry.keywords ?? [], loreScanTexts)) {
+        continue;
+      }
+      const content = entry.content.trim();
+      if (!content) continue;
+      collected.push(content);
+    }
+
+    if (collected.length === 0) return;
+    messages.push({
+      role,
+      content: collected.join("\n\n"),
+    });
+  }
   private renderTemplate(
     template: string,
     context: TemplateContext,
@@ -154,70 +212,6 @@ export class DefaultPromptBuilder implements PromptBuilder {
     return template
       .replace(/\{character\}/gi, context.characterName)
       .replace(/\{user\}/gi, context.userName);
-  }
-  private async appendLorebooks(
-    messages: LLMChatMessage[],
-    characterId: string,
-    loreScanTexts: string[],
-  ): Promise<void> {
-    const mappings =
-      await this.characterLorebookService.listForCharacter(
-        characterId,
-      );
-    if (mappings.length === 0) return;
-    const lorebookById = await this.loadLorebooksById(mappings);
-    const sortedMappings = [...mappings].sort((a, b) => {
-      const aLore = lorebookById.get(a.lorebookId);
-      const bLore = lorebookById.get(b.lorebookId);
-      const nameA = aLore?.name?.toLowerCase() ?? "";
-      const nameB = bLore?.name?.toLowerCase() ?? "";
-      if (nameA !== nameB) return nameA.localeCompare(nameB);
-      return a.lorebookId.localeCompare(b.lorebookId);
-    });
-    if (loreScanTexts.length === 0) return;
-    const collected: string[] = [];
-    for (const mapping of sortedMappings) {
-      const lorebook = lorebookById.get(mapping.lorebookId);
-      if (!lorebook) continue;
-      const entries =
-        await this.lorebookService.listLorebookEntries(
-          mapping.lorebookId,
-        );
-      const enabled = entries
-        .filter((e) => e.isEnabled)
-        .sort(
-          (a, b) => a.insertionOrder - b.insertionOrder,
-        );
-      for (const entry of enabled) {
-        if (!this.entryMatches(entry.keywords ?? [], loreScanTexts)) {
-          continue;
-        }
-        const content = entry.content.trim();
-        if (!content) continue;
-        collected.push(content);
-      }
-    }
-    if (collected.length === 0) return;
-    messages.push({
-      role: "system",
-      content: collected.join("\n\n"),
-    });
-  }
-  private async loadLorebooksById(
-    mappings: { lorebookId: string }[],
-  ): Promise<Map<string, { id: string; name: string }>> {
-    const byId = new Map<string, { id: string; name: string }>();
-    await Promise.all(
-      mappings.map(async (m) => {
-        if (byId.has(m.lorebookId)) return;
-        const lorebook =
-          await this.lorebookService.getLorebook(m.lorebookId);
-        if (lorebook) {
-          byId.set(lorebook.id, lorebook);
-        }
-      }),
-    );
-    return byId;
   }
   private collectLoreScanTexts(
     history: Message[],

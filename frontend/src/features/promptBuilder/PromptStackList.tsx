@@ -4,6 +4,7 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -21,6 +22,7 @@ export interface PromptStackItemView {
   title: string;
   role: PromptRole;
   kind?: PresetKind;
+  locked?: boolean;
 }
 
 interface PromptStackListProps {
@@ -37,7 +39,7 @@ export function PromptStackList({
   const sensors = useSensors(useSensor(PointerSensor));
   const ids = items.map((item) => item.id);
 
-  function handleDragEnd(event: any) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -113,10 +115,16 @@ function SortableStackItem({
   };
 
   const roleLabel = item.role.toUpperCase();
-  const kindLabel =
-    item.kind === "static_text"
-      ? t("promptBuilder.kindLabelStaticText")
-      : undefined;
+  let kindLabel: string | undefined;
+  if (item.kind === "static_text") {
+    kindLabel = t("promptBuilder.kindLabelStaticText");
+  } else if (item.kind === "lorebook") {
+    kindLabel = t("promptBuilder.kindLabelLorebook");
+  } else if (item.kind === "history") {
+    kindLabel = t("promptBuilder.kindLabelHistory");
+  } else if (item.kind === "mcp_tools") {
+    kindLabel = t("promptBuilder.kindLabelMcpTools");
+  }
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -136,6 +144,11 @@ function SortableStackItem({
                   kindLabel.slice(1)}
               </span>
             )}
+            {item.locked && (
+              <span className="badge badge-secondary">
+                {t("promptBuilder.stackLocked")}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -143,7 +156,8 @@ function SortableStackItem({
         type="button"
         className="btn btn-danger"
         style={{ padding: "0.25rem 0.6rem" }}
-        onClick={() => onRemove(item.id)}
+        onClick={() => !item.locked && onRemove(item.id)}
+        disabled={item.locked === true}
       >
         {t("promptBuilder.stackRemoveButton")}
       </button>

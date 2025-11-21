@@ -10,11 +10,23 @@ export interface PromptPreset {
   sortOrder: number;
 }
 
-export interface AttachPromptPresetRequest {
-  presetId: string;
-  role: PromptRole;
-  position?: number;
-}
+export type AttachPromptPresetRequest =
+  | {
+      presetId: string;
+      role: PromptRole;
+      position?: number;
+    }
+  | {
+      kind: "lorebook";
+      lorebookId: string;
+      role: PromptRole;
+      position?: number;
+    }
+  | {
+      kind: "history" | "mcp_tools";
+      role: PromptRole;
+      position?: number;
+    };
 
 export interface ReorderPromptPresetsRequest {
   ids: string[];

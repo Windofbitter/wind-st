@@ -98,7 +98,8 @@ export function runMigrations(db: SqliteDatabase): void {
       description TEXT NOT NULL,
       kind TEXT NOT NULL,
       content TEXT,
-      built_in INTEGER NOT NULL
+      built_in INTEGER NOT NULL,
+      config TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_presets_kind
@@ -261,6 +262,7 @@ export function runMigrations(db: SqliteDatabase): void {
   ensureColumn(db, "messages", "run_id", "TEXT");
   ensureColumn(db, "messages", "state", "TEXT NOT NULL DEFAULT 'ok'");
   ensureTimestampColumn(db, "messages", "created_at");
+  ensureColumn(db, "presets", "config", "TEXT");
   ensureColumn(db, "chat_llm_configs", "max_tool_iterations", "INTEGER NOT NULL DEFAULT 3");
   ensureColumn(db, "chat_llm_configs", "tool_call_timeout_ms", "INTEGER NOT NULL DEFAULT 15000");
   ensureColumn(db, "chats", "user_persona_id", "TEXT");

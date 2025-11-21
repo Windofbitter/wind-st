@@ -142,6 +142,8 @@ export async function buildApp() {
     characterRepository,
     presetRepository,
     promptPresetRepository,
+    lorebookRepository,
+    characterLorebookRepository,
   );
   const llmClient = new OpenAILLMClient();
   const llmAdminClient = new OpenAIAdminClient();

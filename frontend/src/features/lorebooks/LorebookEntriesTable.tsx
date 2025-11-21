@@ -4,6 +4,7 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -38,7 +39,7 @@ export function LorebookEntriesTable({
   const sensors = useSensors(useSensor(PointerSensor));
   const ids = entries.map((entry) => entry.id);
 
-  function handleDragEnd(event: any) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 

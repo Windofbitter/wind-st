@@ -11,17 +11,16 @@ type Theme = "dark" | "light";
 
 export function SettingsPage() {
   const { t, i18n } = useTranslation();
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>(() => {
+    const stored = window.localStorage.getItem(THEME_KEY);
+    if (stored === "light" || stored === "dark") {
+      return stored;
+    }
+    return "dark";
+  });
   const [language, setLanguage] = useState<SupportedLanguage>(
     i18n.language === "zh" ? "zh" : "en",
   );
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(THEME_KEY);
-    if (stored === "light" || stored === "dark") {
-      setTheme(stored);
-    }
-  }, []);
 
   useEffect(() => {
     window.localStorage.setItem(THEME_KEY, theme);

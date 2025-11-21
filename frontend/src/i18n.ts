@@ -307,6 +307,7 @@ const resources = {
         stackEmpty:
           "No presets in stack yet. Click a preset on the left to attach it.",
         stackRemoveButton: "Remove",
+        stackLocked: "Locked",
         previewTitle: "Prompt Preview",
         previewSystemPersonaLabel: "System / Persona:",
         previewStackLabel: "Stack:",
@@ -732,6 +733,7 @@ const resources = {
         stackEmpty:
           "栈中还没有预设。在左侧点击预设以添加。",
         stackRemoveButton: "移除",
+        stackLocked: "已锁定",
         previewTitle: "提示预览",
         previewSystemPersonaLabel: "系统 / 人设：",
         previewStackLabel: "栈：",

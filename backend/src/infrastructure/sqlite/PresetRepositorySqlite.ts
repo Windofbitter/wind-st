@@ -16,7 +16,22 @@ function mapRowToPreset(row: any): Preset {
     kind: row.kind as PresetKind,
     content: row.content,
     builtIn: row.built_in === 1,
+    config: parseConfig(row.config),
   };
+}
+
+function parseConfig(raw: unknown): Record<string, unknown> | null {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw !== "string") return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    // Ignore invalid JSON and fall through to null.
+  }
+  return null;
 }
 
 export class PresetRepositorySqlite implements PresetRepository {
@@ -34,9 +49,10 @@ export class PresetRepositorySqlite implements PresetRepository {
         description,
         kind,
         content,
-        built_in
+        built_in,
+        config
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -47,6 +63,7 @@ export class PresetRepositorySqlite implements PresetRepository {
       data.kind,
       data.content ?? null,
       builtIn ? 1 : 0,
+      JSON.stringify(data.config ?? null),
     );
 
     return {
@@ -56,6 +73,7 @@ export class PresetRepositorySqlite implements PresetRepository {
       kind: data.kind,
       content: data.content ?? null,
       builtIn,
+      config: data.config ?? null,
     };
   }
 
@@ -68,7 +86,8 @@ export class PresetRepositorySqlite implements PresetRepository {
         description,
         kind,
         content,
-        built_in
+        built_in,
+        config
       FROM presets
       WHERE id = ?
     `.trim(),
@@ -106,7 +125,8 @@ export class PresetRepositorySqlite implements PresetRepository {
         description,
         kind,
         content,
-        built_in
+        built_in,
+        config
       FROM presets
     ` +
       (where.length > 0 ? ` WHERE ${where.join(" AND ")}` : "") +
@@ -132,6 +152,10 @@ export class PresetRepositorySqlite implements PresetRepository {
     if (patch.content !== undefined) {
       sets.push("content = ?");
       params.push(patch.content);
+    }
+    if (patch.config !== undefined) {
+      sets.push("config = ?");
+      params.push(JSON.stringify(patch.config ?? null));
     }
     if (patch.builtIn !== undefined) {
       sets.push("built_in = ?");

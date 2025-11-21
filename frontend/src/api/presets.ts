@@ -1,6 +1,10 @@
 import { http, unwrap } from "./httpClient";
 
-export type PresetKind = "static_text";
+export type PresetKind =
+  | "static_text"
+  | "lorebook"
+  | "history"
+  | "mcp_tools";
 
 export interface Preset {
   id: string;
@@ -9,6 +13,7 @@ export interface Preset {
   kind: PresetKind;
   content: string | null;
   builtIn: boolean;
+  config: Record<string, unknown> | null;
 }
 
 export interface ListPresetsParams {
@@ -22,6 +27,7 @@ export interface CreatePresetRequest {
   description: string;
   kind: PresetKind;
   content?: string | null;
+  config?: Record<string, unknown> | null;
   builtIn?: boolean;
 }
 

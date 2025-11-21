@@ -1,47 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { PromptPreset, PromptRole } from "../../api/promptStack";
+import type { PromptRole } from "../../api/promptStack";
+import type { PresetKind } from "../../api/presets";
 import {
-  attachPromptPreset,
-  detachPromptPreset,
-  getPromptStack,
-  reorderPromptPresets,
-} from "../../api/promptStack";
-import type { Preset } from "../../api/presets";
-import { listPresets } from "../../api/presets";
-import type {
-  Lorebook,
-  CharacterLorebook,
-} from "../../api/lorebooks";
-import {
-  listLorebooks,
-  listCharacterLorebooks,
-  attachCharacterLorebook,
-  detachCharacterLorebook,
-} from "../../api/lorebooks";
-import type {
-  MCPServer,
-  CharacterMCPServer,
-} from "../../api/mcpServers";
-import {
-  listMCPServers,
-  listCharacterMCPServers,
   attachCharacterMCPServer,
   detachCharacterMCPServer,
 } from "../../api/mcpServers";
-import { ApiError } from "../../api/httpClient";
 import { PresetPalette } from "./PresetPalette";
-import type { PromptStackItemView } from "./PromptStackList";
-import { PromptStackList } from "./PromptStackList";
-import { LorebookStackSection } from "./LorebookStackSection";
 import { MCPStackSection } from "./MCPStackSection";
-
-type RoleFilter = "all" | PromptRole;
-
-interface LoadState {
-  loading: boolean;
-  error: string | null;
-}
+import type { PromptStackItemView } from "./PromptStackList";
+import type { RoleFilter } from "./types";
+import { PersonaCard } from "./components/PersonaCard";
+import { StackCard } from "./components/StackCard";
+import { AddLorebookRow } from "./components/AddLorebookRow";
+import { usePromptBuilderData } from "./usePromptBuilderData";
 
 interface PromptBuilderTabProps {
   characterId: string;
@@ -55,174 +27,23 @@ export function PromptBuilderTab({
   onPersonaSave,
 }: PromptBuilderTabProps) {
   const { t } = useTranslation();
-  const [personaDraft, setPersonaDraft] = useState(persona);
-  const [savingPersona, setSavingPersona] = useState(false);
-  const [personaError, setPersonaError] = useState<string | null>(
-    null,
-  );
-
-  const [promptStack, setPromptStack] = useState<PromptPreset[]>([]);
-  const [stackLoading, setStackLoading] = useState(false);
-  const [stackError, setStackError] = useState<string | null>(null);
-
-  const [presets, setPresets] = useState<Preset[]>([]);
-  const [presetsLoading, setPresetsLoading] = useState(false);
-  const [presetsError, setPresetsError] = useState<string | null>(
-    null,
-  );
-
-  const [lorebooks, setLorebooks] = useState<Lorebook[]>([]);
-  const [lorebooksState, setLorebooksState] = useState<LoadState>({
-    loading: false,
-    error: null,
+  const data = usePromptBuilderData({
+    characterId,
+    persona,
+    onPersonaSave,
   });
-  const [characterLorebooks, setCharacterLorebooks] = useState<
-    CharacterLorebook[]
-  >([]);
-  const [characterLorebooksState, setCharacterLorebooksState] =
-    useState<LoadState>({
-      loading: false,
-      error: null,
-    });
-
-  const [mcpServers, setMcpServers] = useState<MCPServer[]>([]);
-  const [mcpServersState, setMcpServersState] = useState<LoadState>({
-    loading: false,
-    error: null,
-  });
-  const [characterMcpServers, setCharacterMcpServers] = useState<
-    CharacterMCPServer[]
-  >([]);
-  const [characterMcpServersState, setCharacterMcpServersState] =
-    useState<LoadState>({
-      loading: false,
-      error: null,
-    });
 
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-  const [attachRole, setAttachRole] =
-    useState<PromptRole>("system");
-  const [reordering, setReordering] = useState(false);
-  const [attachError, setAttachError] = useState<string | null>(null);
+  const [attachRole, setAttachRole] = useState<PromptRole>("system");
 
-  useEffect(() => {
-    setPersonaDraft(persona);
-  }, [persona]);
-
-  useEffect(() => {
-    void loadStack();
-    void loadPresets();
-    void loadLorebooks();
-    void loadCharacterLorebooks();
-    void loadMcpServers();
-    void loadCharacterMcpServers();
-  }, [characterId]);
-
-  async function loadStack() {
-    setStackLoading(true);
-    setStackError(null);
-    try {
-      const data = await getPromptStack(characterId);
-      setPromptStack(data);
-    } catch (err) {
-      setStackError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to load prompt stack",
-      );
-    } finally {
-      setStackLoading(false);
-    }
-  }
-
-  async function loadPresets() {
-    setPresetsLoading(true);
-    setPresetsError(null);
-    try {
-      const data = await listPresets({ kind: "static_text" });
-      setPresets(data);
-    } catch (err) {
-      setPresetsError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to load presets",
-      );
-    } finally {
-      setPresetsLoading(false);
-    }
-  }
-
-  async function loadLorebooks() {
-    setLorebooksState({ loading: true, error: null });
-    try {
-      const data = await listLorebooks();
-      setLorebooks(data);
-      setLorebooksState({ loading: false, error: null });
-    } catch (err) {
-      setLorebooksState({
-        loading: false,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to load lorebooks",
-      });
-    }
-  }
-
-  async function loadCharacterLorebooks() {
-    setCharacterLorebooksState({ loading: true, error: null });
-    try {
-      const data = await listCharacterLorebooks(characterId);
-      setCharacterLorebooks(data);
-      setCharacterLorebooksState({ loading: false, error: null });
-    } catch (err) {
-      setCharacterLorebooksState({
-        loading: false,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to load character lorebooks",
-      });
-    }
-  }
-
-  async function loadMcpServers() {
-    setMcpServersState({ loading: true, error: null });
-    try {
-      const data = await listMCPServers();
-      setMcpServers(data);
-      setMcpServersState({ loading: false, error: null });
-    } catch (err) {
-      setMcpServersState({
-        loading: false,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to load MCP servers",
-      });
-    }
-  }
-
-  async function loadCharacterMcpServers() {
-    setCharacterMcpServersState({ loading: true, error: null });
-    try {
-      const data = await listCharacterMCPServers(characterId);
-      setCharacterMcpServers(data);
-      setCharacterMcpServersState({ loading: false, error: null });
-    } catch (err) {
-      setCharacterMcpServersState({
-        loading: false,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to load character MCP servers",
-      });
-    }
-  }
+  const staticPresets = useMemo(
+    () => data.presets.filter((p) => p.kind === "static_text"),
+    [data.presets],
+  );
 
   const stackItems: PromptStackItemView[] = useMemo(() => {
-    const byPreset = new Map(presets.map((p) => [p.id, p]));
-    const sorted = [...promptStack].sort(
+    const byPreset = new Map(data.presets.map((p) => [p.id, p]));
+    const sorted = [...data.promptStack].sort(
       (a, b) => a.sortOrder - b.sortOrder,
     );
     return sorted
@@ -231,189 +52,26 @@ export function PromptBuilderTab({
       )
       .map((pp) => {
         const preset = byPreset.get(pp.presetId);
+        const kind = preset?.kind as PresetKind | undefined;
         return {
           id: pp.id,
           title: preset?.title ?? pp.presetId,
           role: pp.role,
-          kind: preset?.kind,
+          kind,
+          locked: kind === "history",
         };
       });
-  }, [promptStack, presets, roleFilter]);
-
-  async function handlePersonaSave() {
-    setSavingPersona(true);
-    setPersonaError(null);
-    try {
-      await onPersonaSave(personaDraft);
-    } catch (err) {
-      setPersonaError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to save persona",
-      );
-    } finally {
-      setSavingPersona(false);
-    }
-  }
-
-  async function handleAddPreset(presetId: string) {
-    setAttachError(null);
-    try {
-      await attachPromptPreset(characterId, {
-        presetId,
-        role: attachRole,
-      });
-      await loadStack();
-    } catch (err) {
-      setAttachError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to attach preset",
-      );
-    }
-  }
-
-  async function handleRemovePromptPreset(promptPresetId: string) {
-    setAttachError(null);
-    try {
-      await detachPromptPreset(promptPresetId);
-      await loadStack();
-    } catch (err) {
-      setAttachError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to remove prompt preset",
-      );
-    }
-  }
-
-  async function handleReorderPromptPresets(ids: string[]) {
-    setReordering(true);
-    setAttachError(null);
-    try {
-      await reorderPromptPresets(characterId, { ids });
-      const byId = new Map(promptStack.map((pp) => [pp.id, pp]));
-      const reordered: PromptPreset[] = ids
-        .map((id, index) => {
-          const original = byId.get(id);
-          if (!original) return null;
-          return { ...original, sortOrder: index };
-        })
-        .filter((pp): pp is PromptPreset => pp !== null);
-      setPromptStack(reordered);
-    } catch (err) {
-      setAttachError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to reorder prompt presets",
-      );
-    } finally {
-      setReordering(false);
-    }
-  }
-
-  async function handleAttachLorebook(lorebookId: string) {
-    setCharacterLorebooksState((s) => ({ ...s, error: null }));
-    try {
-      await attachCharacterLorebook(characterId, lorebookId);
-      await loadCharacterLorebooks();
-    } catch (err) {
-      setCharacterLorebooksState((s) => ({
-        ...s,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to attach lorebook",
-      }));
-    }
-  }
-
-  async function handleDetachLorebook(mappingId: string) {
-    setCharacterLorebooksState((s) => ({ ...s, error: null }));
-    try {
-      await detachCharacterLorebook(mappingId);
-      await loadCharacterLorebooks();
-    } catch (err) {
-      setCharacterLorebooksState((s) => ({
-        ...s,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to detach lorebook",
-      }));
-    }
-  }
-
-  async function handleAttachMcpServer(serverId: string) {
-    setCharacterMcpServersState((s) => ({ ...s, error: null }));
-    try {
-      await attachCharacterMCPServer(characterId, serverId);
-      await loadCharacterMcpServers();
-    } catch (err) {
-      setCharacterMcpServersState((s) => ({
-        ...s,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to attach MCP server",
-      }));
-    }
-  }
-
-  async function handleDetachMcpServer(mappingId: string) {
-    setCharacterMcpServersState((s) => ({ ...s, error: null }));
-    try {
-      await detachCharacterMCPServer(mappingId);
-      await loadCharacterMcpServers();
-    } catch (err) {
-      setCharacterMcpServersState((s) => ({
-        ...s,
-        error:
-          err instanceof ApiError
-            ? err.message
-            : "Failed to detach MCP server",
-      }));
-    }
-  }
+  }, [data.presets, data.promptStack, roleFilter]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>
-          {t("promptBuilder.quickPersonaTitle")}
-        </h3>
-        <div className="input-group">
-          <label htmlFor="persona-textarea">
-            {t("promptBuilder.quickPersonaLabel")}
-          </label>
-          <textarea
-            id="persona-textarea"
-            value={personaDraft}
-            onChange={(e) =>
-              setPersonaDraft(e.target.value)
-            }
-            rows={5}
-          />
-        </div>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={savingPersona}
-          onClick={() => void handlePersonaSave()}
-        >
-          {savingPersona
-            ? t("promptBuilder.quickPersonaSaveButtonSaving")
-            : t("promptBuilder.quickPersonaSaveButton")}
-        </button>
-        {personaError && (
-          <div
-            className="badge badge-error"
-            style={{ marginTop: "0.5rem" }}
-          >
-            {t("common.errorPrefix")} {personaError}
-          </div>
-        )}
-      </div>
+      <PersonaCard
+        personaDraft={data.personaDraft}
+        onChange={data.setPersonaDraft}
+        onSave={() => void data.savePersona()}
+        saving={data.savingPersona}
+        error={data.personaError}
+      />
 
       <div
         style={{
@@ -426,180 +84,92 @@ export function PromptBuilderTab({
           <h3 style={{ marginTop: 0 }}>
             {t("promptBuilder.paletteTitle")}
           </h3>
-          {presetsLoading && (
+          {data.presetsState.loading && (
             <div>{t("promptBuilder.paletteLoading")}</div>
           )}
-          {presetsError && (
+          {data.presetsState.error && (
             <div className="badge badge-error">
-              {t("common.errorPrefix")} {presetsError}
+              {t("common.errorPrefix")} {data.presetsState.error}
             </div>
           )}
-          {!presetsLoading && presets.length === 0 && (
-            <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
-              {t("promptBuilder.paletteEmpty")}
-            </div>
-          )}
-          {presets.length > 0 && (
+          {!data.presetsState.loading &&
+            staticPresets.length === 0 && (
+              <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
+                {t("promptBuilder.paletteEmpty")}
+              </div>
+            )}
+          {staticPresets.length > 0 && (
             <PresetPalette
-              presets={presets}
+              presets={staticPresets}
               onAddPreset={(id) =>
-                void handleAddPreset(id)
+                void data.attachStaticPreset(id, attachRole)
               }
             />
           )}
+          <div style={{ marginTop: "1rem", display: "grid", gap: "0.5rem" }}>
+            <label style={{ fontWeight: 500 }}>
+              {t("promptBuilder.stackAttachRoleLabel")}
+            </label>
+            <select
+              className="select"
+              value={attachRole}
+              onChange={(e) =>
+                setAttachRole(e.target.value as PromptRole)
+              }
+            >
+              <option value="system">
+                {t("promptBuilder.stackRoleFilterSystem")}
+              </option>
+              <option value="assistant">
+                {t("promptBuilder.stackRoleFilterAssistant")}
+              </option>
+              <option value="user">
+                {t("promptBuilder.stackRoleFilterUser")}
+              </option>
+            </select>
+            <AddLorebookRow
+              lorebooks={data.lorebooks}
+              loading={data.lorebooksState.loading}
+              error={data.lorebooksState.error}
+              selectedId={data.selectedLorebookId}
+              onSelect={data.setSelectedLorebookId}
+              onAttach={() => void data.attachLorebook(attachRole)}
+            />
+            <button
+              type="button"
+              className="btn"
+              onClick={() => void data.attachMcpTools(attachRole)}
+            >
+              {t("promptBuilder.mcpAttachedTitle")}
+            </button>
+          </div>
         </div>
 
-        <div className="card">
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "0.75rem",
-            }}
-          >
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              <h3 style={{ margin: 0 }}>
-                {t("promptBuilder.stackTitle")}
-              </h3>
-              <select
-                className="select"
-                value={roleFilter}
-                onChange={(e) =>
-                  {
-                    const next = e.target
-                      .value as RoleFilter;
-                    setRoleFilter(next);
-                    if (next !== "all") {
-                      setAttachRole(next);
-                    }
-                  }
-                }
-              >
-                <option value="all">
-                  {t("promptBuilder.stackRoleFilterAll")}
-                </option>
-                <option value="system">
-                  {t("promptBuilder.stackRoleFilterSystem")}
-                </option>
-                <option value="assistant">
-                  {t("promptBuilder.stackRoleFilterAssistant")}
-                </option>
-                <option value="user">
-                  {t("promptBuilder.stackRoleFilterUser")}
-                </option>
-              </select>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                flexWrap: "wrap",
-              }}
-            >
-              <label
-                htmlFor="attach-role-select"
-                style={{ fontSize: "0.9rem" }}
-              >
-                {t(
-                  "promptBuilder.stackAttachRoleLabel",
-                )}
-              </label>
-              <select
-                id="attach-role-select"
-                className="select"
-                value={attachRole}
-                onChange={(e) =>
-                  setAttachRole(
-                    e.target.value as PromptRole,
-                  )
-                }
-              >
-                <option value="system">
-                  {t("promptBuilder.stackRoleFilterSystem")}
-                </option>
-                <option value="assistant">
-                  {t(
-                    "promptBuilder.stackRoleFilterAssistant",
-                  )}
-                </option>
-                <option value="user">
-                  {t("promptBuilder.stackRoleFilterUser")}
-                </option>
-              </select>
-              {reordering && (
-                <span
-                  style={{
-                    fontSize: "0.8rem",
-                    opacity: 0.8,
-                  }}
-                >
-                  {t("promptBuilder.stackReordering")}
-                </span>
-              )}
-            </div>
-          </div>
-          {stackLoading && (
-            <div>{t("promptBuilder.stackLoading")}</div>
-          )}
-          {stackError && (
-            <div className="badge badge-error">
-              {t("common.errorPrefix")} {stackError}
-            </div>
-          )}
-          {attachError && (
-            <div className="badge badge-error">
-              {t("common.errorPrefix")} {attachError}
-            </div>
-          )}
-          {stackItems.length === 0 && !stackLoading && (
-            <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
-              {t("promptBuilder.stackEmpty")}
-            </div>
-          )}
-          {stackItems.length > 0 && (
-            <PromptStackList
-              items={stackItems}
-              onRemove={(id) =>
-                void handleRemovePromptPreset(id)
-              }
-              onReorder={(ids) =>
-                void handleReorderPromptPresets(ids)
-              }
-            />
-          )}
-        </div>
+        <StackCard
+          items={stackItems}
+          roleFilter={roleFilter}
+          onRoleFilterChange={setRoleFilter}
+          reordering={data.reordering}
+          stackState={data.stackState}
+          attachError={data.attachError}
+          onRemove={(id) => void data.removePromptPreset(id)}
+          onReorder={(ids) =>
+            void data.reorderPromptPresets(ids)
+          }
+        />
       </div>
 
-      <LorebookStackSection
-        lorebooks={lorebooks}
-        attached={characterLorebooks}
-        loading={
-          lorebooksState.loading ||
-          characterLorebooksState.loading
-        }
-        error={
-          lorebooksState.error ??
-          characterLorebooksState.error
-        }
-        onAttach={(id) => void handleAttachLorebook(id)}
-        onDetach={(id) => void handleDetachLorebook(id)}
-      />
-
       <MCPStackSection
-        servers={mcpServers}
-        attached={characterMcpServers}
-        loading={
-          mcpServersState.loading ||
-          characterMcpServersState.loading
+        servers={data.mcpServers}
+        attached={data.characterMcpServers}
+        loading={data.mcpState.loading}
+        error={data.mcpState.error}
+        onAttach={(id) =>
+          attachAndReloadMcp(characterId, id, data.reloadMcp)
         }
-        error={
-          mcpServersState.error ??
-          characterMcpServersState.error
+        onDetach={(id) =>
+          detachAndReloadMcp(id, data.reloadMcp)
         }
-        onAttach={(id) => void handleAttachMcpServer(id)}
-        onDetach={(id) => void handleDetachMcpServer(id)}
       />
 
       <div className="card">
@@ -619,7 +189,7 @@ export function PromptBuilderTab({
             {t("promptBuilder.previewSystemPersonaLabel")}
           </strong>
           {"\n"}
-          {personaDraft ||
+          {data.personaDraft ||
             t("promptBuilder.previewEmptyPersona")}
           {"\n\n"}
           <strong>
@@ -642,3 +212,17 @@ export function PromptBuilderTab({
   );
 }
 
+function attachAndReloadMcp(
+  characterId: string,
+  serverId: string,
+  reload: () => Promise<void>,
+) {
+  return attachCharacterMCPServer(characterId, serverId).then(reload);
+}
+
+function detachAndReloadMcp(
+  mappingId: string,
+  reload: () => Promise<void>,
+) {
+  return detachCharacterMCPServer(mappingId).then(reload);
+}

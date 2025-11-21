@@ -1,18 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import type { PromptPreset } from "../../../core/entities/PromptPreset";
 import { AppError } from "../../../application/errors/AppError";
-
-interface AttachPresetBody {
-  presetId: string;
-  role: PromptPreset["role"];
-  position?: number;
-}
+import type { AttachPromptPresetInput } from "../../../application/services/PromptStackService";
 
 interface ReorderBody {
   ids: string[];
 }
 
-function ensureAttachPresetPayload(body: unknown): AttachPresetBody {
+function ensureAttachPresetPayload(body: unknown): AttachPromptPresetInput {
   if (!body || typeof body !== "object") {
     throw new AppError(
       "VALIDATION_ERROR",
@@ -21,13 +16,6 @@ function ensureAttachPresetPayload(body: unknown): AttachPresetBody {
   }
 
   const value = body as Partial<AttachPresetBody>;
-
-  if (typeof value.presetId !== "string" || value.presetId.trim() === "") {
-    throw new AppError(
-      "VALIDATION_ERROR",
-      "Invalid prompt stack payload: presetId is required",
-    );
-  }
 
   if (value.role !== "system" && value.role !== "assistant" && value.role !== "user") {
     throw new AppError(
@@ -46,16 +34,42 @@ function ensureAttachPresetPayload(body: unknown): AttachPresetBody {
     );
   }
 
-  const result: AttachPresetBody = {
-    presetId: value.presetId,
-    role: value.role,
-  };
-
-  if (value.position !== undefined) {
-    result.position = value.position;
+  // Attach by existing presetId (static text) or by kind for special entries.
+  if (value.presetId && typeof value.presetId === "string") {
+    return {
+      presetId: value.presetId,
+      role: value.role,
+      position: value.position,
+    };
   }
 
-  return result;
+  if (value.kind === "history" || value.kind === "mcp_tools") {
+    return {
+      kind: value.kind,
+      role: value.role,
+      position: value.position,
+    };
+  }
+
+  if (value.kind === "lorebook") {
+    if (typeof (value as any).lorebookId !== "string") {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid prompt stack payload: lorebookId is required for kind=lorebook",
+      );
+    }
+    return {
+      kind: "lorebook",
+      lorebookId: (value as any).lorebookId,
+      role: value.role,
+      position: value.position,
+    };
+  }
+
+  throw new AppError(
+    "VALIDATION_ERROR",
+    "Invalid prompt stack payload: provide presetId or kind",
+  );
 }
 
 function ensureReorderPayload(body: unknown): ReorderBody {
@@ -87,14 +101,10 @@ export function registerPromptStackRoutes(app: FastifyInstance): void {
 
   app.post("/characters/:characterId/prompt-stack", async (request, reply) => {
     const { characterId } = request.params as { characterId: string };
-    const { presetId, role, position } = ensureAttachPresetPayload(
-      request.body,
-    );
+    const payload = ensureAttachPresetPayload(request.body);
     const attached = await app.promptStackService.attachPresetToCharacter(
       characterId,
-      presetId,
-      role,
-      position,
+      payload,
     );
     void reply.status(201);
     return attached;

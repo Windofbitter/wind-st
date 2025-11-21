@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { TFunction } from "i18next";
 import type { Character } from "../../../api/characters";
 import { listCharacters } from "../../../api/characters";
@@ -65,31 +65,7 @@ export function useCharacterChatState({
   });
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
-  useEffect(() => {
-    void loadCharacters();
-  }, []);
-
-  useEffect(() => {
-    void loadUserPersonas();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedCharacterId) return;
-    void loadChats(selectedCharacterId);
-  }, [selectedCharacterId]);
-
-  const selectedCharacter = useMemo(
-    () =>
-      characters.find((c) => c.id === selectedCharacterId) ?? null,
-    [characters, selectedCharacterId],
-  );
-
-  const activeChat = useMemo(
-    () => chats.find((c) => c.id === selectedChatId) ?? null,
-    [chats, selectedChatId],
-  );
-
-  async function loadCharacters() {
+  const loadCharacters = useCallback(async () => {
     setCharactersState({ loading: true, error: null });
     try {
       const data = await listCharacters();
@@ -108,9 +84,9 @@ export function useCharacterChatState({
       return;
     }
     setCharactersState({ loading: false, error: null });
-  }
+  }, [selectedCharacterId]);
 
-  async function loadUserPersonas() {
+  const loadUserPersonas = useCallback(async () => {
     setUserPersonasState({ loading: true, error: null });
     try {
       let data = await listUserPersonas();
@@ -138,31 +114,61 @@ export function useCharacterChatState({
       return;
     }
     setUserPersonasState({ loading: false, error: null });
-  }
+  }, [selectedUserPersonaId]);
 
-  async function loadChats(characterId: string) {
-    setChatsState({ loading: true, error: null });
-    try {
-      const data = await listChats({ characterId });
-      setChats(data);
-      if (!selectedChatId && data.length > 0) {
-        setSelectedChatId(data[0].id);
-      } else if (
-        selectedChatId &&
-        !data.some((c) => c.id === selectedChatId)
-      ) {
-        setSelectedChatId(data[0]?.id ?? null);
+  const loadChats = useCallback(
+    async (characterId: string) => {
+      setChatsState({ loading: true, error: null });
+      try {
+        const data = await listChats({ characterId });
+        setChats(data);
+        if (!selectedChatId && data.length > 0) {
+          setSelectedChatId(data[0].id);
+        } else if (
+          selectedChatId &&
+          !data.some((c) => c.id === selectedChatId)
+        ) {
+          setSelectedChatId(data[0]?.id ?? null);
+        }
+      } catch (err) {
+        setChatsState({
+          loading: false,
+          error:
+            err instanceof ApiError ? err.message : "Failed to load chats",
+        });
+        return;
       }
-    } catch (err) {
-      setChatsState({
-        loading: false,
-        error:
-          err instanceof ApiError ? err.message : "Failed to load chats",
-      });
-      return;
-    }
-    setChatsState({ loading: false, error: null });
-  }
+      setChatsState({ loading: false, error: null });
+    },
+    [selectedChatId],
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadCharacters();
+  }, [loadCharacters]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadUserPersonas();
+  }, [loadUserPersonas]);
+
+  useEffect(() => {
+    if (!selectedCharacterId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadChats(selectedCharacterId);
+  }, [loadChats, selectedCharacterId]);
+
+  const selectedCharacter = useMemo(
+    () =>
+      characters.find((c) => c.id === selectedCharacterId) ?? null,
+    [characters, selectedCharacterId],
+  );
+
+  const activeChat = useMemo(
+    () => chats.find((c) => c.id === selectedChatId) ?? null,
+    [chats, selectedChatId],
+  );
 
   async function ensureUserPersona(): Promise<string | null> {
     if (selectedUserPersonaId) return selectedUserPersonaId;

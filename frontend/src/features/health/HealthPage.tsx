@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getHealth } from "../../api/health";
 import { ApiError } from "../../api/httpClient";
@@ -16,11 +16,7 @@ export function HealthPage() {
     error: null,
   });
 
-  useEffect(() => {
-    void loadHealth();
-  }, []);
-
-  async function loadHealth() {
+  const loadHealth = useCallback(async () => {
     setState({ loading: true, error: null });
     try {
       const data = await getHealth();
@@ -36,7 +32,12 @@ export function HealthPage() {
       return;
     }
     setState({ loading: false, error: null });
-  }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadHealth();
+  }, [loadHealth]);
 
   const ok = status === "ok";
 

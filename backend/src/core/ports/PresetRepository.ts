@@ -5,6 +5,7 @@ export interface CreatePresetInput {
   description: string;
   kind: PresetKind;
   content?: string | null;
+  config?: Record<string, unknown> | null;
   builtIn?: boolean;
 }
 
@@ -12,6 +13,7 @@ export interface UpdatePresetInput {
   title?: string;
   description?: string;
   content?: string | null;
+  config?: Record<string, unknown> | null;
   builtIn?: boolean;
 }
 

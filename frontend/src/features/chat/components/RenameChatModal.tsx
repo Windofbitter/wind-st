@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Chat } from "../../../api/chats";
 import { useTranslation } from "react-i18next";
 
@@ -15,31 +15,40 @@ export function RenameChatModal({
   onClose,
   onSave,
 }: Props) {
+  if (!chat || !isOpen) return null;
+  return (
+    <RenameChatModalContent
+      chat={chat}
+      onClose={onClose}
+      onSave={onSave}
+    />
+  );
+}
+
+function RenameChatModalContent({
+  chat,
+  onClose,
+  onSave,
+}: {
+  chat: Chat;
+  onClose: () => void;
+  onSave: (chatId: string, title: string) => Promise<{ ok: boolean; error?: string }>;
+}) {
   const { t } = useTranslation();
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(chat.title);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && chat) {
-      setTitle(chat.title);
-      setError(null);
-    }
-  }, [isOpen, chat]);
-
-  if (!chat || !isOpen) return null;
-  const activeChat: Chat = chat;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const next = title.trim();
-    if (!next || next === activeChat.title) {
+    if (!next || next === chat.title) {
       setError(t("chat.renameValidation") ?? "Title required");
       return;
     }
     setSaving(true);
     setError(null);
-    const result = await onSave(activeChat.id, next);
+    const result = await onSave(chat.id, next);
     setSaving(false);
     if (result.ok) {
       onClose();
@@ -55,7 +64,7 @@ export function RenameChatModal({
           {t("chat.renameChatTitle")}
         </h3>
         <p style={{ opacity: 0.8, marginTop: 0 }}>
-          {t("chat.renameChatDescription", { name: activeChat.title })}
+          {t("chat.renameChatDescription", { name: chat.title })}
         </p>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
