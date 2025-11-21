@@ -8,6 +8,7 @@ set FRONTEND_PORT=5173
 
 if not "%~1"=="" set BACKEND_PORT=%~1
 if not "%~2"=="" set FRONTEND_PORT=%~2
+set BACKEND_ORIGIN=http://localhost:%BACKEND_PORT%
 
 echo [wind-st] Resetting backend deps...
 pushd backend
@@ -50,7 +51,7 @@ if errorlevel 1 (
   exit /b 1
 )
 echo [wind-st] Starting frontend on port %FRONTEND_PORT% ...
-start "wind-st frontend" cmd /k "npm run dev -- --port %FRONTEND_PORT%"
+start "wind-st frontend" cmd /k "set VITE_API_BASE_URL=%BACKEND_ORIGIN% && set VITE_API_PROXY_TARGET=%BACKEND_ORIGIN% && npm run dev -- --port %FRONTEND_PORT%"
 popd
 
 echo.

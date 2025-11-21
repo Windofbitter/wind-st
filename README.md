@@ -23,7 +23,7 @@ Requirements: Node.js 20+ and npm.
 Windows (one-shot dev)
 
 - Run `dev.bat` from the repo root. It wipes `backend/node_modules` and `frontend/node_modules`, runs `npm ci`, then opens two terminals.
-- Optional ports: `dev.bat <backendPort> <frontendPort>` (defaults 3000 / 5173).
+- Optional ports: `dev.bat <backendPort> <frontendPort>` (defaults 3000 / 5173). The script auto-sets `VITE_API_BASE_URL`/proxy to the backend port.
 - Backend at http://localhost:<backendPort>, frontend at http://localhost:<frontendPort>.
 
 Manual setup (any OS)
@@ -79,7 +79,7 @@ npm run build --prefix frontend
 Windows 一键启动
 
 - 在仓库根目录运行 `dev.bat`。它会清理 `backend/node_modules` 和 `frontend/node_modules`，执行 `npm ci`，然后打开两个终端。
-- 可选端口：`dev.bat <backendPort> <frontendPort>`（默认为 3000 / 5173）。
+- 可选端口：`dev.bat <backendPort> <frontendPort>`（默认为 3000 / 5173）。脚本会自动设置 `VITE_API_BASE_URL`/proxy 指向对应后端端口。
 - 后端：http://localhost:<backendPort>，前端：http://localhost:<frontendPort>。
 
 手动方式（任意系统）
