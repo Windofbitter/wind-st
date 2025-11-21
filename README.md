@@ -20,18 +20,22 @@ SillyTavern-inspired chat stack with prompt stacking, lorebooks, and Model Conte
 
 Requirements: Node.js 20+ and npm.
 
-Backend
+Windows (one-shot dev)
+
+- Run `dev.bat` from the repo root. It wipes `backend/node_modules` and `frontend/node_modules`, runs `npm ci`, then opens two terminals:
+  - Backend on http://localhost:3000
+  - Frontend on http://localhost:5173
+
+Manual setup (any OS)
 
 ```bash
+# backend
 npm install --prefix backend
-npm run dev --prefix backend   # starts API on http://localhost:3000
-```
+npm run dev --prefix backend
 
-Frontend
-
-```bash
+# frontend (separate shell)
 npm install --prefix frontend
-npm run dev --prefix frontend  # starts UI on http://localhost:5173
+npm run dev --prefix frontend
 ```
 
 Build for production
@@ -72,18 +76,22 @@ npm run build --prefix frontend
 
 环境需求：Node.js 20+，npm。
 
-后端
+Windows 一键启动
+
+- 在仓库根目录运行 `dev.bat`。它会清理 `backend/node_modules` 和 `frontend/node_modules`，执行 `npm ci`，然后打开两个终端：
+  - 后端：http://localhost:3000
+  - 前端：http://localhost:5173
+
+手动方式（任意系统）
 
 ```bash
+# 后端
 npm install --prefix backend
-npm run dev --prefix backend   # API 地址 http://localhost:3000
-```
+npm run dev --prefix backend
 
-前端
-
-```bash
+# 前端（新终端）
 npm install --prefix frontend
-npm run dev --prefix frontend  # 前端地址 http://localhost:5173
+npm run dev --prefix frontend
 ```
 
 生产构建
