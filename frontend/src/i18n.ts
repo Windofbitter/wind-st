@@ -277,6 +277,7 @@ const resources = {
         stackRoleFilterSystem: "System",
         stackRoleFilterAssistant: "Assistant",
         stackRoleFilterUser: "User",
+        stackAttachRoleLabel: "Attach as",
         stackReordering: "Reordering…",
         stackLoading: "Loading stack…",
         stackEmpty:
@@ -677,6 +678,7 @@ const resources = {
         stackRoleFilterSystem: "系统",
         stackRoleFilterAssistant: "助手",
         stackRoleFilterUser: "用户",
+        stackAttachRoleLabel: "添加到",
         stackReordering: "正在重新排序…",
         stackLoading: "正在加载栈…",
         stackEmpty:
@@ -687,6 +689,10 @@ const resources = {
         previewStackLabel: "栈：",
         previewEmptyPersona: "<空的人设>",
         previewNoPresets: "<没有附加预设>",
+        lorebooksAttachedTitle: "已附加的世界书",
+        lorebooksAttachedEmpty: "尚未附加世界书。",
+        mcpAttachedTitle: "已附加的 MCP 服务器",
+        mcpAttachedEmpty: "尚未附加任何 MCP 服务器。",
       },
       llmConnections: {
         newTitle: "新建连接",

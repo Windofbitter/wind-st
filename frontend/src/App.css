@@ -220,6 +220,28 @@
   margin-bottom: 0.5rem;
 }
 
+.select {
+  appearance: none;
+  padding: 0.45rem 0.75rem;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  min-width: 140px;
+  font-size: 0.95rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.select:hover {
+  border-color: var(--btn-secondary-border);
+}
+
 .input-group input,
 .input-group textarea,
 .input-group select {

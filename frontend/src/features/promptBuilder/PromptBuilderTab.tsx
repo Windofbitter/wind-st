@@ -100,6 +100,8 @@ export function PromptBuilderTab({
     });
 
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [attachRole, setAttachRole] =
+    useState<PromptRole>("system");
   const [reordering, setReordering] = useState(false);
   const [attachError, setAttachError] = useState<string | null>(null);
 
@@ -254,17 +256,12 @@ export function PromptBuilderTab({
     }
   }
 
-  function resolveNewRole(): PromptRole {
-    if (roleFilter === "all") return "system";
-    return roleFilter;
-  }
-
   async function handleAddPreset(presetId: string) {
     setAttachError(null);
     try {
       await attachPromptPreset(characterId, {
         presetId,
-        role: resolveNewRole(),
+        role: attachRole,
       });
       await loadStack();
     } catch (err) {
@@ -466,11 +463,17 @@ export function PromptBuilderTab({
                 {t("promptBuilder.stackTitle")}
               </h3>
               <select
+                className="select"
                 value={roleFilter}
                 onChange={(e) =>
-                  setRoleFilter(
-                    e.target.value as RoleFilter,
-                  )
+                  {
+                    const next = e.target
+                      .value as RoleFilter;
+                    setRoleFilter(next);
+                    if (next !== "all") {
+                      setAttachRole(next);
+                    }
+                  }
                 }
               >
                 <option value="all">
@@ -487,16 +490,55 @@ export function PromptBuilderTab({
                 </option>
               </select>
             </div>
-            {reordering && (
-              <span
-                style={{
-                  fontSize: "0.8rem",
-                  opacity: 0.8,
-                }}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <label
+                htmlFor="attach-role-select"
+                style={{ fontSize: "0.9rem" }}
               >
-                {t("promptBuilder.stackReordering")}
-              </span>
-            )}
+                {t(
+                  "promptBuilder.stackAttachRoleLabel",
+                )}
+              </label>
+              <select
+                id="attach-role-select"
+                className="select"
+                value={attachRole}
+                onChange={(e) =>
+                  setAttachRole(
+                    e.target.value as PromptRole,
+                  )
+                }
+              >
+                <option value="system">
+                  {t("promptBuilder.stackRoleFilterSystem")}
+                </option>
+                <option value="assistant">
+                  {t(
+                    "promptBuilder.stackRoleFilterAssistant",
+                  )}
+                </option>
+                <option value="user">
+                  {t("promptBuilder.stackRoleFilterUser")}
+                </option>
+              </select>
+              {reordering && (
+                <span
+                  style={{
+                    fontSize: "0.8rem",
+                    opacity: 0.8,
+                  }}
+                >
+                  {t("promptBuilder.stackReordering")}
+                </span>
+              )}
+            </div>
           </div>
           {stackLoading && (
             <div>{t("promptBuilder.stackLoading")}</div>
