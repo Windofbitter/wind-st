@@ -8,6 +8,8 @@ function getPageTitle(
 ): string {
   if (pathname.startsWith("/chat")) return t("nav.chat");
   if (pathname.startsWith("/characters")) return t("nav.characters");
+  if (pathname.startsWith("/user-personas"))
+    return t("nav.userPersonas");
   if (pathname.startsWith("/presets")) return t("nav.presets");
   if (pathname.startsWith("/lorebooks")) return t("nav.lorebooks");
   if (pathname.startsWith("/llm-connections"))
@@ -52,6 +54,14 @@ export function AppLayout() {
             }
           >
             {t("nav.presets")}
+          </NavLink>
+          <NavLink
+            to="/user-personas"
+            className={({ isActive }) =>
+              isActive ? "nav-link active" : "nav-link"
+            }
+          >
+            {t("nav.userPersonas")}
           </NavLink>
           <NavLink
             to="/lorebooks"

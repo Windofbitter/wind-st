@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Character } from "../../../api/characters";
 import type { Chat } from "../../../api/chats";
+import type { UserPersona } from "../../../api/userPersonas";
 
 interface LoadState {
   loading: boolean;
@@ -12,6 +13,10 @@ interface Props {
   charactersState: LoadState;
   selectedCharacterId: string | null;
   onSelectCharacter: (id: string | null) => void;
+  userPersonas: UserPersona[];
+  userPersonasState: LoadState;
+  selectedUserPersonaId: string | null;
+  onSelectUserPersona: (id: string | null) => void;
   chats: Chat[];
   chatsState: LoadState;
   selectedChatId: string | null;
@@ -26,6 +31,10 @@ export function ChatSidebar({
   charactersState,
   selectedCharacterId,
   onSelectCharacter,
+  userPersonas,
+  userPersonasState,
+  selectedUserPersonaId,
+  onSelectUserPersona,
   chats,
   chatsState,
   selectedChatId,
@@ -65,6 +74,33 @@ export function ChatSidebar({
             {t("common.errorPrefix")} {charactersState.error}
           </div>
         )}
+        <div className="input-group" style={{ marginTop: "0.75rem" }}>
+          <label htmlFor="user-persona-select">
+            {t("chat.userPersonaLabel")}
+          </label>
+          <select
+            id="user-persona-select"
+            value={selectedUserPersonaId ?? ""}
+            onChange={(e) =>
+              onSelectUserPersona(e.target.value || null)
+            }
+          >
+            <option value="">
+              {t("chat.userPersonaPlaceholder")}
+            </option>
+            {userPersonas.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+                {p.isDefault ? ` (${t("chat.userPersonaDefaultTag")})` : ""}
+              </option>
+            ))}
+          </select>
+          {userPersonasState.error && (
+            <div className="badge badge-error">
+              {t("common.errorPrefix")} {userPersonasState.error}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="card" style={{ flex: 1, overflowY: "auto" }}>
@@ -73,7 +109,7 @@ export function ChatSidebar({
           <button
             className="btn btn-primary"
             onClick={onCreateChat}
-            disabled={!selectedCharacterId}
+            disabled={!selectedCharacterId || !selectedUserPersonaId}
           >
             {t("chat.chatsNew")}
           </button>

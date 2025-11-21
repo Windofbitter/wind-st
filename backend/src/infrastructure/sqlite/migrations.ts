@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import type { SqliteDatabase } from "./db";
 
 function ensureColumn(
@@ -32,6 +33,41 @@ function ensureTimestampColumn(
   db.exec(
     `UPDATE ${table} SET ${column} = datetime('now') WHERE ${column} IS NULL`,
   );
+}
+
+function ensureDefaultUserPersona(db: SqliteDatabase): string {
+  const existingDefault = db.prepare(
+    `SELECT id FROM user_personas WHERE is_default = 1 LIMIT 1`,
+  ).get() as { id: string } | undefined;
+  if (existingDefault?.id) {
+    return existingDefault.id;
+  }
+
+  const anyPersona = db.prepare(
+    `SELECT id FROM user_personas ORDER BY rowid LIMIT 1`,
+  ).get() as { id: string } | undefined;
+  if (anyPersona?.id) {
+    db.prepare(
+      `UPDATE user_personas SET is_default = 1 WHERE id = ?`,
+    ).run(anyPersona.id);
+    return anyPersona.id;
+  }
+
+  const id = crypto.randomUUID();
+  db.prepare(
+    `
+    INSERT INTO user_personas (
+      id,
+      name,
+      description,
+      prompt,
+      is_default
+    )
+    VALUES (?, ?, ?, ?, 1)
+  `.trim(),
+  ).run(id, "Default User", "Auto-created during migration", null);
+
+  return id;
 }
 
 export function runMigrations(db: SqliteDatabase): void {
@@ -124,9 +160,6 @@ export function runMigrations(db: SqliteDatabase): void {
 
     CREATE INDEX IF NOT EXISTS idx_chats_character
       ON chats(character_id, created_at);
-
-    CREATE INDEX IF NOT EXISTS idx_chats_user_persona
-      ON chats(user_persona_id, created_at);
 
     CREATE TABLE IF NOT EXISTS messages (
       id TEXT PRIMARY KEY,
@@ -230,6 +263,7 @@ export function runMigrations(db: SqliteDatabase): void {
   ensureTimestampColumn(db, "messages", "created_at");
   ensureColumn(db, "chat_llm_configs", "max_tool_iterations", "INTEGER NOT NULL DEFAULT 3");
   ensureColumn(db, "chat_llm_configs", "tool_call_timeout_ms", "INTEGER NOT NULL DEFAULT 15000");
+  ensureColumn(db, "chats", "user_persona_id", "TEXT");
   ensureColumn(db, "llm_connections", "status", "TEXT NOT NULL DEFAULT 'unknown'");
   ensureColumn(db, "llm_connections", "last_tested_at", "TEXT");
   ensureColumn(db, "llm_connections", "models_available", "INTEGER");
@@ -240,6 +274,15 @@ export function runMigrations(db: SqliteDatabase): void {
   ensureColumn(db, "mcp_servers", "last_checked_at", "TEXT");
   ensureColumn(db, "mcp_servers", "tool_count", "INTEGER");
 
+  const defaultUserPersonaId = ensureDefaultUserPersona(db);
+  db.prepare(
+    `UPDATE chats SET user_persona_id = ? WHERE user_persona_id IS NULL`,
+  ).run(defaultUserPersonaId);
+
+  db.exec(
+    `CREATE INDEX IF NOT EXISTS idx_chats_user_persona
+      ON chats(user_persona_id, created_at)`,
+  );
   db.exec(
     `CREATE INDEX IF NOT EXISTS idx_messages_chat_created_at
       ON messages(chat_id, created_at)`,

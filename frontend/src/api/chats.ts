@@ -4,6 +4,7 @@ import type { Message } from "./messages";
 export interface Chat {
   id: string;
   characterId: string;
+  userPersonaId: string;
   title: string;
   createdAt: string;
   updatedAt: string;
@@ -43,6 +44,7 @@ export interface PromptPreview {
 
 export interface ListChatsParams {
   characterId?: string;
+  userPersonaId?: string;
 }
 
 export interface InitialChatConfigInput {
@@ -56,6 +58,7 @@ export interface InitialChatConfigInput {
 
 export interface CreateChatRequest {
   characterId: string;
+  userPersonaId: string;
   title: string;
   initialConfig?: InitialChatConfigInput;
 }

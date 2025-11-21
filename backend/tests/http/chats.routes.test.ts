@@ -27,6 +27,19 @@ describe("Chat routes", () => {
     return response.json() as { id: string };
   }
 
+  async function createUserPersona() {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user-personas",
+      payload: {
+        name: "You",
+        description: "d",
+        prompt: "p",
+      },
+    });
+    return response.json() as { id: string };
+  }
+
   async function createLLMConnection() {
     const response = await app.inject({
       method: "POST",
@@ -56,6 +69,7 @@ describe("Chat routes", () => {
     app = ctx.app;
 
     const character = await createCharacter();
+    const persona = await createUserPersona();
     const connection = await createLLMConnection();
 
     const createChatResponse = await app.inject({
@@ -63,6 +77,7 @@ describe("Chat routes", () => {
       url: "/chats",
       payload: {
         characterId: character.id,
+        userPersonaId: persona.id,
         title: "Test chat",
         initialConfig: {
           llmConnectionId: connection.id,
@@ -114,6 +129,7 @@ describe("Chat routes", () => {
     app = ctx.app;
 
     const character = await createCharacter();
+    const persona = await createUserPersona();
     const connection = await createLLMConnection();
 
     const createChatResponse = await app.inject({
@@ -121,6 +137,7 @@ describe("Chat routes", () => {
       url: "/chats",
       payload: {
         characterId: character.id,
+        userPersonaId: persona.id,
         title: "Original",
         initialConfig: {
           llmConnectionId: connection.id,

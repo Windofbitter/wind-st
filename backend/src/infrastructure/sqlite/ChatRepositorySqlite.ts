@@ -16,6 +16,7 @@ function mapRowToChat(row: any): Chat {
   return {
     id: row.id,
     characterId: row.character_id,
+    userPersonaId: row.user_persona_id,
     title: row.title,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -35,19 +36,28 @@ export class ChatRepositorySqlite implements ChatRepository {
       INSERT INTO chats (
         id,
         character_id,
+        user_persona_id,
         title,
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
-    stmt.run(id, data.characterId, data.title, createdAt, updatedAt);
+    stmt.run(
+      id,
+      data.characterId,
+      data.userPersonaId,
+      data.title,
+      createdAt,
+      updatedAt,
+    );
 
     return {
       id,
       characterId: data.characterId,
+      userPersonaId: data.userPersonaId,
       title: data.title,
       createdAt,
       updatedAt,
@@ -60,6 +70,7 @@ export class ChatRepositorySqlite implements ChatRepository {
       SELECT
         id,
         character_id,
+        user_persona_id,
         title,
         created_at,
         updated_at
@@ -81,12 +92,17 @@ export class ChatRepositorySqlite implements ChatRepository {
       where.push("character_id = ?");
       params.push(filter.characterId);
     }
+    if (filter?.userPersonaId) {
+      where.push("user_persona_id = ?");
+      params.push(filter.userPersonaId);
+    }
 
     const sql =
       `
       SELECT
         id,
         character_id,
+        user_persona_id,
         title,
         created_at,
         updated_at
@@ -107,6 +123,10 @@ export class ChatRepositorySqlite implements ChatRepository {
     if (patch.title !== undefined) {
       sets.push("title = ?");
       params.push(patch.title);
+    }
+    if (patch.userPersonaId !== undefined) {
+      sets.push("user_persona_id = ?");
+      params.push(patch.userPersonaId);
     }
     if (patch.updatedAt !== undefined) {
       sets.push("updated_at = ?");

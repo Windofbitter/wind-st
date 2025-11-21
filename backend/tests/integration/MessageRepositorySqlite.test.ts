@@ -3,7 +3,7 @@ import { MessageRepositorySqlite } from "../../src/infrastructure/sqlite/Message
 import { ChatRepositorySqlite } from "../../src/infrastructure/sqlite/ChatRepositorySqlite";
 import { CharacterRepositorySqlite } from "../../src/infrastructure/sqlite/CharacterRepositorySqlite";
 import type { SqliteDatabase } from "../../src/infrastructure/sqlite/db";
-import { createTestDatabase } from "../utils/testDb";
+import { createDefaultUserPersona, createTestDatabase } from "../utils/testDb";
 
 describe("MessageRepositorySqlite", () => {
   let db: SqliteDatabase;
@@ -20,9 +20,11 @@ describe("MessageRepositorySqlite", () => {
       avatarPath: "/avatars/x.png",
       creatorNotes: null,
     });
+    const persona = await createDefaultUserPersona(db);
     const chatRepo = new ChatRepositorySqlite(db);
     const chat = await chatRepo.create({
       characterId: character.id,
+      userPersonaId: persona.id,
       title: "Chat",
     });
     chatId = chat.id;

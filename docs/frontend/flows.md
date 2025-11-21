@@ -4,12 +4,13 @@ These are the user-space guarantees to keep intact. If any break, fix the flow b
 
 ## Core happy path
 1) Create an LLM connection (name, baseUrl, defaultModel, apiKey). `POST /llm-connections`.
-2) Create a character (name/description/persona). `POST /characters`.
-3) Create at least one preset (`static_text`) and a lorebook with entries (keywords, content, insertionOrder, isEnabled). `POST /presets`, `POST /lorebooks/.../entries`.
-4) Attach presets to the character prompt stack with roles, order them via DnD (`PromptStackList` → `reorderPromptPresets` uses ordered `ids`). Attach lorebooks/MCP servers where needed.
-5) Create a chat for that character, optionally with an initial LLM config. `POST /chats`.
-6) Load chat messages (`listMessages`), history config (`getChatHistoryConfig`), prompt preview (`getPromptPreview`), and per-chat LLM config (`getChatConfig`) when a chat is selected.
-7) Send a turn (`createTurn`); on success, messages refresh and prompt preview should reflect the new state.
+2) Create a user persona (name/description/prompt, optional default flag). `POST /user-personas`.
+3) Create a character (name/description/persona). `POST /characters`.
+4) Create at least one preset (`static_text`) and a lorebook with entries (keywords, content, insertionOrder, isEnabled). `POST /presets`, `POST /lorebooks/.../entries`.
+5) Attach presets to the character prompt stack with roles, order them via DnD (`PromptStackList` → `reorderPromptPresets` uses ordered `ids`). Attach lorebooks/MCP servers where needed.
+6) Create a chat for that character, selecting a user persona, optionally with an initial LLM config. `POST /chats`.
+7) Load chat messages (`listMessages`), history config (`getChatHistoryConfig`), prompt preview (`getPromptPreview`), and per-chat LLM config (`getChatConfig`) when a chat is selected.
+8) Send a turn (`createTurn`); on success, messages refresh and prompt preview should reflect the new state.
 
 ## Prompt stack + ordering
 - Drag-and-drop uses stable `PromptPreset.id`; `reorderPromptPresets` expects the full ordered `ids` array. Never fabricate ids client-side.

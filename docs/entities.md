@@ -9,15 +9,24 @@ The core persona the user interacts with.
 - **avatar_path**: String (Local path to the image file)
 - **creator_notes**: String (Optional metadata)
 
-## 2. Chat
+## 2. UserPersona
+Reusable user identity attached to chats.
+- **id**: UUID
+- **name**: String
+- **description**: String (Optional)
+- **prompt**: Text (Optional user prompt block)
+- **is_default**: Boolean (True when preferred for new chats)
+
+## 3. Chat
 A container for a conversation history.
 - **id**: UUID
 - **character_id**: UUID (FK to Character)
+- **user_persona_id**: UUID (FK to UserPersona)
 - **title**: String (e.g., "The Tavern Encounter")
 - **created_at**: Timestamp
 - **updated_at**: Timestamp
 
-## 3. Message
+## 4. Message
 A single turn in the conversation.
 - **id**: UUID
 - **chat_id**: UUID (FK to Chat)
@@ -27,7 +36,7 @@ A single turn in the conversation.
 - **tool_results**: JSON (The output from the tool)
 - **token_count**: Integer (For context window management)
 
-## 4. ChatRun (Orchestrated turn)
+## 5. ChatRun (Orchestrated turn)
 Represents a single orchestrated LLM turn for a chat (user → assistant, possibly with tools).
 - **id**: UUID
 - **chat_id**: UUID (FK to Chat)
@@ -44,13 +53,13 @@ Notes:
 - Orchestration logic (`ChatOrchestrator`) is responsible for creating/updating ChatRun rows; core entities like Chat and Message remain free of transient "busy" flags.
 - On process restart, any ChatRun left in status = running should be treated as failed or canceled (implementation decision), and the chat becomes idle again.
 
-## 5. Lorebook
+## 6. Lorebook
 A collection of world info entries.
 - **id**: UUID
 - **name**: String
 - **description**: String
 
-## 6. LorebookEntry
+## 7. LorebookEntry
 A specific fact triggered by keywords.
 - **id**: UUID
 - **lorebook_id**: UUID (FK to Lorebook)
@@ -59,7 +68,7 @@ A specific fact triggered by keywords.
 - **insertion_order**: Integer (Priority)
 - **is_enabled**: Boolean
 
-## 7. Preset
+## 8. Preset
 Reusable prompt block definition.
 - **id**: UUID
 - **title**: String (Display title for the creator)
@@ -69,7 +78,7 @@ Reusable prompt block definition.
 - **built_in**: Boolean (True for built-in presets like conversation history or default tool sets)
 - **config**: JSON (Kind-specific options, e.g. { lorebook_id }, history settings, { mcp_server_ids })
 
-## 8. PromptPreset
+## 9. PromptPreset
 Per-character prompt stack entry.
 - **id**: UUID
 - **character_id**: UUID (FK to Character)
@@ -77,7 +86,7 @@ Per-character prompt stack entry.
 - **role**: Enum (system, assistant, user) (Primarily for static_text; other kinds typically map to system)
 - **sort_order**: Integer (For drag-and-drop ordering)
 
-## 9. MCPServer
+## 10. MCPServer
 Configuration for an external tool provider.
 - **id**: UUID
 - **name**: String (e.g., "Filesystem Server")
@@ -86,7 +95,7 @@ Configuration for an external tool provider.
 - **env**: JSON (Environment variables)
 - **is_enabled**: Boolean
 
-## 10. LLMConnection
+## 11. LLMConnection
 Configuration for an LLM provider endpoint.
 - **id**: UUID
 - **name**: String (e.g., "OpenAI Compatible Main", "Local Ollama")
@@ -96,7 +105,7 @@ Configuration for an LLM provider endpoint.
 - **api_key**: String (Write-only secret used to authenticate with the provider; not returned in standard listing APIs)
 - **is_enabled**: Boolean
 
-## 11. ChatLLMConfig
+## 12. ChatLLMConfig
 Per-chat LLM configuration.
 - **id**: UUID
 - **chat_id**: UUID (FK to Chat)

@@ -2,12 +2,13 @@ import { beforeEach, afterEach, describe, expect, it } from "vitest";
 import { ChatRepositorySqlite } from "../../src/infrastructure/sqlite/ChatRepositorySqlite";
 import { CharacterRepositorySqlite } from "../../src/infrastructure/sqlite/CharacterRepositorySqlite";
 import type { SqliteDatabase } from "../../src/infrastructure/sqlite/db";
-import { createTestDatabase } from "../utils/testDb";
+import { createDefaultUserPersona, createTestDatabase } from "../utils/testDb";
 
 describe("ChatRepositorySqlite", () => {
   let db: SqliteDatabase;
   let chatRepo: ChatRepositorySqlite;
   let characterId: string;
+  let userPersonaId: string;
 
   beforeEach(async () => {
     db = createTestDatabase();
@@ -20,6 +21,10 @@ describe("ChatRepositorySqlite", () => {
       creatorNotes: null,
     });
     characterId = character.id;
+
+    const persona = await createDefaultUserPersona(db);
+    userPersonaId = persona.id;
+
     chatRepo = new ChatRepositorySqlite(db);
   });
 
@@ -30,10 +35,12 @@ describe("ChatRepositorySqlite", () => {
   it("creates, gets, lists, updates and deletes chats", async () => {
     const chat1 = await chatRepo.create({
       characterId,
+      userPersonaId,
       title: "First",
     });
     const chat2 = await chatRepo.create({
       characterId,
+      userPersonaId,
       title: "Second",
     });
 
@@ -61,6 +68,7 @@ describe("ChatRepositorySqlite", () => {
   it("returns existing chat when update patch is empty", async () => {
     const chat = await chatRepo.create({
       characterId,
+      userPersonaId,
       title: "NoPatch",
     });
 

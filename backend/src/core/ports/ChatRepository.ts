@@ -2,16 +2,19 @@ import type { Chat } from "../entities/Chat";
 
 export interface CreateChatInput {
   characterId: string;
+  userPersonaId: string;
   title: string;
 }
 
 export interface UpdateChatInput {
   title?: string;
+  userPersonaId?: string;
   updatedAt?: string;
 }
 
 export interface ChatFilter {
   characterId?: string;
+  userPersonaId?: string;
 }
 
 export interface ChatRepository {

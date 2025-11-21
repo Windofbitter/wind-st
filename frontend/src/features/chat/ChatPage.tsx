@@ -15,6 +15,10 @@ export function ChatPage() {
     charactersState,
     selectedCharacterId,
     setSelectedCharacterId,
+    userPersonas,
+    userPersonasState,
+    selectedUserPersonaId,
+    setSelectedUserPersonaId,
     chats,
     chatsState,
     selectedChatId,
@@ -64,6 +68,10 @@ export function ChatPage() {
         charactersState={charactersState}
         selectedCharacterId={selectedCharacterId}
         onSelectCharacter={setSelectedCharacterId}
+        userPersonas={userPersonas}
+        userPersonasState={userPersonasState}
+        selectedUserPersonaId={selectedUserPersonaId}
+        onSelectUserPersona={setSelectedUserPersonaId}
         chats={chats}
         chatsState={chatsState}
         selectedChatId={selectedChatId}

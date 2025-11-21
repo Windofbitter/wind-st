@@ -24,11 +24,23 @@ describe("Message routes", () => {
     });
     const character = characterResponse.json() as { id: string };
 
+    const personaResponse = await app.inject({
+      method: "POST",
+      url: "/user-personas",
+      payload: {
+        name: "You",
+        description: "d",
+        prompt: "p",
+      },
+    });
+    const persona = personaResponse.json() as { id: string };
+
     const chatResponse = await app.inject({
       method: "POST",
       url: "/chats",
       payload: {
         characterId: character.id,
+        userPersonaId: persona.id,
         title: "Chat",
       },
     });

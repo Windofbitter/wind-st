@@ -4,7 +4,7 @@ import { MessageRepositorySqlite } from "../../src/infrastructure/sqlite/Message
 import { ChatRunRepositorySqlite } from "../../src/infrastructure/sqlite/ChatRunRepositorySqlite";
 import { CharacterRepositorySqlite } from "../../src/infrastructure/sqlite/CharacterRepositorySqlite";
 import { ChatRepositorySqlite } from "../../src/infrastructure/sqlite/ChatRepositorySqlite";
-import { createTestDatabase } from "../utils/testDb";
+import { createDefaultUserPersona, createTestDatabase } from "../utils/testDb";
 import type { SqliteDatabase } from "../../src/infrastructure/sqlite/db";
 import { AppError } from "../../src/application/errors/AppError";
 
@@ -25,10 +25,12 @@ describe("MessageService", () => {
       avatarPath: "/avatars/u.png",
       creatorNotes: null,
     });
+    const persona = await createDefaultUserPersona(db);
 
     const chatRepo = new ChatRepositorySqlite(db);
     const chat = await chatRepo.create({
       characterId: character.id,
+      userPersonaId: persona.id,
       title: "Chat",
     });
     chatId = chat.id;

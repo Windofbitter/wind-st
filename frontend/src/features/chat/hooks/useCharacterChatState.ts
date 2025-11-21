@@ -5,6 +5,8 @@ import { listCharacters } from "../../../api/characters";
 import type { Chat } from "../../../api/chats";
 import { createChat, deleteChat, listChats, updateChatTitle } from "../../../api/chats";
 import { ApiError } from "../../../api/httpClient";
+import type { UserPersona } from "../../../api/userPersonas";
+import { createUserPersona, listUserPersonas } from "../../../api/userPersonas";
 import type { LoadState } from "./stateTypes";
 
 interface Params {
@@ -17,6 +19,10 @@ export interface CharacterChatState {
   charactersState: LoadState;
   selectedCharacterId: string | null;
   setSelectedCharacterId: Dispatch<SetStateAction<string | null>>;
+  userPersonas: UserPersona[];
+  userPersonasState: LoadState;
+  selectedUserPersonaId: string | null;
+  setSelectedUserPersonaId: Dispatch<SetStateAction<string | null>>;
   chats: Chat[];
   chatsState: LoadState;
   selectedChatId: string | null;
@@ -43,6 +49,14 @@ export function useCharacterChatState({
   const [selectedCharacterId, setSelectedCharacterId] = useState<
     string | null
   >(null);
+  const [userPersonas, setUserPersonas] = useState<UserPersona[]>([]);
+  const [userPersonasState, setUserPersonasState] = useState<LoadState>({
+    loading: false,
+    error: null,
+  });
+  const [selectedUserPersonaId, setSelectedUserPersonaId] = useState<
+    string | null
+  >(null);
 
   const [chats, setChats] = useState<Chat[]>([]);
   const [chatsState, setChatsState] = useState<LoadState>({
@@ -53,6 +67,10 @@ export function useCharacterChatState({
 
   useEffect(() => {
     void loadCharacters();
+  }, []);
+
+  useEffect(() => {
+    void loadUserPersonas();
   }, []);
 
   useEffect(() => {
@@ -92,6 +110,36 @@ export function useCharacterChatState({
     setCharactersState({ loading: false, error: null });
   }
 
+  async function loadUserPersonas() {
+    setUserPersonasState({ loading: true, error: null });
+    try {
+      let data = await listUserPersonas();
+      if (data.length === 0) {
+        const created = await createUserPersona({
+          name: "You",
+          isDefault: true,
+        });
+        data = [created];
+      }
+      setUserPersonas(data);
+      if (!selectedUserPersonaId && data.length > 0) {
+        const preferred =
+          data.find((p) => p.isDefault) ?? data[0];
+        setSelectedUserPersonaId(preferred?.id ?? null);
+      }
+    } catch (err) {
+      setUserPersonasState({
+        loading: false,
+        error:
+          err instanceof ApiError
+            ? err.message
+            : "Failed to load personas",
+      });
+      return;
+    }
+    setUserPersonasState({ loading: false, error: null });
+  }
+
   async function loadChats(characterId: string) {
     setChatsState({ loading: true, error: null });
     try {
@@ -116,6 +164,32 @@ export function useCharacterChatState({
     setChatsState({ loading: false, error: null });
   }
 
+  async function ensureUserPersona(): Promise<string | null> {
+    if (selectedUserPersonaId) return selectedUserPersonaId;
+    if (userPersonas.length > 0) {
+      const preferred =
+        userPersonas.find((p) => p.isDefault) ?? userPersonas[0];
+      setSelectedUserPersonaId(preferred?.id ?? null);
+      return preferred?.id ?? null;
+    }
+    try {
+      const created = await createUserPersona({
+        name: "You",
+        isDefault: true,
+      });
+      setUserPersonas([created]);
+      setSelectedUserPersonaId(created.id);
+      return created.id;
+    } catch (err) {
+      setGlobalError(
+        err instanceof ApiError
+          ? err.message
+          : "No user persona available",
+      );
+      return null;
+    }
+  }
+
   async function handleCreateChat() {
     if (!selectedCharacterId) return;
     const title = window.prompt(
@@ -126,8 +200,11 @@ export function useCharacterChatState({
 
     setGlobalError(null);
     try {
+      const personaId = await ensureUserPersona();
+      if (!personaId) return;
       const { chat } = await createChat({
         characterId: selectedCharacterId,
+        userPersonaId: personaId,
         title: title.trim(),
       });
       await loadChats(selectedCharacterId);
@@ -194,6 +271,10 @@ export function useCharacterChatState({
     charactersState,
     selectedCharacterId,
     setSelectedCharacterId,
+    userPersonas,
+    userPersonasState,
+    selectedUserPersonaId,
+    setSelectedUserPersonaId,
     chats,
     chatsState,
     selectedChatId,

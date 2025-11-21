@@ -8,4 +8,3 @@ export interface ChatLLMConfig {
   maxToolIterations: number;
   toolCallTimeoutMs: number;
 }
-

@@ -7,7 +7,9 @@ import type {
   UpdateChatLLMConfigInput,
 } from "../../core/ports/ChatLLMConfigRepository";
 import type { ChatRepository } from "../../core/ports/ChatRepository";
+import type { UserPersonaService } from "./UserPersonaService";
 import { LLMConnectionService } from "./LLMConnectionService";
+import { AppError } from "../errors/AppError";
 import {
   DEFAULT_MAX_TOOL_ITERATIONS,
   DEFAULT_TOOL_CALL_TIMEOUT_MS,
@@ -20,6 +22,7 @@ export class ChatService {
     private readonly chatRepo: ChatRepository,
     private readonly chatConfigRepo: ChatLLMConfigRepository,
     private readonly llmConnectionService: LLMConnectionService,
+    private readonly userPersonaService: UserPersonaService,
   ) {}
 
   private async resolveConfigInput(
@@ -49,6 +52,16 @@ export class ChatService {
     data: CreateChatInput,
     initialConfig?: Omit<CreateChatLLMConfigInput, "chatId">,
   ): Promise<{ chat: Chat; llmConfig: ChatLLMConfig | null }> {
+    const persona = await this.userPersonaService.getById(
+      data.userPersonaId,
+    );
+    if (!persona) {
+      throw new AppError(
+        "USER_PERSONA_NOT_FOUND",
+        "User persona not found",
+      );
+    }
+
     const chat = await this.chatRepo.create(data);
 
     let llmConfig: ChatLLMConfig | null = null;
@@ -75,6 +88,17 @@ export class ChatService {
     id: string,
     patch: Partial<Omit<CreateChatInput, "characterId">>,
   ): Promise<Chat | null> {
+    if (patch.userPersonaId) {
+      const persona = await this.userPersonaService.getById(
+        patch.userPersonaId,
+      );
+      if (!persona) {
+        throw new AppError(
+          "USER_PERSONA_NOT_FOUND",
+          "User persona not found",
+        );
+      }
+    }
     return this.chatRepo.update(id, patch);
   }
 

@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { ChatService } from "../../src/application/services/ChatService";
 import { LLMConnectionService } from "../../src/application/services/LLMConnectionService";
+import { UserPersonaService } from "../../src/application/services/UserPersonaService";
 import {
   FakeChatLLMConfigRepository,
   FakeChatRepository,
   FakeLLMConnectionRepository,
+  FakeUserPersonaRepository,
 } from "./fakeRepositories";
 import {
   DEFAULT_MAX_OUTPUT_TOKENS,
@@ -18,27 +20,41 @@ async function createService() {
   const chatConfigRepo = new FakeChatLLMConfigRepository();
   const llmConnectionRepo = new FakeLLMConnectionRepository();
   const llmConnectionService = new LLMConnectionService(llmConnectionRepo);
+  const userPersonaRepo = new FakeUserPersonaRepository();
+  const userPersonaService = new UserPersonaService(
+    userPersonaRepo,
+    chatRepo,
+  );
+  const defaultPersona = await userPersonaService.create({
+    name: "You",
+    isDefault: true,
+  });
 
   const service = new ChatService(
     chatRepo,
     chatConfigRepo,
     llmConnectionService,
+    userPersonaService,
   );
   return {
     chatRepo,
     chatConfigRepo,
     llmConnectionRepo,
     llmConnectionService,
+    userPersonaService,
+    defaultPersona,
     service,
   };
 }
 
 describe("ChatService", () => {
   it("creates chat without initial config", async () => {
-    const { service, chatConfigRepo } = await createService();
+    const { service, chatConfigRepo, defaultPersona } =
+      await createService();
 
     const { chat, llmConfig } = await service.createChat({
       characterId: "char-1",
+      userPersonaId: defaultPersona.id,
       title: "Test chat",
     });
 
@@ -50,8 +66,12 @@ describe("ChatService", () => {
   });
 
   it("creates chat with default config when a connection exists", async () => {
-    const { service, chatConfigRepo, llmConnectionRepo } =
-      await createService();
+    const {
+      service,
+      chatConfigRepo,
+      llmConnectionRepo,
+      defaultPersona,
+    } = await createService();
 
     const createdConn = await llmConnectionRepo.create({
       name: "Primary",
@@ -64,6 +84,7 @@ describe("ChatService", () => {
 
     const { chat, llmConfig } = await service.createChat({
       characterId: "char-1",
+      userPersonaId: defaultPersona.id,
       title: "Test chat",
     });
 
@@ -86,8 +107,12 @@ describe("ChatService", () => {
   });
 
   it("creates chat with initial LLM config, wiring chatId", async () => {
-    const { service, chatConfigRepo, llmConnectionRepo } =
-      await createService();
+    const {
+      service,
+      chatConfigRepo,
+      llmConnectionRepo,
+      defaultPersona,
+    } = await createService();
 
     const connection = await llmConnectionRepo.create({
       name: "Primary",
@@ -101,6 +126,7 @@ describe("ChatService", () => {
     const { chat, llmConfig } = await service.createChat(
       {
         characterId: "char-1",
+        userPersonaId: defaultPersona.id,
         title: "With config",
       },
       {
@@ -121,11 +147,17 @@ describe("ChatService", () => {
   });
 
   it("deletes chat and its config", async () => {
-    const { service, chatRepo, chatConfigRepo, llmConnectionRepo } =
-      await createService();
+    const {
+      service,
+      chatRepo,
+      chatConfigRepo,
+      llmConnectionRepo,
+      defaultPersona,
+    } = await createService();
 
     const chat = await chatRepo.create({
       characterId: "char-1",
+      userPersonaId: defaultPersona.id,
       title: "t",
     });
     await chatConfigRepo.create({
@@ -154,16 +186,23 @@ describe("ChatService", () => {
   });
 
   it("proxies get/list/update config operations", async () => {
-    const { service, chatRepo, llmConnectionRepo } = await createService();
+    const {
+      service,
+      chatRepo,
+      llmConnectionRepo,
+      defaultPersona,
+    } = await createService();
 
     const chat = await chatRepo.create({
       characterId: "char-1",
+      userPersonaId: defaultPersona.id,
       title: "t",
     });
 
     const { llmConfig } = await service.createChat(
       {
         characterId: chat.characterId,
+        userPersonaId: defaultPersona.id,
         title: chat.title,
       },
       {

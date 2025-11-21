@@ -8,6 +8,7 @@ import type { MCPServer } from "../../src/core/entities/MCPServer";
 import type { Message } from "../../src/core/entities/Message";
 import type { Preset } from "../../src/core/entities/Preset";
 import type { PromptPreset } from "../../src/core/entities/PromptPreset";
+import type { UserPersona } from "../../src/core/entities/UserPersona";
 import type {
   CharacterFilter,
   CharacterRepository,
@@ -62,6 +63,12 @@ import type {
   PromptPresetRepository,
   UpdatePromptPresetInput,
 } from "../../src/core/ports/PromptPresetRepository";
+import type {
+  CreateUserPersonaInput,
+  UpdateUserPersonaInput,
+  UserPersonaFilter,
+  UserPersonaRepository,
+} from "../../src/core/ports/UserPersonaRepository";
 import {
   DEFAULT_MAX_TOOL_ITERATIONS,
   DEFAULT_TOOL_CALL_TIMEOUT_MS,
@@ -72,6 +79,53 @@ let idCounter = 0;
 function nextId(prefix: string): string {
   idCounter += 1;
   return `${prefix}-${idCounter}`;
+}
+
+export class FakeUserPersonaRepository implements UserPersonaRepository {
+  private items = new Map<string, UserPersona>();
+
+  async create(data: CreateUserPersonaInput): Promise<UserPersona> {
+    const id = nextId("persona");
+    const persona: UserPersona = {
+      id,
+      name: data.name,
+      description: data.description ?? null,
+      prompt: data.prompt ?? null,
+      isDefault: !!data.isDefault,
+    };
+    this.items.set(id, persona);
+    return persona;
+  }
+
+  async getById(id: string): Promise<UserPersona | null> {
+    return this.items.get(id) ?? null;
+  }
+
+  async list(filter?: UserPersonaFilter): Promise<UserPersona[]> {
+    let all = Array.from(this.items.values());
+    if (filter?.isDefault !== undefined) {
+      all = all.filter((p) => p.isDefault === filter.isDefault);
+    }
+    return all.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async update(
+    id: string,
+    patch: UpdateUserPersonaInput,
+  ): Promise<UserPersona | null> {
+    const existing = this.items.get(id);
+    if (!existing) return null;
+    const updated: UserPersona = {
+      ...existing,
+      ...patch,
+    };
+    this.items.set(id, updated);
+    return updated;
+  }
+
+  async delete(id: string): Promise<void> {
+    this.items.delete(id);
+  }
 }
 
 export class FakeCharacterRepository implements CharacterRepository {
@@ -133,6 +187,7 @@ export class FakeChatRepository implements ChatRepository {
     const chat: Chat = {
       id,
       characterId: data.characterId,
+      userPersonaId: data.userPersonaId,
       title: data.title,
       createdAt: now,
       updatedAt: now,
@@ -149,6 +204,9 @@ export class FakeChatRepository implements ChatRepository {
     let all = Array.from(this.items.values());
     if (filter?.characterId) {
       all = all.filter((c) => c.characterId === filter.characterId);
+    }
+    if (filter?.userPersonaId) {
+      all = all.filter((c) => c.userPersonaId === filter.userPersonaId);
     }
     return all;
   }
@@ -183,6 +241,8 @@ export class FakeChatLLMConfigRepository implements ChatLLMConfigRepository {
       maxOutputTokens: data.maxOutputTokens,
       maxToolIterations: data.maxToolIterations ?? DEFAULT_MAX_TOOL_ITERATIONS,
       toolCallTimeoutMs: data.toolCallTimeoutMs ?? DEFAULT_TOOL_CALL_TIMEOUT_MS,
+      // Tests don't exercise lore budget, but keep shape aligned with entity.
+      loreTokenBudget: (data as any).loreTokenBudget ?? 1024,
     };
     this.items.set(data.chatId, config);
     return config;

@@ -4,7 +4,7 @@ import { ChatRepositorySqlite } from "../../src/infrastructure/sqlite/ChatReposi
 import { LLMConnectionRepositorySqlite } from "../../src/infrastructure/sqlite/LLMConnectionRepositorySqlite";
 import { CharacterRepositorySqlite } from "../../src/infrastructure/sqlite/CharacterRepositorySqlite";
 import type { SqliteDatabase } from "../../src/infrastructure/sqlite/db";
-import { createTestDatabase } from "../utils/testDb";
+import { createDefaultUserPersona, createTestDatabase } from "../utils/testDb";
 
 describe("ChatLLMConfigRepositorySqlite", () => {
   let db: SqliteDatabase;
@@ -23,9 +23,12 @@ describe("ChatLLMConfigRepositorySqlite", () => {
       creatorNotes: null,
     });
 
+    const persona = await createDefaultUserPersona(db);
+
     const chatRepo = new ChatRepositorySqlite(db);
     const chat = await chatRepo.create({
       characterId: character.id,
+      userPersonaId: persona.id,
       title: "ConfigChat",
     });
     chatId = chat.id;

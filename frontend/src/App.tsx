@@ -4,6 +4,7 @@ import { ChatPage } from "./features/chat/ChatPage";
 import { CharactersListPage } from "./features/characters/CharactersListPage";
 import { CharacterDetailPage } from "./features/characters/CharacterDetailPage";
 import { PresetsPage } from "./features/presets/PresetsPage";
+import { UserPersonasPage } from "./features/userPersonas/UserPersonasPage";
 import { LorebooksPage } from "./features/lorebooks/LorebooksPage";
 import { LorebookDetailPage } from "./features/lorebooks/LorebookDetailPage";
 import { LLMConnectionsPage } from "./features/llmConnections/LLMConnectionsPage";
@@ -23,6 +24,7 @@ function App() {
           path="characters/:characterId"
           element={<CharacterDetailPage />}
         />
+        <Route path="user-personas" element={<UserPersonasPage />} />
         <Route path="presets" element={<PresetsPage />} />
         <Route path="lorebooks" element={<LorebooksPage />} />
         <Route
