@@ -70,6 +70,49 @@ function ensureDefaultUserPersona(db: SqliteDatabase): string {
   return id;
 }
 
+function normalizeLorebookTable(db: SqliteDatabase): void {
+  const columns = db
+    .prepare(`PRAGMA table_info(lorebooks)`)
+    .all() as Array<{ name: string }>;
+  const hasOnlyExpected =
+    columns.length === 3 &&
+    columns.some((c) => c.name === "id") &&
+    columns.some((c) => c.name === "name") &&
+    columns.some((c) => c.name === "description");
+
+  if (hasOnlyExpected) {
+    return;
+  }
+
+  db.exec("PRAGMA foreign_keys = OFF");
+  db.exec("BEGIN");
+  try {
+    db.exec(`ALTER TABLE lorebooks RENAME TO lorebooks_old`);
+    db.exec(
+      `
+      CREATE TABLE lorebooks (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL
+      )
+    `.trim(),
+    );
+    db.exec(
+      `
+      INSERT INTO lorebooks (id, name, description)
+      SELECT id, name, description FROM lorebooks_old
+    `.trim(),
+    );
+    db.exec(`DROP TABLE lorebooks_old`);
+    db.exec("COMMIT");
+  } catch (err) {
+    db.exec("ROLLBACK");
+    throw err;
+  } finally {
+    db.exec("PRAGMA foreign_keys = ON");
+  }
+}
+
 export function runMigrations(db: SqliteDatabase): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS characters (
@@ -289,4 +332,6 @@ export function runMigrations(db: SqliteDatabase): void {
     `CREATE INDEX IF NOT EXISTS idx_messages_chat_created_at
       ON messages(chat_id, created_at)`,
   );
+
+  normalizeLorebookTable(db);
 }

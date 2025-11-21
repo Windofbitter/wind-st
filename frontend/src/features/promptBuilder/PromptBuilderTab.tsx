@@ -53,9 +53,14 @@ export function PromptBuilderTab({
       .map((pp) => {
         const preset = byPreset.get(pp.presetId);
         const kind = preset?.kind as PresetKind | undefined;
+        const rawTitle = preset?.title ?? pp.presetId;
+        const title =
+          kind === "lorebook"
+            ? rawTitle.replace(/^lorebook:\s*/i, "")
+            : rawTitle;
         return {
           id: pp.id,
-          title: preset?.title ?? pp.presetId,
+          title,
           role: pp.role,
           kind,
           locked: kind === "history",
@@ -127,6 +132,9 @@ export function PromptBuilderTab({
                 {t("promptBuilder.stackRoleFilterUser")}
               </option>
             </select>
+            <div style={{ fontWeight: 500 }}>
+              {t("promptBuilder.paletteSectionLorebooks")}
+            </div>
             <AddLorebookRow
               lorebooks={data.lorebooks}
               loading={data.lorebooksState.loading}

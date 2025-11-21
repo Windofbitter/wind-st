@@ -179,8 +179,10 @@ export function usePromptBuilderData({
   }, [characterId]);
 
   const reloadAll = useCallback(async () => {
+    // Load stack first so built-in presets created on the fly (history, lorebook, MCP tools)
+    // are present before we refresh the preset list used for display.
+    await loadStack();
     await Promise.all([
-      loadStack(),
       loadPresets(),
       loadLorebooks(),
       reloadMcp(),
@@ -236,7 +238,7 @@ export function usePromptBuilderData({
         lorebookId: selectedLorebookId,
         role,
       });
-      await loadStack();
+      await Promise.all([loadStack(), loadPresets()]);
     } catch (err) {
       setAttachError(
         err instanceof ApiError
@@ -253,7 +255,7 @@ export function usePromptBuilderData({
         kind: "mcp_tools",
         role,
       });
-      await loadStack();
+      await Promise.all([loadStack(), loadPresets()]);
     } catch (err) {
       setAttachError(
         err instanceof ApiError

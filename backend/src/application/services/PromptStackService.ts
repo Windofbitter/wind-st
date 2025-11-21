@@ -244,7 +244,7 @@ export class PromptStackService {
     if (found) return found;
 
     return this.presetRepo.create({
-      title: `Lorebook: ${lorebook.name}`,
+      title: lorebook.name,
       description: lorebook.description ?? lorebook.name,
       kind: "lorebook",
       content: null,
