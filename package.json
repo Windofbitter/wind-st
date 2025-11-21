@@ -1,8 +1,0 @@
-{
-  "name": "wind-st-root",
-  "private": true,
-  "scripts": {
-    "test": "npm test --prefix backend"
-  }
-}
-

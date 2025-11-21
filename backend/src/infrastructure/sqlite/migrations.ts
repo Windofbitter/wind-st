@@ -16,6 +16,24 @@ function ensureColumn(
   db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
 }
 
+// SQLite cannot ADD COLUMN with a non-constant DEFAULT expression (e.g., datetime('now')).
+// For legacy databases missing created_at, add a simple TEXT column and backfill to now.
+function ensureTimestampColumn(
+  db: SqliteDatabase,
+  table: string,
+  column: string,
+): void {
+  const pragma = db.prepare(`PRAGMA table_info(${table})`);
+  const columns = pragma.all() as Array<{ name: string }>;
+  if (columns.some((col) => col.name === column)) {
+    return;
+  }
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
+  db.exec(
+    `UPDATE ${table} SET ${column} = datetime('now') WHERE ${column} IS NULL`,
+  );
+}
+
 export function runMigrations(db: SqliteDatabase): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS characters (
@@ -195,7 +213,7 @@ export function runMigrations(db: SqliteDatabase): void {
   ensureColumn(db, "messages", "tool_call_id", "TEXT");
   ensureColumn(db, "messages", "run_id", "TEXT");
   ensureColumn(db, "messages", "state", "TEXT NOT NULL DEFAULT 'ok'");
-  ensureColumn(db, "messages", "created_at", "TEXT NOT NULL DEFAULT (datetime('now'))");
+  ensureTimestampColumn(db, "messages", "created_at");
   ensureColumn(db, "chat_llm_configs", "max_tool_iterations", "INTEGER NOT NULL DEFAULT 3");
   ensureColumn(db, "chat_llm_configs", "tool_call_timeout_ms", "INTEGER NOT NULL DEFAULT 15000");
   ensureColumn(db, "llm_connections", "status", "TEXT NOT NULL DEFAULT 'unknown'");
