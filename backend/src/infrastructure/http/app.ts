@@ -6,6 +6,7 @@ import { ChatEventService } from "../../application/services/ChatEventService";
 import { ChatService } from "../../application/services/ChatService";
 import { MessageService } from "../../application/services/MessageService";
 import { LLMConnectionService } from "../../application/services/LLMConnectionService";
+import { UserPersonaService } from "../../application/services/UserPersonaService";
 import { LorebookService } from "../../application/services/LorebookService";
 import { CharacterLorebookService } from "../../application/services/CharacterLorebookService";
 import { CharacterMCPServerService } from "../../application/services/CharacterMCPServerService";
@@ -16,6 +17,7 @@ import { PromptStackService } from "../../application/services/PromptStackServic
 import { ChatOrchestrator } from "../../application/orchestrators/ChatOrchestrator";
 import { HistoryConfigService } from "../../application/services/HistoryConfigService";
 import { DefaultPromptBuilder } from "../../application/services/PromptBuilder";
+import { createGptTokenCounter, createApproxTokenCounter } from "../../application/utils/TokenCounter";
 import type { MCPClient } from "../../core/ports/MCPClient";
 import { openDatabase } from "../sqlite/db";
 import { CharacterRepositorySqlite } from "../sqlite/CharacterRepositorySqlite";
@@ -30,6 +32,7 @@ import { LorebookEntryRepositorySqlite } from "../sqlite/LorebookEntryRepository
 import { CharacterLorebookRepositorySqlite } from "../sqlite/CharacterLorebookRepositorySqlite";
 import { CharacterMCPServerRepositorySqlite } from "../sqlite/CharacterMCPServerRepositorySqlite";
 import { MCPServerRepositorySqlite } from "../sqlite/MCPServerRepositorySqlite";
+import { UserPersonaRepositorySqlite } from "../sqlite/UserPersonaRepositorySqlite";
 import { PresetRepositorySqlite } from "../sqlite/PresetRepositorySqlite";
 import { PromptPresetRepositorySqlite } from "../sqlite/PromptPresetRepositorySqlite";
 import { OpenAILLMClient } from "../llm/OpenAILLMClient";
@@ -48,11 +51,13 @@ import { registerMCPServerRoutes } from "./routes/mcpServers";
 import { registerCharacterLorebookRoutes } from "./routes/characterLorebooks";
 import { registerCharacterMCPServerRoutes } from "./routes/characterMcpServers";
 import { registerChatEventRoutes } from "./routes/chatEvents";
+import { registerUserPersonaRoutes } from "./routes/userPersonas";
 
 declare module "fastify" {
   interface FastifyInstance {
     characterService: CharacterService;
     chatService: ChatService;
+    userPersonaService: UserPersonaService;
     messageService: MessageService;
     llmConnectionService: LLMConnectionService;
     lorebookService: LorebookService;
@@ -89,17 +94,23 @@ export async function buildApp() {
   const mcpServerRepository = new MCPServerRepositorySqlite(db);
   const characterMcpServerRepository =
     new CharacterMCPServerRepositorySqlite(db);
+  const userPersonaRepository = new UserPersonaRepositorySqlite(db);
   const presetRepository = new PresetRepositorySqlite(db);
   const promptPresetRepository = new PromptPresetRepositorySqlite(db);
 
   const llmConnectionService = new LLMConnectionService(
     llmConnectionRepository,
   );
+  const userPersonaService = new UserPersonaService(
+    userPersonaRepository,
+    chatRepository,
+  );
   const characterService = new CharacterService(characterRepository);
   const chatService = new ChatService(
     chatRepository,
     chatConfigRepository,
     llmConnectionService,
+    userPersonaService,
   );
   const messageService = new MessageService(
     messageRepository,
@@ -124,6 +135,8 @@ export async function buildApp() {
   const historyConfigService = new HistoryConfigService(
     chatHistoryConfigRepository,
   );
+  // Prefer GPT tokenizer (aligned with SillyTavern); fall back to heuristic if unavailable.
+  const tokenCounter = createGptTokenCounter() ?? createApproxTokenCounter();
   const presetService = new PresetService(presetRepository);
   const promptStackService = new PromptStackService(
     characterRepository,
@@ -139,6 +152,7 @@ export async function buildApp() {
   const promptBuilder = new DefaultPromptBuilder(
     chatService,
     characterService,
+    userPersonaService,
     promptStackService,
     presetService,
     lorebookService,
@@ -147,6 +161,7 @@ export async function buildApp() {
     characterMcpServerService,
     historyConfigService,
     messageService,
+    tokenCounter,
   );
   const chatEventService = new ChatEventService();
   const chatOrchestrator = new ChatOrchestrator(
@@ -176,6 +191,7 @@ export async function buildApp() {
 
   app.decorate("characterService", characterService);
   app.decorate("chatService", chatService);
+  app.decorate("userPersonaService", userPersonaService);
   app.decorate("messageService", messageService);
   app.decorate("llmConnectionService", llmConnectionService);
   app.decorate("lorebookService", lorebookService);
@@ -195,6 +211,7 @@ export async function buildApp() {
   registerHealthRoutes(app);
   registerCharacterRoutes(app);
   registerChatRoutes(app);
+  registerUserPersonaRoutes(app);
   registerMessageRoutes(app);
   registerLorebookRoutes(app);
   registerCharacterLorebookRoutes(app);

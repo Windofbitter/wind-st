@@ -9,6 +9,7 @@ import { PresetService } from "../../src/application/services/PresetService";
 import { PromptStackService } from "../../src/application/services/PromptStackService";
 import { HistoryConfigService } from "../../src/application/services/HistoryConfigService";
 import { ChatOrchestrator } from "../../src/application/orchestrators/ChatOrchestrator";
+import { UserPersonaService } from "../../src/application/services/UserPersonaService";
 import { registerErrorHandler } from "../../src/infrastructure/http/errorHandler";
 import { registerHealthRoutes } from "../../src/infrastructure/http/routes/health";
 import { registerCharacterRoutes } from "../../src/infrastructure/http/routes/characters";
@@ -19,6 +20,7 @@ import { registerPresetRoutes } from "../../src/infrastructure/http/routes/prese
 import { registerPromptStackRoutes } from "../../src/infrastructure/http/routes/promptStack";
 import { registerLLMConnectionRoutes } from "../../src/infrastructure/http/routes/llmConnections";
 import { registerMCPServerRoutes } from "../../src/infrastructure/http/routes/mcpServers";
+import { registerUserPersonaRoutes } from "../../src/infrastructure/http/routes/userPersonas";
 import type { ChatRunRepository } from "../../src/core/ports/ChatRunRepository";
 import type { LLMClient } from "../../src/core/ports/LLMClient";
 import type { MCPClient } from "../../src/core/ports/MCPClient";
@@ -34,6 +36,7 @@ import {
   FakeMessageRepository,
   FakePresetRepository,
   FakePromptPresetRepository,
+  FakeUserPersonaRepository,
 } from "../services/fakeRepositories";
 import {
   FakeChatRunRepository,
@@ -94,26 +97,38 @@ export async function createTestApp(
   const mcpServerRepository = new FakeMCPServerRepository();
   const presetRepository = new FakePresetRepository();
   const promptPresetRepository = new FakePromptPresetRepository();
+  const userPersonaRepository = new FakeUserPersonaRepository();
   const historyConfigRepository = {
     async create(data: {
       chatId: string;
       historyEnabled: boolean;
       messageLimit: number;
+      loreScanTokenLimit: number;
     }) {
       return data;
     },
     async getByChatId():
-      Promise<{ chatId: string; historyEnabled: boolean; messageLimit: number } | null> {
+      Promise<{
+        chatId: string;
+        historyEnabled: boolean;
+        messageLimit: number;
+        loreScanTokenLimit: number;
+      } | null> {
       return null;
     },
     async updateByChatId(
       chatId: string,
-      patch: { historyEnabled?: boolean; messageLimit?: number },
+      patch: {
+        historyEnabled?: boolean;
+        messageLimit?: number;
+        loreScanTokenLimit?: number;
+      },
     ) {
       return {
         chatId,
         historyEnabled: patch.historyEnabled ?? true,
         messageLimit: patch.messageLimit ?? 20,
+        loreScanTokenLimit: patch.loreScanTokenLimit ?? 1500,
       };
     },
     async deleteByChatId() {
@@ -123,10 +138,15 @@ export async function createTestApp(
 
   const characterService = new CharacterService(characterRepository);
   const llmConnectionService = new LLMConnectionService(llmConnectionRepository);
+  const userPersonaService = new UserPersonaService(
+    userPersonaRepository,
+    chatRepository,
+  );
   const chatService = new ChatService(
     chatRepository,
     chatConfigRepository,
     llmConnectionService,
+    userPersonaService,
   );
   const messageService = new MessageService(
     messageRepository,
@@ -178,6 +198,7 @@ export async function createTestApp(
 
   app.decorate("characterService", characterService);
   app.decorate("chatService", chatService);
+  app.decorate("userPersonaService", userPersonaService);
   app.decorate("messageService", messageService);
   app.decorate("llmConnectionService", llmConnectionService);
   app.decorate("lorebookService", lorebookService);
@@ -193,6 +214,7 @@ export async function createTestApp(
   registerHealthRoutes(app);
   registerCharacterRoutes(app);
   registerChatRoutes(app);
+  registerUserPersonaRoutes(app);
   registerMessageRoutes(app);
   registerLorebookRoutes(app);
   registerPresetRoutes(app);

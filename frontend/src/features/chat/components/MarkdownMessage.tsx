@@ -18,7 +18,7 @@ export function MarkdownMessage({ content }: MarkdownMessageProps) {
               rel="noreferrer noopener"
             />
           ),
-          code: ({ inline, ...props }) =>
+          code: ({ inline, ...props }: any) =>
             inline ? (
               <code {...props} />
             ) : (

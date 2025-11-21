@@ -11,6 +11,7 @@ function mapRowToChatHistoryConfig(row: any): ChatHistoryConfig {
     chatId: row.chat_id,
     historyEnabled: row.history_enabled === 1,
     messageLimit: row.message_limit,
+    loreScanTokenLimit: row.lore_scan_token_limit ?? 1500,
   };
 }
 
@@ -27,9 +28,10 @@ export class ChatHistoryConfigRepositorySqlite
       INSERT INTO chat_history_configs (
         chat_id,
         history_enabled,
-        message_limit
+        message_limit,
+        lore_scan_token_limit
       )
-      VALUES (?, ?, ?)
+      VALUES (?, ?, ?, ?)
     `.trim(),
     );
 
@@ -37,12 +39,14 @@ export class ChatHistoryConfigRepositorySqlite
       data.chatId,
       data.historyEnabled ? 1 : 0,
       data.messageLimit,
+      data.loreScanTokenLimit,
     );
 
     return {
       chatId: data.chatId,
       historyEnabled: data.historyEnabled,
       messageLimit: data.messageLimit,
+      loreScanTokenLimit: data.loreScanTokenLimit,
     };
   }
 
@@ -52,7 +56,8 @@ export class ChatHistoryConfigRepositorySqlite
       SELECT
         chat_id,
         history_enabled,
-        message_limit
+        message_limit,
+        lore_scan_token_limit
       FROM chat_history_configs
       WHERE chat_id = ?
     `.trim(),
@@ -77,6 +82,10 @@ export class ChatHistoryConfigRepositorySqlite
     if (patch.messageLimit !== undefined) {
       sets.push("message_limit = ?");
       params.push(patch.messageLimit);
+    }
+    if (patch.loreScanTokenLimit !== undefined) {
+      sets.push("lore_scan_token_limit = ?");
+      params.push(patch.loreScanTokenLimit);
     }
 
     if (sets.length === 0) {
@@ -105,4 +114,3 @@ export class ChatHistoryConfigRepositorySqlite
     stmt.run(chatId);
   }
 }
-

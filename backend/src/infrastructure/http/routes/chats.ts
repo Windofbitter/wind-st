@@ -18,6 +18,7 @@ type InitialChatConfigInput = Omit<CreateChatLLMConfigInput, "chatId">;
 
 interface CreateChatBody {
   characterId: string;
+  userPersonaId: string;
   title: string;
   initialConfig?: InitialChatConfigInput;
 }
@@ -28,19 +29,26 @@ interface CreateTurnBody {
 
 interface UpdateChatBody {
   title?: string;
+  userPersonaId?: string;
 }
 
 interface UpdateHistoryConfigBody {
   historyEnabled?: boolean;
   messageLimit?: number;
+  loreScanTokenLimit?: number;
 }
 
 function toChatFilter(query: Record<string, unknown>): ChatFilter | undefined {
+  const filter: ChatFilter = {};
   const characterId = query.characterId;
   if (typeof characterId === "string" && characterId.trim() !== "") {
-    return { characterId };
+    filter.characterId = characterId;
   }
-  return undefined;
+  const userPersonaId = query.userPersonaId;
+  if (typeof userPersonaId === "string" && userPersonaId.trim() !== "") {
+    filter.userPersonaId = userPersonaId;
+  }
+  return Object.keys(filter).length > 0 ? filter : undefined;
 }
 
 function ensureCreateChatPayload(
@@ -58,12 +66,14 @@ function ensureCreateChatPayload(
   if (
     typeof value.characterId !== "string" ||
     value.characterId.trim() === "" ||
+    typeof value.userPersonaId !== "string" ||
+    value.userPersonaId.trim() === "" ||
     typeof value.title !== "string" ||
     value.title.trim() === ""
   ) {
     throw new AppError(
       "VALIDATION_ERROR",
-      "Invalid chat payload: characterId and title are required",
+      "Invalid chat payload: characterId, userPersonaId and title are required",
     );
   }
 
@@ -123,6 +133,7 @@ function ensureCreateChatPayload(
   } = {
     chat: {
       characterId: value.characterId,
+      userPersonaId: value.userPersonaId,
       title: value.title,
     },
   };
@@ -237,6 +248,19 @@ function ensureUpdateChatPayload(body: unknown): UpdateChatBody {
     patch.title = value.title.trim();
   }
 
+  if (value.userPersonaId !== undefined) {
+    if (
+      typeof value.userPersonaId !== "string" ||
+      value.userPersonaId.trim() === ""
+    ) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid chat patch: userPersonaId must be non-empty string",
+      );
+    }
+    patch.userPersonaId = value.userPersonaId.trim();
+  }
+
   if (Object.keys(patch).length === 0) {
     throw new AppError(
       "VALIDATION_ERROR",
@@ -282,6 +306,20 @@ function ensureUpdateHistoryConfigPayload(
       );
     }
     patch.messageLimit = value.messageLimit;
+  }
+
+  if (value.loreScanTokenLimit !== undefined) {
+    if (
+      typeof value.loreScanTokenLimit !== "number" ||
+      !Number.isFinite(value.loreScanTokenLimit) ||
+      value.loreScanTokenLimit <= 0
+    ) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Invalid history config patch: loreScanTokenLimit must be positive number",
+      );
+    }
+    patch.loreScanTokenLimit = value.loreScanTokenLimit;
   }
 
   return patch;

@@ -9,12 +9,14 @@ import { LLMConnectionService } from "../../src/application/services/LLMConnecti
 import { HistoryConfigService } from "../../src/application/services/HistoryConfigService";
 import { MCPServerService } from "../../src/application/services/MCPServerService";
 import { ChatEventService } from "../../src/application/services/ChatEventService";
+import { UserPersonaService } from "../../src/application/services/UserPersonaService";
 import {
   FakeChatRepository,
   FakeChatLLMConfigRepository,
   FakeLLMConnectionRepository,
   FakeMessageRepository,
   FakeMCPServerRepository,
+  FakeUserPersonaRepository,
 } from "./fakeRepositories";
 import {
   FakeChatRunRepository,
@@ -49,19 +51,29 @@ class SimplePromptBuilder implements PromptBuilder {
   }
 }
 
-function createEnvironment(customClient?: LLMClient) {
+async function createEnvironment(customClient?: LLMClient) {
   const chatRepo = new FakeChatRepository();
   const chatConfigRepo = new FakeChatLLMConfigRepository();
   const messageRepo = new FakeMessageRepository();
   const llmConnectionRepo = new FakeLLMConnectionRepository();
   const mcpServerRepo = new FakeMCPServerRepository();
   const chatRunRepo = new FakeChatRunRepository();
+  const userPersonaRepo = new FakeUserPersonaRepository();
 
   const llmConnectionService = new LLMConnectionService(llmConnectionRepo);
+  const userPersonaService = new UserPersonaService(
+    userPersonaRepo,
+    chatRepo,
+  );
+  const defaultPersona = await userPersonaService.create({
+    name: "You",
+    isDefault: true,
+  });
   const chatService = new ChatService(
     chatRepo,
     chatConfigRepo,
     llmConnectionService,
+    userPersonaService,
   );
   const messageService = new MessageService(
     messageRepo,
@@ -71,7 +83,12 @@ function createEnvironment(customClient?: LLMClient) {
   const chatEvents = new ChatEventService();
   const historyConfigService = new HistoryConfigService({
     async create(data) {
-      return { chatId: data.chatId, historyEnabled: data.historyEnabled, messageLimit: data.messageLimit };
+      return {
+        chatId: data.chatId,
+        historyEnabled: data.historyEnabled,
+        messageLimit: data.messageLimit,
+        loreScanTokenLimit: data.loreScanTokenLimit,
+      };
     },
     async getByChatId() {
       return null;
@@ -81,6 +98,7 @@ function createEnvironment(customClient?: LLMClient) {
         chatId,
         historyEnabled: patch.historyEnabled ?? true,
         messageLimit: patch.messageLimit ?? 20,
+        loreScanTokenLimit: patch.loreScanTokenLimit ?? 1500,
       };
     },
     async deleteByChatId() {
@@ -118,6 +136,8 @@ function createEnvironment(customClient?: LLMClient) {
 
   return {
     chatService,
+    userPersonaService,
+    defaultPersona,
     messageService,
     llmConnectionService,
     chatRunRepo,
@@ -136,7 +156,7 @@ describe("ChatOrchestrator", () => {
       usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
     };
 
-    const env = createEnvironment(new FakeLLMClient(llmResponse));
+    const env = await createEnvironment(new FakeLLMClient(llmResponse));
 
     const connection = await env.llmConnectionService.createConnection({
       name: "Primary",
@@ -150,6 +170,7 @@ describe("ChatOrchestrator", () => {
     const { chat } = await env.chatService.createChat(
       {
         characterId: "char-1",
+        userPersonaId: env.defaultPersona.id,
         title: "Test chat",
       },
       {
@@ -202,7 +223,7 @@ describe("ChatOrchestrator", () => {
       },
     };
 
-    const env = createEnvironment(slowClient);
+    const env = await createEnvironment(slowClient);
 
     const connection = await env.llmConnectionService.createConnection({
       name: "Primary",
@@ -215,6 +236,7 @@ describe("ChatOrchestrator", () => {
     const { chat } = await env.chatService.createChat(
       {
         characterId: "char-1",
+        userPersonaId: env.defaultPersona.id,
         title: "Test chat",
       },
       {

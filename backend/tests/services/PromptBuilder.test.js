@@ -11,6 +11,8 @@ import { CharacterMCPServerService } from "../../src/application/services/Charac
 import { HistoryConfigService } from "../../src/application/services/HistoryConfigService";
 import { MessageService } from "../../src/application/services/MessageService";
 import { LLMConnectionService } from "../../src/application/services/LLMConnectionService";
+import { UserPersonaService } from "../../src/application/services/UserPersonaService";
+import { createApproxTokenCounter } from "../../src/application/utils/TokenCounter";
 import {
   FakeCharacterRepository,
   FakeChatRepository,
@@ -22,6 +24,7 @@ import {
   FakeMessageRepository,
   FakePresetRepository,
   FakePromptPresetRepository,
+  FakeUserPersonaRepository,
 } from "./fakeRepositories";
 import { FakeChatRunRepository } from "./fakeOrchestration";
 
@@ -31,8 +34,12 @@ class InMemoryHistoryConfigRepository {
   }
 
   async create(data) {
-    this.items.set(data.chatId, data);
-    return data;
+    const record = {
+      ...data,
+      loreScanTokenLimit: data.loreScanTokenLimit ?? 1500,
+    };
+    this.items.set(data.chatId, record);
+    return record;
   }
 
   async getByChatId(chatId) {
@@ -131,7 +138,7 @@ class InMemoryCharacterMCPServerRepository {
   }
 }
 
-function createEnvironment() {
+async function createEnvironment() {
   const characterRepo = new FakeCharacterRepository();
   const chatRepo = new FakeChatRepository();
   const chatConfigRepo = new FakeChatLLMConfigRepository();
@@ -143,6 +150,7 @@ function createEnvironment() {
   const chatRunRepo = new FakeChatRunRepository();
   const presetRepo = new FakePresetRepository();
   const promptPresetRepo = new FakePromptPresetRepository();
+  const userPersonaRepo = new FakeUserPersonaRepository();
   const historyConfigRepo = new InMemoryHistoryConfigRepository();
   const characterLorebookRepo =
     new InMemoryCharacterLorebookRepository();
@@ -155,6 +163,7 @@ function createEnvironment() {
     chatRepo,
     chatConfigRepo,
     llmConnectionService,
+    userPersonaService,
   );
   const promptStackService = new PromptStackService(
     characterRepo,
@@ -166,6 +175,14 @@ function createEnvironment() {
     lorebookRepo,
     lorebookEntryRepo,
   );
+  const userPersonaService = new UserPersonaService(
+    userPersonaRepo,
+    chatRepo,
+  );
+  const defaultPersona = await userPersonaService.create({
+    name: "You",
+    isDefault: true,
+  });
   const characterLorebookService = new CharacterLorebookService(
     characterRepo,
     lorebookRepo,
@@ -184,10 +201,12 @@ function createEnvironment() {
     messageRepo,
     chatRunRepo,
   );
+  const tokenCounter = createApproxTokenCounter();
 
   const promptBuilder = new DefaultPromptBuilder(
     chatService,
     characterService,
+    userPersonaService,
     promptStackService,
     presetService,
     lorebookService,
@@ -196,11 +215,15 @@ function createEnvironment() {
     characterMcpServerService,
     historyConfigService,
     messageService,
+    tokenCounter,
   );
 
   return {
     characterService,
     chatService,
+    userPersonaService,
+    defaultPersona,
+    defaultPersonaId: defaultPersona.id,
     promptStackService,
     presetService,
     lorebookService,
@@ -219,10 +242,11 @@ describe("DefaultPromptBuilder", () => {
     const {
       characterService,
       chatService,
+      defaultPersonaId,
       promptStackService,
       presetService,
       promptBuilder,
-    } = createEnvironment();
+    } = await createEnvironment();
 
     const character = await characterService.createCharacter({
       name: "Test",
@@ -277,15 +301,61 @@ describe("DefaultPromptBuilder", () => {
     ]);
   });
 
+  it("replaces {character} and {user} placeholders in persona and presets", async () => {
+    const {
+      characterService,
+      chatService,
+      defaultPersonaId,
+      promptStackService,
+      presetService,
+      promptBuilder,
+    } = await createEnvironment();
+
+    const character = await characterService.createCharacter({
+      name: "Hero",
+      description: "desc",
+      persona: "I am {character}",
+      avatarPath: "",
+      creatorNotes: null,
+    });
+
+    const { chat } = await chatService.createChat({
+      characterId: character.id,
+      userPersonaId: defaultPersonaId,
+      title: "Chat",
+    });
+
+    const preset = await presetService.createPreset({
+      title: "Greeting",
+      description: "",
+      kind: "static_text",
+      content: "Hello {user} from {character}",
+      builtIn: false,
+    });
+
+    await promptStackService.attachPresetToCharacter(
+      character.id,
+      preset.id,
+      "system",
+    );
+
+    const result = await promptBuilder.buildPromptForChat(chat.id);
+    expect(result.messages.map((m) => m.content)).toEqual([
+      "I am Hero",
+      "Hello You from Hero",
+    ]);
+  });
+
   it("includes lorebook entries in insertion order as a system message", async () => {
     const {
       characterService,
       chatService,
+      defaultPersonaId,
       lorebookService,
       characterLorebookService,
       messageService,
       promptBuilder,
-    } = createEnvironment();
+    } = await createEnvironment();
 
     const character = await characterService.createCharacter({
       name: "Test",
@@ -297,6 +367,7 @@ describe("DefaultPromptBuilder", () => {
 
     const { chat } = await chatService.createChat({
       characterId: character.id,
+      userPersonaId: defaultPersonaId,
       title: "Chat",
     });
 
@@ -340,11 +411,12 @@ describe("DefaultPromptBuilder", () => {
     const {
       characterService,
       chatService,
+      defaultPersonaId,
       lorebookService,
       characterLorebookService,
       messageService,
       promptBuilder,
-    } = createEnvironment();
+    } = await createEnvironment();
 
     const character = await characterService.createCharacter({
       name: "Test",
@@ -356,6 +428,7 @@ describe("DefaultPromptBuilder", () => {
 
     const { chat } = await chatService.createChat({
       characterId: character.id,
+      userPersonaId: defaultPersonaId,
       title: "Chat",
     });
 
@@ -391,11 +464,12 @@ describe("DefaultPromptBuilder", () => {
     const {
       characterService,
       chatService,
+      defaultPersonaId,
       lorebookService,
       characterLorebookService,
       messageService,
       promptBuilder,
-    } = createEnvironment();
+    } = await createEnvironment();
 
     const character = await characterService.createCharacter({
       name: "Test",
@@ -407,6 +481,7 @@ describe("DefaultPromptBuilder", () => {
 
     const { chat } = await chatService.createChat({
       characterId: character.id,
+      userPersonaId: defaultPersonaId,
       title: "Chat",
     });
 
@@ -449,11 +524,12 @@ describe("DefaultPromptBuilder", () => {
     const {
       characterService,
       chatService,
+      defaultPersonaId,
       lorebookService,
       characterLorebookService,
       messageService,
       promptBuilder,
-    } = createEnvironment();
+    } = await createEnvironment();
 
     const character = await characterService.createCharacter({
       name: "Test",
@@ -465,6 +541,7 @@ describe("DefaultPromptBuilder", () => {
 
     const { chat } = await chatService.createChat({
       characterId: character.id,
+      userPersonaId: defaultPersonaId,
       title: "Chat",
     });
 
@@ -509,10 +586,11 @@ describe("DefaultPromptBuilder", () => {
     const {
       characterService,
       chatService,
+      defaultPersonaId,
       historyConfigService,
       messageService,
       promptBuilder,
-    } = createEnvironment();
+    } = await createEnvironment();
 
     const character = await characterService.createCharacter({
       name: "Test",
@@ -524,6 +602,7 @@ describe("DefaultPromptBuilder", () => {
 
     const { chat } = await chatService.createChat({
       characterId: character.id,
+      userPersonaId: defaultPersonaId,
       title: "Chat",
     });
 
@@ -560,10 +639,11 @@ describe("DefaultPromptBuilder", () => {
     const {
       characterService,
       chatService,
+      defaultPersonaId,
       mcpServerService,
       characterMcpServerService,
       promptBuilder,
-    } = createEnvironment();
+    } = await createEnvironment();
 
     const character = await characterService.createCharacter({
       name: "Test",
@@ -575,6 +655,7 @@ describe("DefaultPromptBuilder", () => {
 
     const { chat } = await chatService.createChat({
       characterId: character.id,
+      userPersonaId: defaultPersonaId,
       title: "Chat",
     });
 

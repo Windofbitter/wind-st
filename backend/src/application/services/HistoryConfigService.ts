@@ -7,11 +7,13 @@ import type {
 export interface EffectiveHistoryConfig {
   historyEnabled: boolean;
   messageLimit: number;
+  loreScanTokenLimit: number;
 }
 
 const DEFAULT_HISTORY_CONFIG: EffectiveHistoryConfig = {
   historyEnabled: true,
   messageLimit: 20,
+  loreScanTokenLimit: 1500,
 };
 
 export class HistoryConfigService {
@@ -26,6 +28,7 @@ export class HistoryConfigService {
     return {
       historyEnabled: cfg.historyEnabled,
       messageLimit: cfg.messageLimit,
+      loreScanTokenLimit: cfg.loreScanTokenLimit,
     };
   }
 
@@ -41,11 +44,14 @@ export class HistoryConfigService {
           patch.historyEnabled ?? DEFAULT_HISTORY_CONFIG.historyEnabled,
         messageLimit:
           patch.messageLimit ?? DEFAULT_HISTORY_CONFIG.messageLimit,
+        loreScanTokenLimit:
+          patch.loreScanTokenLimit ?? DEFAULT_HISTORY_CONFIG.loreScanTokenLimit,
       };
       return this.repo.create({
         chatId,
         historyEnabled: base.historyEnabled,
         messageLimit: base.messageLimit,
+        loreScanTokenLimit: base.loreScanTokenLimit,
       });
     }
 
@@ -54,4 +60,3 @@ export class HistoryConfigService {
     return updated ?? existing;
   }
 }
-

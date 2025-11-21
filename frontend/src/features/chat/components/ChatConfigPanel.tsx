@@ -275,6 +275,26 @@ export function ChatConfigPanel({
               }
             />
           </div>
+          <div className="input-group">
+            <label htmlFor="lore-scan-token-limit">
+              {t("chat.loreScanTokenLimitLabel")}
+            </label>
+            <input
+              id="lore-scan-token-limit"
+              type="number"
+              min="100"
+              step="50"
+              value={chatHistoryConfig.loreScanTokenLimit}
+              onChange={(e) =>
+                onHistoryConfigChange({
+                  loreScanTokenLimit: Number(e.target.value),
+                })
+              }
+            />
+            <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>
+              {t("chat.loreScanTokenLimitHint")}
+            </div>
+          </div>
           <button
             type="button"
             className="btn btn-primary"

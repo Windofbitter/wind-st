@@ -3,6 +3,7 @@ import { http, unwrap } from "./httpClient";
 export interface ChatHistoryConfig {
   historyEnabled: boolean;
   messageLimit: number;
+  loreScanTokenLimit: number;
 }
 
 export type UpdateChatHistoryConfigRequest = Partial<ChatHistoryConfig>;
@@ -26,4 +27,3 @@ export async function updateChatHistoryConfig(
     ),
   );
 }
-

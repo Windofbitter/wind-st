@@ -15,17 +15,23 @@ Source of truth for the DTOs used by the React app. Keep this in sync with `fron
 - `UpdateCharacterRequest`: partial of create.
 - Calls: `listCharacters({ name? })` (query key: `name`), `getCharacter(id)`, `createCharacter(payload)`, `updateCharacter(id, payload)`, `deleteCharacter(id)`.
 
+### User personas (`src/api/userPersonas.ts`)
+- `UserPersona`: `{ id, name, description|null, prompt|null, isDefault }`.
+- Requests: `CreateUserPersonaRequest` same fields (`isDefault` defaults to `false`), `UpdateUserPersonaRequest` partial.
+- Calls: `listUserPersonas({ isDefault? })`, `createUserPersona(payload)`, `updateUserPersona(id, payload)`, `deleteUserPersona(id)`.
+
 ### Chats (`src/api/chats.ts`)
-- `Chat`: `{ id, characterId, title, createdAt, updatedAt }`.
+- `Chat`: `{ id, characterId, userPersonaId, title, createdAt, updatedAt }`.
 - `ChatLLMConfig`: `{ id, chatId, llmConnectionId, model, temperature, maxOutputTokens, maxToolIterations, toolCallTimeoutMs }`.
-- `CreateChatRequest`: `{ characterId, title, initialConfig?: { llmConnectionId, model, temperature, maxOutputTokens, maxToolIterations?, toolCallTimeoutMs? } }` (`maxToolIterations` defaults to `3`, `toolCallTimeoutMs` defaults to `15000` if omitted).
+- `CreateChatRequest`: `{ characterId, userPersonaId, title, initialConfig?: { llmConnectionId, model, temperature, maxOutputTokens, maxToolIterations?, toolCallTimeoutMs? } }` (`maxToolIterations` defaults to `3`, `toolCallTimeoutMs` defaults to `15000` if omitted).
 - `CreateChatResponse`: `{ chat, llmConfig }` (config always created alongside the chat).
 - `UpdateChatConfigRequest`: partial of `ChatLLMConfig` minus ids.
 - `PromptPreview`: `{ messages: { role: "system"|"user"|"assistant"|"tool"; content: string; toolCalls?: ToolCall[]; toolCallId?: string|null }[]; tools: { serverId, serverName }[] }` (messages mirror `LLMChatMessage`; tool calls appear when history contains tool use).
-- Calls: `listChats({ characterId? })`, `getChat(id)`, `createChat(payload)`, `deleteChat(id)`, `getChatConfig(chatId)`, `updateChatConfig(chatId, payload)`, `createTurn(chatId, { content })`, `getPromptPreview(chatId)`.
+- Calls: `listChats({ characterId?, userPersonaId? })`, `getChat(id)`, `createChat(payload)`, `deleteChat(id)`, `getChatConfig(chatId)`, `updateChatConfig(chatId, payload)`, `createTurn(chatId, { content })`, `getPromptPreview(chatId)`.
 
 ### Chat history config (`src/api/historyConfig.ts`)
-- `ChatHistoryConfig`: `{ historyEnabled: boolean; messageLimit: number }` (defaults to `{ historyEnabled: true, messageLimit: 20 }` when none is stored).
+- `ChatHistoryConfig`: `{ historyEnabled: boolean; messageLimit: number; loreScanTokenLimit: number }` (defaults: `historyEnabled: true`, `messageLimit: 20`, `loreScanTokenLimit: 1500`).
+- `loreScanTokenLimit` controls how many recent tokens are scanned for lore keyword matching (independent of how many history messages are sent to the LLM).
 - Calls: `getChatHistoryConfig(chatId)`, `updateChatHistoryConfig(chatId, partial)` (creates config if missing).
 
 ### Messages (`src/api/messages.ts`)

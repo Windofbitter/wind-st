@@ -48,6 +48,14 @@ export function runMigrations(db: SqliteDatabase): void {
     CREATE INDEX IF NOT EXISTS idx_characters_name
       ON characters(name);
 
+    CREATE TABLE IF NOT EXISTS user_personas (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      prompt TEXT,
+      is_default INTEGER NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS presets (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -106,14 +114,19 @@ export function runMigrations(db: SqliteDatabase): void {
     CREATE TABLE IF NOT EXISTS chats (
       id TEXT PRIMARY KEY,
       character_id TEXT NOT NULL,
+      user_persona_id TEXT NOT NULL,
       title TEXT NOT NULL,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
-      FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+      FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_persona_id) REFERENCES user_personas(id) ON DELETE RESTRICT
     );
 
     CREATE INDEX IF NOT EXISTS idx_chats_character
       ON chats(character_id, created_at);
+
+    CREATE INDEX IF NOT EXISTS idx_chats_user_persona
+      ON chats(user_persona_id, created_at);
 
     CREATE TABLE IF NOT EXISTS messages (
       id TEXT PRIMARY KEY,
@@ -205,6 +218,7 @@ export function runMigrations(db: SqliteDatabase): void {
       chat_id TEXT PRIMARY KEY,
       history_enabled INTEGER NOT NULL,
       message_limit INTEGER NOT NULL,
+      lore_scan_token_limit INTEGER NOT NULL DEFAULT 1500,
       FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
     );
   `);
@@ -219,6 +233,8 @@ export function runMigrations(db: SqliteDatabase): void {
   ensureColumn(db, "llm_connections", "status", "TEXT NOT NULL DEFAULT 'unknown'");
   ensureColumn(db, "llm_connections", "last_tested_at", "TEXT");
   ensureColumn(db, "llm_connections", "models_available", "INTEGER");
+
+  ensureColumn(db, "chat_history_configs", "lore_scan_token_limit", "INTEGER NOT NULL DEFAULT 1500");
 
   ensureColumn(db, "mcp_servers", "status", "TEXT NOT NULL DEFAULT 'unknown'");
   ensureColumn(db, "mcp_servers", "last_checked_at", "TEXT");

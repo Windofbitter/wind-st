@@ -27,8 +27,11 @@ Application and HTTP layers depend only on ports defined in `core`; infrastructu
   - `attachPresetToCharacter(characterId, presetId, role, position?)`
   - `detachPromptPreset(promptPresetId)`
   - `reorderPromptPresets(characterId, orderedPromptPresetIds)`
+- `UserPersonaService`
+  - `create(data)` / `list(filter?)` / `getById(id)` / `update(id, patch)` / `delete(id)`
 - Ports:
   - `CharacterRepository`
+  - `UserPersonaRepository`
   - `PresetRepository`
   - `PromptPresetRepository`
 
@@ -111,7 +114,11 @@ Application and HTTP layers depend only on ports defined in `core`; infrastructu
     - character `PromptPreset` stack (`static_text`, `lorebook`, `history`, `mcp_tools`),
     - triggered `LorebookEntry`s and their insertion order,
     - history strategy from `history` presets,
-    - MCP tools from `mcp_tools` presets.
+    - MCP tools from `mcp_tools` presets,
+    - user persona prompt (if set) and `{character}` / `{user}` substitutions in persona + static presets.
+  - Lore matching:
+    - Scans recent user/assistant text by token budget (`loreScanTokenLimit` from chat history config; default 1500), not a fixed message count.
+    - Matches keywords (case-insensitive substring) against that slice; injects all enabled hits in a single system block.
 - `ChatOrchestrator`
   - `handleUserMessage(chatId, userContent)`
   - Responsibilities:

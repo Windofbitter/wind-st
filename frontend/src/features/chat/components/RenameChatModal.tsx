@@ -27,18 +27,19 @@ export function RenameChatModal({
     }
   }, [isOpen, chat]);
 
-  if (!isOpen || !chat) return null;
+  if (!chat || !isOpen) return null;
+  const activeChat: Chat = chat;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const next = title.trim();
-    if (!next || next === chat.title) {
+    if (!next || next === activeChat.title) {
       setError(t("chat.renameValidation") ?? "Title required");
       return;
     }
     setSaving(true);
     setError(null);
-    const result = await onSave(chat.id, next);
+    const result = await onSave(activeChat.id, next);
     setSaving(false);
     if (result.ok) {
       onClose();
@@ -54,7 +55,7 @@ export function RenameChatModal({
           {t("chat.renameChatTitle")}
         </h3>
         <p style={{ opacity: 0.8, marginTop: 0 }}>
-          {t("chat.renameChatDescription", { name: chat.title })}
+          {t("chat.renameChatDescription", { name: activeChat.title })}
         </p>
         <form onSubmit={handleSubmit}>
           <div className="input-group">

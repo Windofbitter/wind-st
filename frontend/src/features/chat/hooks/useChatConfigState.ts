@@ -223,7 +223,11 @@ export function useChatConfigState({
     setChatHistoryState({ loading: true, error: null });
     try {
       const cfg = await getChatHistoryConfig(chatId);
-      setChatHistoryConfig(cfg);
+      setChatHistoryConfig({
+        historyEnabled: cfg.historyEnabled,
+        messageLimit: cfg.messageLimit,
+        loreScanTokenLimit: cfg.loreScanTokenLimit,
+      });
     } catch (err) {
       setChatHistoryState({
         loading: false,
@@ -303,6 +307,7 @@ export function useChatConfigState({
         const historyPayload = {
           historyEnabled: chatHistoryConfig.historyEnabled,
           messageLimit: chatHistoryConfig.messageLimit,
+          loreScanTokenLimit: chatHistoryConfig.loreScanTokenLimit,
         };
         const updatedHistory = await updateChatHistoryConfig(
           activeChat.id,

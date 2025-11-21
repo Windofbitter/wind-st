@@ -4,11 +4,13 @@ export interface CreateChatHistoryConfigInput {
   chatId: string;
   historyEnabled: boolean;
   messageLimit: number;
+  loreScanTokenLimit: number;
 }
 
 export interface UpdateChatHistoryConfigInput {
   historyEnabled?: boolean;
   messageLimit?: number;
+  loreScanTokenLimit?: number;
 }
 
 export interface ChatHistoryConfigRepository {
@@ -20,4 +22,3 @@ export interface ChatHistoryConfigRepository {
   ): Promise<ChatHistoryConfig | null>;
   deleteByChatId(chatId: string): Promise<void>;
 }
-
