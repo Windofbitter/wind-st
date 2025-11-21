@@ -194,8 +194,9 @@ export class PromptStackService {
       kind: "history",
       builtIn: true,
     });
-    if (existing.length > 0) {
-      return existing[0];
+    const [first] = existing;
+    if (first) {
+      return first;
     }
     return this.presetRepo.create({
       title: "Chat History",
@@ -212,8 +213,9 @@ export class PromptStackService {
       kind: "mcp_tools",
       builtIn: true,
     });
-    if (existing.length > 0) {
-      return existing[0];
+    const [first] = existing;
+    if (first) {
+      return first;
     }
     return this.presetRepo.create({
       title: "MCP Tools",

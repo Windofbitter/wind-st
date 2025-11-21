@@ -1,8 +1,30 @@
-import { countTokens } from "gpt-tokenizer";
-
 export interface TokenCounter {
   count(text: string): number;
   countAll(texts: string[]): number;
+}
+
+type CountTokensFn = (text: string, model?: string) => number;
+
+let cachedCountTokens: CountTokensFn | null = null;
+let attemptedLoad = false;
+
+function loadCountTokens(): CountTokensFn | null {
+  if (attemptedLoad) {
+    return cachedCountTokens;
+  }
+  attemptedLoad = true;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mod = require("gpt-tokenizer") as {
+      countTokens?: CountTokensFn;
+    };
+    if (typeof mod.countTokens === "function") {
+      cachedCountTokens = mod.countTokens;
+    }
+  } catch {
+    cachedCountTokens = null;
+  }
+  return cachedCountTokens;
 }
 
 // Approximates token counts using a simple character heuristic (chars / 4).
@@ -24,11 +46,14 @@ export function createApproxTokenCounter(): TokenCounter {
 }
 
 export class GptTokenCounter implements TokenCounter {
-  constructor(private readonly model?: string) {}
+  constructor(
+    private readonly countTokensFn: CountTokensFn,
+    private readonly model?: string,
+  ) {}
 
   count(text: string): number {
     if (!text) return 0;
-    return countTokens(text, this.model);
+    return this.countTokensFn(text, this.model);
   }
 
   countAll(texts: string[]): number {
@@ -37,10 +62,9 @@ export class GptTokenCounter implements TokenCounter {
 }
 
 export function createGptTokenCounter(model?: string): TokenCounter {
-  try {
-    return new GptTokenCounter(model);
-  } catch {
-    // Fall back quietly if tokenizer fails to initialize.
+  const countTokensFn = loadCountTokens();
+  if (!countTokensFn) {
     return createApproxTokenCounter();
   }
+  return new GptTokenCounter(countTokensFn, model);
 }

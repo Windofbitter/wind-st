@@ -223,6 +223,7 @@ export class DefaultPromptBuilder implements PromptBuilder {
     let remaining = Math.floor(tokenLimit);
     for (let i = history.length - 1; i >= 0; i -= 1) {
       const entry = history[i];
+      if (!entry) continue;
       if (entry.state !== "ok") continue;
       if (entry.role !== "user" && entry.role !== "assistant") continue;
       const content = entry.content?.trim();

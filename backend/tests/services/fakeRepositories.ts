@@ -9,6 +9,7 @@ import type { Message } from "../../src/core/entities/Message";
 import type { Preset } from "../../src/core/entities/Preset";
 import type { PromptPreset } from "../../src/core/entities/PromptPreset";
 import type { UserPersona } from "../../src/core/entities/UserPersona";
+import type { CharacterLorebook } from "../../src/core/entities/CharacterLorebook";
 import type {
   CharacterFilter,
   CharacterRepository,
@@ -37,6 +38,10 @@ import type {
   LorebookRepository,
   UpdateLorebookInput,
 } from "../../src/core/ports/LorebookRepository";
+import type {
+  CharacterLorebookRepository,
+  CreateCharacterLorebookInput,
+} from "../../src/core/ports/CharacterLorebookRepository";
 import type {
   CreateLLMConnectionInput,
   LLMConnectionRepository,
@@ -364,6 +369,39 @@ export class FakeLorebookEntryRepository implements LorebookEntryRepository {
     };
     this.items.set(id, updated);
     return updated;
+  }
+
+  async delete(id: string): Promise<void> {
+    this.items.delete(id);
+  }
+}
+
+export class FakeCharacterLorebookRepository
+  implements CharacterLorebookRepository
+{
+  private items = new Map<string, CharacterLorebook>();
+
+  async create(
+    data: CreateCharacterLorebookInput,
+  ): Promise<CharacterLorebook> {
+    const id = nextId("char-lb");
+    const record: CharacterLorebook = {
+      id,
+      characterId: data.characterId,
+      lorebookId: data.lorebookId,
+    };
+    this.items.set(id, record);
+    return record;
+  }
+
+  async getById(id: string): Promise<CharacterLorebook | null> {
+    return this.items.get(id) ?? null;
+  }
+
+  async listByCharacter(characterId: string): Promise<CharacterLorebook[]> {
+    return Array.from(this.items.values()).filter(
+      (item) => item.characterId === characterId,
+    );
   }
 
   async delete(id: string): Promise<void> {

@@ -4,18 +4,31 @@ import {
   FakeCharacterRepository,
   FakePresetRepository,
   FakePromptPresetRepository,
+  FakeLorebookRepository,
+  FakeCharacterLorebookRepository,
 } from "./fakeRepositories";
 
 function createService() {
   const characterRepo = new FakeCharacterRepository();
   const presetRepo = new FakePresetRepository();
   const promptPresetRepo = new FakePromptPresetRepository();
+  const lorebookRepo = new FakeLorebookRepository();
+  const characterLorebookRepo = new FakeCharacterLorebookRepository();
   const service = new PromptStackService(
     characterRepo,
     presetRepo,
     promptPresetRepo,
+    lorebookRepo,
+    characterLorebookRepo,
   );
-  return { characterRepo, presetRepo, promptPresetRepo, service };
+  return {
+    characterRepo,
+    presetRepo,
+    promptPresetRepo,
+    lorebookRepo,
+    characterLorebookRepo,
+    service,
+  };
 }
 
 describe("PromptStackService", () => {
@@ -42,8 +55,12 @@ describe("PromptStackService", () => {
     });
 
     const stack = await service.getPromptStackForCharacter(character.id);
-    expect(stack).toHaveLength(1);
+    const historyPreset = (await presetRepo.list({ kind: "history" }))[0];
+    expect(historyPreset).toBeDefined();
+
+    expect(stack).toHaveLength(2);
     expect(stack[0].presetId).toBe(preset.id);
+    expect(stack[1].presetId).toBe(historyPreset?.id);
   });
 
   it("throws when attaching preset to missing character or preset", async () => {
@@ -55,7 +72,10 @@ describe("PromptStackService", () => {
     });
 
     await expect(
-      service.attachPresetToCharacter("missing", preset.id, "system"),
+      service.attachPresetToCharacter("missing", {
+        presetId: preset.id,
+        role: "system",
+      }),
     ).rejects.toThrowError("Character not found");
 
     const character = await characterRepo.create({
@@ -66,7 +86,10 @@ describe("PromptStackService", () => {
     });
 
     await expect(
-      service.attachPresetToCharacter(character.id, "missing", "system"),
+      service.attachPresetToCharacter(character.id, {
+        presetId: "missing",
+        role: "system",
+      }),
     ).rejects.toThrowError("Preset not found");
   });
 
@@ -91,8 +114,14 @@ describe("PromptStackService", () => {
       kind: "static_text",
     });
 
-    await service.attachPresetToCharacter(character.id, p1.id, "system");
-    await service.attachPresetToCharacter(character.id, p2.id, "assistant");
+    await service.attachPresetToCharacter(character.id, {
+      presetId: p1.id,
+      role: "system",
+    });
+    await service.attachPresetToCharacter(character.id, {
+      presetId: p2.id,
+      role: "assistant",
+    });
 
     const stack = await promptPresetRepo.listByCharacter(character.id);
     expect(stack.map((pp) => pp.sortOrder)).toEqual([0, 1]);
@@ -127,13 +156,17 @@ describe("PromptStackService", () => {
 
     const pp1 = await service.attachPresetToCharacter(
       character.id,
-      p1.id,
-      "system",
+      {
+        presetId: p1.id,
+        role: "system",
+      },
     );
     const pp2 = await service.attachPresetToCharacter(
       character.id,
-      p2.id,
-      "assistant",
+      {
+        presetId: p2.id,
+        role: "assistant",
+      },
     );
 
     expect(pp1.sortOrder).toBe(0);
@@ -141,9 +174,11 @@ describe("PromptStackService", () => {
 
     const inserted = await service.attachPresetToCharacter(
       character.id,
-      p3.id,
-      "user",
-      1,
+      {
+        presetId: p3.id,
+        role: "user",
+        position: 1,
+      },
     );
     expect(inserted.sortOrder).toBe(1);
 
@@ -184,18 +219,24 @@ describe("PromptStackService", () => {
 
     const pp1 = await service.attachPresetToCharacter(
       character.id,
-      p1.id,
-      "system",
+      {
+        presetId: p1.id,
+        role: "system",
+      },
     );
     const pp2 = await service.attachPresetToCharacter(
       character.id,
-      p2.id,
-      "assistant",
+      {
+        presetId: p2.id,
+        role: "assistant",
+      },
     );
     const pp3 = await service.attachPresetToCharacter(
       character.id,
-      p3.id,
-      "user",
+      {
+        presetId: p3.id,
+        role: "user",
+      },
     );
 
     await service.detachPromptPreset(pp2.id);
@@ -231,13 +272,17 @@ describe("PromptStackService", () => {
 
     const pp1 = await service.attachPresetToCharacter(
       character.id,
-      p1.id,
-      "system",
+      {
+        presetId: p1.id,
+        role: "system",
+      },
     );
     const pp2 = await service.attachPresetToCharacter(
       character.id,
-      p2.id,
-      "assistant",
+      {
+        presetId: p2.id,
+        role: "assistant",
+      },
     );
 
     await expect(

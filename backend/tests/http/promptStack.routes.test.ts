@@ -71,14 +71,26 @@ describe("Prompt stack routes", () => {
       url: `/characters/${character.id}/prompt-stack`,
     });
     expect(stackResponse.statusCode).toBe(200);
-    const stack = stackResponse.json() as Array<{ presetId: string }>;
-    expect(stack.map((pp) => pp.presetId)).toEqual([p1.id, p2.id]);
+    const stack = stackResponse.json() as Array<{ id: string; presetId: string }>;
+    expect(stack.length).toBeGreaterThanOrEqual(3);
+    expect(stack[0]?.presetId).toBe(p1.id);
+    expect(stack[1]?.presetId).toBe(p2.id);
+    const historyEntry = stack.find(
+      (pp) => pp.presetId !== p1.id && pp.presetId !== p2.id,
+    );
+    expect(historyEntry).toBeDefined();
 
+    const reorderIds = [stack[1]?.id, stack[0]?.id].filter(
+      Boolean,
+    ) as string[];
+    if (historyEntry?.id) {
+      reorderIds.push(historyEntry.id);
+    }
     const reorderedResponse = await app.inject({
       method: "POST",
       url: `/characters/${character.id}/prompt-stack/reorder`,
       payload: {
-        ids: [stack[1].id, stack[0].id],
+        ids: reorderIds,
       },
     });
     expect(reorderedResponse.statusCode).toBe(204);
@@ -87,8 +99,8 @@ describe("Prompt stack routes", () => {
       method: "GET",
       url: `/characters/${character.id}/prompt-stack`,
     });
-    const reordered = afterReorder.json() as Array<{ presetId: string }>;
-    expect(reordered.map((pp) => pp.presetId)).toEqual([p2.id, p1.id]);
+    const reordered = afterReorder.json() as Array<{ id: string; presetId: string }>;
+    expect(reordered.map((pp) => pp.id)).toEqual(reorderIds);
 
     const detachResponse = await app.inject({
       method: "DELETE",

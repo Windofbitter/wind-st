@@ -43,8 +43,11 @@ export function LorebookEntriesTable({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = ids.indexOf(active.id);
-    const newIndex = ids.indexOf(over.id);
+    const activeId = typeof active.id === "string" ? active.id : `${active.id}`;
+    const overId = typeof over.id === "string" ? over.id : `${over.id}`;
+
+    const oldIndex = ids.indexOf(activeId);
+    const newIndex = ids.indexOf(overId);
     if (oldIndex === -1 || newIndex === -1) return;
 
     const newOrder = arrayMove(ids, oldIndex, newIndex);

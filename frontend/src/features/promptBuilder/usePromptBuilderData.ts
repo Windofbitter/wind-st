@@ -105,20 +105,7 @@ export function usePromptBuilderData({
     setPersonaDraft(persona);
   }, [persona]);
 
-  const reloadAll = useCallback(async () => {
-    await Promise.all([
-      loadStack(),
-      loadPresets(),
-      loadLorebooks(),
-      reloadMcp(),
-    ]);
-  }, [loadStack, loadPresets, loadLorebooks, reloadMcp]);
-
-  useEffect(() => {
-    void reloadAll();
-  }, [reloadAll]);
-
-  async function loadStack() {
+  const loadStack = useCallback(async () => {
     setStackState({ loading: true, error: null });
     try {
       const data = await getPromptStack(characterId);
@@ -133,9 +120,9 @@ export function usePromptBuilderData({
             : "Failed to load prompt stack",
       });
     }
-  }
+  }, [characterId]);
 
-  async function loadPresets() {
+  const loadPresets = useCallback(async () => {
     setPresetsState({ loading: true, error: null });
     try {
       const data = await listPresets();
@@ -150,9 +137,9 @@ export function usePromptBuilderData({
             : "Failed to load presets",
       });
     }
-  }
+  }, []);
 
-  async function loadLorebooks() {
+  const loadLorebooks = useCallback(async () => {
     setLorebooksState({ loading: true, error: null });
     try {
       const data = await listLorebooks();
@@ -168,9 +155,9 @@ export function usePromptBuilderData({
             : "Failed to load lorebooks",
       });
     }
-  }
+  }, []);
 
-  async function reloadMcp() {
+  const reloadMcp = useCallback(async () => {
     setMcpState((s) => ({ ...s, loading: true, error: null }));
     try {
       const [servers, mappings] = await Promise.all([
@@ -189,7 +176,20 @@ export function usePromptBuilderData({
             : "Failed to load MCP servers",
       });
     }
-  }
+  }, [characterId]);
+
+  const reloadAll = useCallback(async () => {
+    await Promise.all([
+      loadStack(),
+      loadPresets(),
+      loadLorebooks(),
+      reloadMcp(),
+    ]);
+  }, [loadStack, loadPresets, loadLorebooks, reloadMcp]);
+
+  useEffect(() => {
+    void reloadAll();
+  }, [reloadAll]);
 
   async function savePersona() {
     setSavingPersona(true);

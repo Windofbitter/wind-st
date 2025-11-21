@@ -278,13 +278,17 @@ describe("DefaultPromptBuilder", () => {
 
     await promptStackService.attachPresetToCharacter(
       character.id,
-      preset1.id,
-      "system",
+      {
+        presetId: preset1.id,
+        role: "system",
+      },
     );
     await promptStackService.attachPresetToCharacter(
       character.id,
-      preset2.id,
-      "assistant",
+      {
+        presetId: preset2.id,
+        role: "assistant",
+      },
     );
 
     const result = await promptBuilder.buildPromptForChat(chat.id);
@@ -335,8 +339,10 @@ describe("DefaultPromptBuilder", () => {
 
     await promptStackService.attachPresetToCharacter(
       character.id,
-      preset.id,
-      "system",
+      {
+        presetId: preset.id,
+        role: "system",
+      },
     );
 
     const result = await promptBuilder.buildPromptForChat(chat.id);

@@ -31,6 +31,7 @@ import {
   FakeChatLLMConfigRepository,
   FakeLorebookRepository,
   FakeLorebookEntryRepository,
+  FakeCharacterLorebookRepository,
   FakeLLMConnectionRepository,
   FakeMCPServerRepository,
   FakeMessageRepository,
@@ -94,6 +95,7 @@ export async function createTestApp(
   const llmConnectionRepository = new FakeLLMConnectionRepository();
   const lorebookRepository = new FakeLorebookRepository();
   const lorebookEntryRepository = new FakeLorebookEntryRepository();
+  const characterLorebookRepository = new FakeCharacterLorebookRepository();
   const mcpServerRepository = new FakeMCPServerRepository();
   const presetRepository = new FakePresetRepository();
   const promptPresetRepository = new FakePromptPresetRepository();
@@ -162,6 +164,8 @@ export async function createTestApp(
     characterRepository,
     presetRepository,
     promptPresetRepository,
+    lorebookRepository,
+    characterLorebookRepository,
   );
   const historyConfigService = new HistoryConfigService(
     historyConfigRepository,

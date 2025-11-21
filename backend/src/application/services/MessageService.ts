@@ -39,6 +39,9 @@ export class MessageService {
     }
 
     const target = messages[targetIdx];
+    if (!target) {
+      throw new AppError("MESSAGE_NOT_FOUND", "Message not found");
+    }
     if (target.role !== "user") {
       throw new AppError(
         "INVALID_MESSAGE_ROLE",
@@ -67,12 +70,14 @@ export class MessageService {
     if (targetIdx === -1) return;
 
     const target = messages[targetIdx];
+    if (!target) return;
     const toDelete = new Set<string>([messageId]);
     const runRelated = new Set<string>([messageId]);
 
     if (target.role === "user") {
       for (let i = targetIdx + 1; i < messages.length; i++) {
         const msg = messages[i];
+        if (!msg) continue;
         if (msg.role === "user") break;
         toDelete.add(msg.id);
         runRelated.add(msg.id);
@@ -100,6 +105,7 @@ export class MessageService {
       if (!userMessageId) {
         for (let i = targetIdx - 1; i >= 0; i -= 1) {
           const msg = messages[i];
+          if (!msg) continue;
           if (msg.role === "user") {
             userMessageId = msg.id;
             break;

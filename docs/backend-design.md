@@ -24,7 +24,7 @@ Application and HTTP layers depend only on ports defined in `core`; infrastructu
   - `deleteCharacter(id)`
 - `PromptStackService` (for `Preset` + `PromptPreset`)
   - `getPromptStackForCharacter(characterId)`
-  - `attachPresetToCharacter(characterId, presetId, role, position?)`
+  - `attachPresetToCharacter(characterId, input: { presetId? | (kind + lorebookId?), role, position? })`
   - `detachPromptPreset(promptPresetId)`
   - `reorderPromptPresets(characterId, orderedPromptPresetIds)`
 - `UserPersonaService`

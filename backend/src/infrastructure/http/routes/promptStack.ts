@@ -3,6 +3,14 @@ import type { PromptPreset } from "../../../core/entities/PromptPreset";
 import { AppError } from "../../../application/errors/AppError";
 import type { AttachPromptPresetInput } from "../../../application/services/PromptStackService";
 
+interface AttachPresetBody {
+  presetId?: string;
+  kind?: "history" | "mcp_tools" | "lorebook";
+  lorebookId?: string;
+  role: PromptPreset["role"];
+  position?: number;
+}
+
 interface ReorderBody {
   ids: string[];
 }
@@ -34,12 +42,15 @@ function ensureAttachPresetPayload(body: unknown): AttachPromptPresetInput {
     );
   }
 
+  const positionPatch =
+    value.position !== undefined ? { position: value.position } : {};
+
   // Attach by existing presetId (static text) or by kind for special entries.
   if (value.presetId && typeof value.presetId === "string") {
     return {
       presetId: value.presetId,
       role: value.role,
-      position: value.position,
+      ...positionPatch,
     };
   }
 
@@ -47,7 +58,7 @@ function ensureAttachPresetPayload(body: unknown): AttachPromptPresetInput {
     return {
       kind: value.kind,
       role: value.role,
-      position: value.position,
+      ...positionPatch,
     };
   }
 
@@ -62,7 +73,7 @@ function ensureAttachPresetPayload(body: unknown): AttachPromptPresetInput {
       kind: "lorebook",
       lorebookId: (value as any).lorebookId,
       role: value.role,
-      position: value.position,
+      ...positionPatch,
     };
   }
 
