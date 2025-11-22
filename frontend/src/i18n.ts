@@ -19,10 +19,12 @@ const resources = {
     translation: {
       nav: {
         chat: "Chat",
+        library: "Library",
         characters: "Characters",
         userPersonas: "User Personas",
         presets: "Presets",
         lorebooks: "Lorebooks",
+        system: "System",
         llmConnections: "LLM Connections",
         mcpServers: "MCP Servers",
         runs: "Runs",
@@ -86,6 +88,7 @@ const resources = {
         promptStackLoading: "Loading prompt stack…",
         personaTitle: "Persona",
         personaEmpty: "No persona defined.",
+        toggleStack: "Stack",
         stackTitle: "Stack",
         stackEmpty:
           "No prompt presets attached. Edit via Characters → Prompt Builder.",
@@ -128,8 +131,12 @@ const resources = {
       common: {
         errorPrefix: "Error:",
         errorLoadingConnections: "Error loading connections:",
+        loading: "Loading…",
         loadingConfig: "Loading config…",
         testing: "Testing…",
+        add: "Add",
+        edit: "Edit",
+        remove: "Remove",
         save: "Save",
         saving: "Saving…",
         cancel: "Cancel",
@@ -450,10 +457,12 @@ const resources = {
     translation: {
       nav: {
         chat: "对话",
+        library: "资源库",
         characters: "角色",
         userPersonas: "用户人设",
         presets: "预设",
         lorebooks: "世界书",
+        system: "系统",
         llmConnections: "LLM 连接",
         mcpServers: "MCP 服务器",
         runs: "运行记录",
@@ -515,6 +524,7 @@ const resources = {
         promptStackLoading: "正在加载提示栈…",
         personaTitle: "人设",
         personaEmpty: "未定义人设。",
+        toggleStack: "提示栈",
         stackTitle: "栈",
         stackEmpty:
           "尚未关联提示预设。可通过“角色 → 提示构建器”编辑。",
@@ -556,8 +566,12 @@ const resources = {
       common: {
         errorPrefix: "错误：",
         errorLoadingConnections: "加载连接时出错：",
+        loading: "正在加载…",
         loadingConfig: "正在加载配置…",
         testing: "正在测试…",
+        add: "添加",
+        edit: "编辑",
+        remove: "移除",
         save: "保存",
         saving: "正在保存…",
         cancel: "取消",

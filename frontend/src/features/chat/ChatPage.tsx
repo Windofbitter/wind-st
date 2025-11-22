@@ -6,10 +6,12 @@ import { ChatConfigPanel } from "./components/ChatConfigPanel";
 import { PromptStackCard } from "./components/PromptStackCard";
 import { PromptPreviewCard } from "./components/PromptPreviewCard";
 import { RenameChatModal } from "./components/RenameChatModal";
+import { PromptStackDrawer } from "./components/PromptStackDrawer";
 import { useChatController } from "./useChatController";
 
 export function ChatPage() {
   const [renameTarget, setRenameTarget] = useState<Chat | null>(null);
+  const [isStackOpen, setIsStackOpen] = useState(false);
   const {
     characters,
     charactersState,
@@ -57,6 +59,7 @@ export function ChatPage() {
     handleHistoryConfigChange,
     handleSaveChatConfig,
     fetchModelsForConnection,
+    refreshPromptStack,
   } = useChatController();
 
   const renameModalOpen = renameTarget !== null;
@@ -94,6 +97,7 @@ export function ChatPage() {
         onDeleteMessage={(id) => void handleDeleteMessage(id)}
         isSending={isSending}
         globalError={globalError}
+        onToggleStack={() => setIsStackOpen(true)}
       />
 
       <aside className="chat-right-sidebar">
@@ -133,6 +137,14 @@ export function ChatPage() {
         isOpen={renameModalOpen}
         onClose={() => setRenameTarget(null)}
         onSave={handleRenameChat}
+      />
+      <PromptStackDrawer
+        isOpen={isStackOpen}
+        onClose={() => setIsStackOpen(false)}
+        selectedCharacter={selectedCharacter}
+        promptStack={promptStack}
+        promptStackState={promptStackState}
+        onReload={refreshPromptStack}
       />
     </div>
   );

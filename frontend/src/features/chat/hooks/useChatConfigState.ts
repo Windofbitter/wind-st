@@ -50,6 +50,7 @@ export interface ChatConfigState {
   ) => Promise<void>;
   handleSaveChatConfig: () => Promise<void>;
   loadPromptPreview: (chatId: string) => Promise<void>;
+  refreshPromptStack: () => Promise<void>;
 }
 
 export function useChatConfigState({
@@ -136,8 +137,8 @@ export function useChatConfigState({
     () =>
       chatConfig
         ? llmConnections.find(
-            (c) => c.id === chatConfig.llmConnectionId,
-          ) ?? null
+          (c) => c.id === chatConfig.llmConnectionId,
+        ) ?? null
         : null,
     [chatConfig, llmConnections],
   );
@@ -350,5 +351,9 @@ export function useChatConfigState({
     handleHistoryConfigChange,
     handleSaveChatConfig,
     loadPromptPreview,
+    refreshPromptStack: () =>
+      selectedCharacterId
+        ? loadPromptStack(selectedCharacterId)
+        : Promise.resolve(),
   };
 }

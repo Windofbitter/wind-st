@@ -23,6 +23,7 @@ interface Props {
   onDeleteMessage: (messageId: string) => void;
   isSending: boolean;
   globalError: string | null;
+  onToggleStack: () => void;
 }
 
 export function ChatMain({
@@ -38,6 +39,7 @@ export function ChatMain({
   onDeleteMessage,
   isSending,
   globalError,
+  onToggleStack,
 }: Props) {
   const { t } = useTranslation();
 
@@ -90,6 +92,26 @@ export function ChatMain({
           />
         </div>
         <div className="composer">
+          <button
+            className="icon-button"
+            type="button"
+            onClick={onToggleStack}
+            title={t("chat.toggleStack") || "Stack"}
+            style={{ height: "56px", width: "48px" }}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </button>
           <textarea
             placeholder={
               activeChat
