@@ -51,7 +51,7 @@ if errorlevel 1 (
   exit /b 1
 )
 echo [wind-st] Starting frontend on port %FRONTEND_PORT% ...
-start "wind-st frontend" cmd /k "set VITE_API_BASE_URL=%BACKEND_ORIGIN% && set VITE_API_PROXY_TARGET=%BACKEND_ORIGIN% && npm run dev -- --port %FRONTEND_PORT%"
+start "wind-st frontend" cmd /k "set VITE_API_PROXY_TARGET=%BACKEND_ORIGIN% && npm run dev -- --port %FRONTEND_PORT%"
 popd
 
 echo.
