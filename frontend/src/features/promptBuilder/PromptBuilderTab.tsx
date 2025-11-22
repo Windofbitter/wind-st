@@ -58,12 +58,23 @@ export function PromptBuilderTab({
           kind === "lorebook"
             ? rawTitle.replace(/^lorebook:\s*/i, "")
             : rawTitle;
+        const lorebookId =
+          kind === "lorebook"
+            ? (preset?.config &&
+                typeof (preset.config as { lorebookId?: unknown })
+                  .lorebookId === "string"
+                ? (preset.config as { lorebookId: string })
+                    .lorebookId
+                : null)
+            : null;
         return {
           id: pp.id,
           title,
           role: pp.role,
           kind,
           locked: kind === "history",
+          presetId: pp.presetId,
+          lorebookId: lorebookId ?? undefined,
         };
       });
   }, [data.presets, data.promptStack, roleFilter]);
@@ -164,6 +175,7 @@ export function PromptBuilderTab({
           onReorder={(ids) =>
             void data.reorderPromptPresets(ids)
           }
+          onReload={() => void data.reloadAll()}
         />
       </div>
 
@@ -178,6 +190,7 @@ export function PromptBuilderTab({
         onDetach={(id) =>
           detachAndReloadMcp(id, data.reloadMcp)
         }
+        onReload={() => void data.reloadMcp()}
       />
 
       <div className="card">

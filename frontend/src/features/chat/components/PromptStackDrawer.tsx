@@ -5,8 +5,8 @@ import type { PromptPreset } from "../../../api/promptStack";
 import { detachPromptPreset } from "../../../api/promptStack";
 import { getPreset } from "../../../api/presets";
 import { ApiError } from "../../../api/httpClient";
-import { PresetQuickEditModal } from "./PresetQuickEditModal";
-import { LorebookQuickEditModal } from "./LorebookQuickEditModal";
+import { PresetEditorPanel } from "../../promptStack/PresetEditorPanel";
+import { LorebookEditorPanel } from "../../promptStack/LorebookEditorPanel";
 
 interface LoadState {
     loading: boolean;
@@ -188,32 +188,34 @@ export function PromptStackDrawer({
                                         ))}
                                 </ul>
                             </div>
+
+                            {editingItem && (
+                                <div className="card" style={{ margin: 0 }}>
+                                    {editingItem.type === "preset" ? (
+                                        <PresetEditorPanel
+                                            presetId={editingItem.id}
+                                            onSaved={() => {
+                                                setEditingItem(null);
+                                                void onReload();
+                                            }}
+                                            onCancel={() => setEditingItem(null)}
+                                        />
+                                    ) : (
+                                        <LorebookEditorPanel
+                                            lorebookId={editingItem.id}
+                                            onSaved={() => {
+                                                setEditingItem(null);
+                                                void onReload();
+                                            }}
+                                            onCancel={() => setEditingItem(null)}
+                                        />
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
-
-            {editingItem?.type === "preset" && (
-                <PresetQuickEditModal
-                    presetId={editingItem.id}
-                    isOpen={true}
-                    onClose={() => {
-                        setEditingItem(null);
-                        void onReload();
-                    }}
-                />
-            )}
-
-            {editingItem?.type === "lorebook" && (
-                <LorebookQuickEditModal
-                    lorebookId={editingItem.id}
-                    isOpen={true}
-                    onClose={() => {
-                        setEditingItem(null);
-                        void onReload();
-                    }}
-                />
-            )}
         </>
     );
 }

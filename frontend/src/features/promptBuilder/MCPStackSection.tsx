@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   CharacterMCPServer,
   MCPServer,
 } from "../../api/mcpServers";
+import { MCPServerQuickEditModal } from "../mcpServers/MCPServerQuickEditModal";
 
 interface MCPStackSectionProps {
   servers: MCPServer[];
@@ -11,6 +13,7 @@ interface MCPStackSectionProps {
   error: string | null;
   onAttach(serverId: string): void;
   onDetach(mappingId: string): void;
+  onReload(): void | Promise<void>;
 }
 
 export function MCPStackSection({
@@ -20,8 +23,10 @@ export function MCPStackSection({
   error,
   onAttach,
   onDetach,
+  onReload,
 }: MCPStackSectionProps) {
   const { t } = useTranslation();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const attachedByServer = new Map(
     attached.map((m) => [m.mcpServerId, m]),
@@ -33,6 +38,11 @@ export function MCPStackSection({
   const attachedServers = servers.filter((s) =>
     attachedByServer.has(s.id),
   );
+
+  const editingServer =
+    editingId != null
+      ? servers.find((s) => s.id === editingId) ?? null
+      : null;
 
   return (
     <div className="card">
@@ -154,14 +164,29 @@ export function MCPStackSection({
                         {server.args.join(" ")}
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      style={{ padding: "0.25rem 0.6rem" }}
-                      onClick={() => onDetach(mapping.id)}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                      }}
                     >
-                      {t("promptBuilder.stackRemoveButton")}
-                    </button>
+                      <button
+                        type="button"
+                        className="btn"
+                        style={{ padding: "0.25rem 0.6rem" }}
+                        onClick={() => setEditingId(server.id)}
+                      >
+                        {t("common.edit")}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        style={{ padding: "0.25rem 0.6rem" }}
+                        onClick={() => onDetach(mapping.id)}
+                      >
+                        {t("promptBuilder.stackRemoveButton")}
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -178,6 +203,15 @@ export function MCPStackSection({
             </div>
           </div>
         </div>
+      )}
+
+      {editingServer && (
+        <MCPServerQuickEditModal
+          server={editingServer}
+          isOpen={true}
+          onClose={() => setEditingId(null)}
+          onSaved={() => void onReload()}
+        />
       )}
     </div>
   );

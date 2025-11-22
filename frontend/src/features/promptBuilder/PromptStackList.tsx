@@ -23,18 +23,22 @@ export interface PromptStackItemView {
   role: PromptRole;
   kind?: PresetKind;
   locked?: boolean;
+  presetId: string;
+  lorebookId?: string;
 }
 
 interface PromptStackListProps {
   items: PromptStackItemView[];
   onReorder(ids: string[]): void;
   onRemove(id: string): void;
+  onEdit(item: PromptStackItemView): void;
 }
 
 export function PromptStackList({
   items,
   onReorder,
   onRemove,
+  onEdit,
 }: PromptStackListProps) {
   const sensors = useSensors(useSensor(PointerSensor));
   const ids = items.map((item) => item.id);
@@ -76,6 +80,7 @@ export function PromptStackList({
               key={item.id}
               item={item}
               onRemove={onRemove}
+              onEdit={onEdit}
             />
           ))}
         </div>
@@ -87,11 +92,13 @@ export function PromptStackList({
 interface SortableStackItemProps {
   item: PromptStackItemView;
   onRemove(id: string): void;
+  onEdit(item: PromptStackItemView): void;
 }
 
 function SortableStackItem({
   item,
   onRemove,
+  onEdit,
 }: SortableStackItemProps) {
   const { t } = useTranslation();
   const {
@@ -155,15 +162,26 @@ function SortableStackItem({
           </div>
         </div>
       </div>
-      <button
-        type="button"
-        className="btn btn-danger"
-        style={{ padding: "0.25rem 0.6rem" }}
-        onClick={() => !item.locked && onRemove(item.id)}
-        disabled={item.locked === true}
-      >
-        {t("promptBuilder.stackRemoveButton")}
-      </button>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <button
+          type="button"
+          className="btn"
+          style={{ padding: "0.25rem 0.6rem" }}
+          onClick={() => onEdit(item)}
+          disabled={item.locked === true}
+        >
+          {t("common.edit")}
+        </button>
+        <button
+          type="button"
+          className="btn btn-danger"
+          style={{ padding: "0.25rem 0.6rem" }}
+          onClick={() => !item.locked && onRemove(item.id)}
+          disabled={item.locked === true}
+        >
+          {t("promptBuilder.stackRemoveButton")}
+        </button>
+      </div>
     </div>
   );
 }

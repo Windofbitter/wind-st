@@ -46,6 +46,7 @@ export interface PromptBuilderData {
   characterMcpServers: CharacterMCPServer[];
   mcpState: LoadState;
   reloadMcp(): Promise<void>;
+  reloadAll(): Promise<void>;
 
   attachStaticPreset(presetId: string, role: PromptRole): Promise<void>;
   attachLorebook(role: PromptRole): Promise<void>;
@@ -328,6 +329,7 @@ export function usePromptBuilderData({
     characterMcpServers,
     mcpState,
     reloadMcp,
+    reloadAll,
 
     attachStaticPreset,
     attachLorebook,

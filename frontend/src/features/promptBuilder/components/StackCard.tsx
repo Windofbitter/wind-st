@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PromptStackItemView } from "../PromptStackList";
 import { PromptStackList } from "../PromptStackList";
 import type { RoleFilter } from "../types";
+import { PresetEditorPanel } from "../../promptStack/PresetEditorPanel";
+import { LorebookEditorPanel } from "../../promptStack/LorebookEditorPanel";
 
 interface Props {
   items: PromptStackItemView[];
@@ -12,6 +15,7 @@ interface Props {
   attachError: string | null;
   onRemove(id: string): void;
   onReorder(ids: string[]): void;
+  onReload(): void | Promise<void>;
 }
 
 export function StackCard({
@@ -23,8 +27,11 @@ export function StackCard({
   attachError,
   onRemove,
   onReorder,
+  onReload,
 }: Props) {
   const { t } = useTranslation();
+  const [editingItem, setEditingItem] =
+    useState<PromptStackItemView | null>(null);
   return (
     <div className="card">
       <div
@@ -90,11 +97,44 @@ export function StackCard({
         </div>
       )}
       {items.length > 0 && (
-        <PromptStackList
-          items={items}
-          onRemove={(id) => void onRemove(id)}
-          onReorder={(ids) => void onReorder(ids)}
-        />
+        <>
+          <PromptStackList
+            items={items}
+            onRemove={(id) => void onRemove(id)}
+            onReorder={(ids) => void onReorder(ids)}
+            onEdit={(item) => {
+              if (item.locked) return;
+              setEditingItem(item);
+            }}
+          />
+          {editingItem && (
+            <div
+              className="card"
+              style={{ marginTop: "0.75rem" }}
+            >
+              {editingItem.kind === "lorebook" &&
+              editingItem.lorebookId ? (
+                <LorebookEditorPanel
+                  lorebookId={editingItem.lorebookId}
+                  onSaved={() => {
+                    setEditingItem(null);
+                    void onReload();
+                  }}
+                  onCancel={() => setEditingItem(null)}
+                />
+              ) : (
+                <PresetEditorPanel
+                  presetId={editingItem.presetId}
+                  onSaved={() => {
+                    setEditingItem(null);
+                    void onReload();
+                  }}
+                  onCancel={() => setEditingItem(null)}
+                />
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
