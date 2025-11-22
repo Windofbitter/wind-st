@@ -13,6 +13,7 @@ import {
   updatePreset,
 } from "../../api/presets";
 import { ApiError } from "../../api/httpClient";
+import { useScrollToBottom } from "../../hooks/useScrollToBottom";
 
 interface LoadState {
   loading: boolean;
@@ -29,6 +30,7 @@ const emptyCreateForm: CreatePresetRequest = {
 
 export function PresetsPage() {
   const { t } = useTranslation();
+  const { bottomRef, scrollToBottom } = useScrollToBottom();
   const [presets, setPresets] = useState<Preset[]>([]);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -57,6 +59,12 @@ export function PresetsPage() {
   useEffect(() => {
     void loadPresets();
   }, [filterKind, filterBuiltIn, titleSearch]);
+
+  useEffect(() => {
+    if (editingId) {
+      scrollToBottom();
+    }
+  }, [editingId]);
 
   async function loadPresets() {
     setState({ loading: true, error: null });
@@ -99,6 +107,7 @@ export function PresetsPage() {
       await createPreset(createForm);
       setCreateForm(emptyCreateForm);
       await loadPresets();
+      scrollToBottom();
     } catch (err) {
       setCreateError(
         err instanceof ApiError
@@ -483,6 +492,8 @@ export function PresetsPage() {
           </div>
         )}
       </div>
+      <div ref={bottomRef} />
     </div>
   );
 }
+

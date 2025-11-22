@@ -11,6 +11,7 @@ import {
   listLorebooks,
 } from "../../api/lorebooks";
 import { ApiError } from "../../api/httpClient";
+import { useScrollToBottom } from "../../hooks/useScrollToBottom";
 
 interface LoadState {
   loading: boolean;
@@ -24,6 +25,7 @@ const emptyForm: CreateLorebookRequest = {
 
 export function LorebooksPage() {
   const { t } = useTranslation();
+  const { bottomRef, scrollToBottom } = useScrollToBottom();
   const [lorebooks, setLorebooks] = useState<Lorebook[]>([]);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -73,6 +75,7 @@ export function LorebooksPage() {
       await createLorebook(form);
       setForm(emptyForm);
       await loadLorebooks();
+      scrollToBottom();
     } catch (err) {
       setCreateError(
         err instanceof ApiError
@@ -238,7 +241,7 @@ export function LorebooksPage() {
           </tbody>
         </table>
       </div>
+      <div ref={bottomRef} />
     </div>
   );
 }
-

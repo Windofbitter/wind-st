@@ -9,6 +9,7 @@ import {
 } from "../../api/userPersonas";
 import { ApiError } from "../../api/httpClient";
 import { Toggle } from "../../components/common/Toggle";
+import { useScrollToBottom } from "../../hooks/useScrollToBottom";
 
 interface LoadState {
   loading: boolean;
@@ -31,6 +32,7 @@ const emptyForm: CreateFormState = {
 
 export function UserPersonasPage() {
   const { t } = useTranslation();
+  const { bottomRef, scrollToBottom } = useScrollToBottom();
   const [personas, setPersonas] = useState<UserPersona[]>([]);
   const [state, setState] = useState<LoadState>({
     loading: false,
@@ -77,6 +79,7 @@ export function UserPersonasPage() {
       });
       setForm(emptyForm);
       await loadPersonas();
+      scrollToBottom();
     } catch (err) {
       setCreateError(
         err instanceof ApiError
@@ -257,6 +260,8 @@ export function UserPersonasPage() {
           </tbody>
         </table>
       </div>
+      <div ref={bottomRef} />
     </div>
   );
 }
+

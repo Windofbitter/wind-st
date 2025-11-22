@@ -18,6 +18,7 @@ import {
 } from "../../api/lorebooks";
 import { ApiError } from "../../api/httpClient";
 import { LorebookEntriesTable } from "./LorebookEntriesTable";
+import { useScrollToBottom } from "../../hooks/useScrollToBottom";
 
 interface LoadState {
   loading: boolean;
@@ -34,6 +35,7 @@ const emptyEntryForm: CreateLorebookEntryRequest = {
 export function LorebookDetailPage() {
   const { lorebookId } = useParams<{ lorebookId: string }>();
   const { t } = useTranslation();
+  const { bottomRef, scrollToBottom } = useScrollToBottom();
 
   const [lorebook, setLorebook] = useState<Lorebook | null>(null);
   const [lorebookState, setLorebookState] = useState<LoadState>({
@@ -67,6 +69,12 @@ export function LorebookDetailPage() {
     void loadLorebook(lorebookId);
     void loadEntries(lorebookId);
   }, [lorebookId]);
+
+  useEffect(() => {
+    if (editingEntryId) {
+      scrollToBottom();
+    }
+  }, [editingEntryId]);
 
   async function loadLorebook(id: string) {
     setLorebookState({ loading: true, error: null });
@@ -137,21 +145,22 @@ export function LorebookDetailPage() {
       const nextOrder =
         entries.length > 0
           ? Math.max(
-              ...entries.map((e) => e.insertionOrder),
-            ) + 1
+            ...entries.map((e) => e.insertionOrder),
+          ) + 1
           : 0;
       const payload: CreateLorebookEntryRequest = {
         ...entryForm,
         insertionOrder: nextOrder,
         keywords:
           entryForm.keywords.length === 0 &&
-          entryForm.content.trim() !== ""
+            entryForm.content.trim() !== ""
             ? []
             : entryForm.keywords,
       };
       await createLorebookEntry(lorebookId, payload);
       setEntryForm(emptyEntryForm);
       await loadEntries(lorebookId);
+      scrollToBottom();
     } catch (err) {
       setEntryError(
         err instanceof ApiError
@@ -533,6 +542,7 @@ export function LorebookDetailPage() {
           )}
         </div>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 }
