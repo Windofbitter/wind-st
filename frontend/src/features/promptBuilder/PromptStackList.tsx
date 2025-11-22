@@ -31,18 +31,22 @@ export interface PromptStackItemView {
 
 interface PromptStackListProps {
   items: PromptStackItemView[];
+  editingId: string | null;
   onReorder(ids: string[]): void;
   onRemove(id: string): void;
   onEdit(item: PromptStackItemView): void;
   onToggle(id: string, isEnabled: boolean): void;
+  renderEditor(item: PromptStackItemView): React.ReactNode;
 }
 
 export function PromptStackList({
   items,
+  editingId,
   onReorder,
   onRemove,
   onEdit,
   onToggle,
+  renderEditor,
 }: PromptStackListProps) {
   const sensors = useSensors(useSensor(PointerSensor));
   const ids = items.map((item) => item.id);
@@ -86,6 +90,8 @@ export function PromptStackList({
               onRemove={onRemove}
               onEdit={onEdit}
               onToggle={onToggle}
+              isEditing={editingId === item.id}
+              editor={editingId === item.id ? renderEditor(item) : null}
             />
           ))}
         </div>
@@ -99,6 +105,8 @@ interface SortableStackItemProps {
   onRemove(id: string): void;
   onEdit(item: PromptStackItemView): void;
   onToggle(id: string, isEnabled: boolean): void;
+  isEditing: boolean;
+  editor: React.ReactNode;
 }
 
 function SortableStackItem({
@@ -106,6 +114,8 @@ function SortableStackItem({
   onRemove,
   onEdit,
   onToggle,
+  isEditing,
+  editor,
 }: SortableStackItemProps) {
   const { t } = useTranslation();
   const {
@@ -119,20 +129,10 @@ function SortableStackItem({
 
   const isDisabled = item.isEnabled === false;
 
-  const style: React.CSSProperties = {
+  const containerStyle: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.6 : isDisabled ? 0.65 : 1,
-    cursor: "grab",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0.5rem 0.75rem",
-    borderRadius: 4,
-    border: "1px solid var(--border-color)",
-    backgroundColor: isDisabled
-      ? "var(--card-bg)"
-      : "var(--sidebar-bg)",
   };
 
   const roleLabel = item.role.toUpperCase();
@@ -148,62 +148,98 @@ function SortableStackItem({
   }
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={containerStyle}>
       <div
-        {...attributes}
-        {...listeners}
-        style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0.5rem 0.75rem",
+          borderRadius: 4,
+          border: "1px solid var(--border-color)",
+          backgroundColor: isDisabled
+            ? "var(--card-bg)"
+            : "var(--sidebar-bg)",
+          borderBottomLeftRadius: isEditing ? 0 : 4,
+          borderBottomRightRadius: isEditing ? 0 : 4,
+        }}
       >
-        <span style={{ fontSize: "1.1rem" }}>⋮⋮</span>
-        <div>
-          <div style={{ fontWeight: 500 }}>{item.title}</div>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <span className="badge">{roleLabel}</span>
-            {kindLabel && (
-              <span className="badge">
-                {kindLabel.charAt(0).toUpperCase() +
-                  kindLabel.slice(1)}
-              </span>
-            )}
-            {item.locked && (
-              <span className="badge badge-secondary">
-                {t("promptBuilder.stackLocked")}
-              </span>
-            )}
-            {isDisabled && (
-              <span className="badge badge-secondary">
-                {t("promptBuilder.stackDisabled")}
-              </span>
-            )}
+        <div
+          {...attributes}
+          {...listeners}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            cursor: "grab",
+          }}
+        >
+          <span style={{ fontSize: "1.1rem" }}>⋮⋮</span>
+          <div>
+            <div style={{ fontWeight: 500 }}>{item.title}</div>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <span className="badge">{roleLabel}</span>
+              {kindLabel && (
+                <span className="badge">
+                  {kindLabel.charAt(0).toUpperCase() +
+                    kindLabel.slice(1)}
+                </span>
+              )}
+              {item.locked && (
+                <span className="badge badge-secondary">
+                  {t("promptBuilder.stackLocked")}
+                </span>
+              )}
+              {isDisabled && (
+                <span className="badge badge-secondary">
+                  {t("promptBuilder.stackDisabled")}
+                </span>
+              )}
+            </div>
           </div>
         </div>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Toggle
+            checked={item.isEnabled}
+            onChange={(next) => onToggle(item.id, next)}
+            label={t("promptBuilder.stackToggleLabel")}
+            disabled={isDragging}
+          />
+          <button
+            type="button"
+            className="btn"
+            style={{ padding: "0.25rem 0.6rem" }}
+            onClick={() => onEdit(item)}
+            disabled={item.locked === true}
+          >
+            {t("common.edit")}
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            style={{ padding: "0.25rem 0.6rem" }}
+            onClick={() => !item.locked && onRemove(item.id)}
+            disabled={item.locked === true}
+          >
+            {t("promptBuilder.stackRemoveButton")}
+          </button>
+        </div>
       </div>
-      <div style={{ display: "flex", gap: "0.5rem" }}>
-        <Toggle
-          checked={item.isEnabled}
-          onChange={(next) => onToggle(item.id, next)}
-          label={t("promptBuilder.stackToggleLabel")}
-          disabled={isDragging}
-        />
-        <button
-          type="button"
-          className="btn"
-          style={{ padding: "0.25rem 0.6rem" }}
-          onClick={() => onEdit(item)}
-          disabled={item.locked === true}
+      {isEditing && editor && (
+        <div
+          style={{
+            border: "1px solid var(--border-color)",
+            borderTop: "none",
+            borderBottomLeftRadius: 4,
+            borderBottomRightRadius: 4,
+            padding: "0.5rem 0.75rem",
+            marginTop: "-1px",
+            backgroundColor: "var(--card-bg)",
+          }}
         >
-          {t("common.edit")}
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger"
-          style={{ padding: "0.25rem 0.6rem" }}
-          onClick={() => !item.locked && onRemove(item.id)}
-          disabled={item.locked === true}
-        >
-          {t("promptBuilder.stackRemoveButton")}
-        </button>
-      </div>
+          {editor}
+        </div>
+      )}
     </div>
   );
 }

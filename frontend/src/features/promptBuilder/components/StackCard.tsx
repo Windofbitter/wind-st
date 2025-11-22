@@ -102,6 +102,7 @@ export function StackCard({
         <>
           <PromptStackList
             items={items}
+            editingId={editingItem?.id ?? null}
             onRemove={(id) => void onRemove(id)}
             onReorder={(ids) => void onReorder(ids)}
             onEdit={(item) => {
@@ -111,16 +112,10 @@ export function StackCard({
             onToggle={(id, isEnabled) =>
               void onToggleEnabled(id, isEnabled)
             }
-          />
-          {editingItem && (
-            <div
-              className="card"
-              style={{ marginTop: "0.75rem" }}
-            >
-              {editingItem.kind === "lorebook" &&
-              editingItem.lorebookId ? (
+            renderEditor={(item) =>
+              item.kind === "lorebook" && item.lorebookId ? (
                 <LorebookEditorPanel
-                  lorebookId={editingItem.lorebookId}
+                  lorebookId={item.lorebookId}
                   onSaved={() => {
                     setEditingItem(null);
                     void onReload();
@@ -129,16 +124,16 @@ export function StackCard({
                 />
               ) : (
                 <PresetEditorPanel
-                  presetId={editingItem.presetId}
+                  presetId={item.presetId}
                   onSaved={() => {
                     setEditingItem(null);
                     void onReload();
                   }}
                   onCancel={() => setEditingItem(null)}
                 />
-              )}
-            </div>
-          )}
+              )
+            }
+          />
         </>
       )}
     </div>

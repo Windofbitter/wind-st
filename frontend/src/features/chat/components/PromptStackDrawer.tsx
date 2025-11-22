@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Character } from "../../../api/characters";
+import type { Character, UpdateCharacterRequest } from "../../../api/characters";
+import { updateCharacter } from "../../../api/characters";
 import type { PromptPreset } from "../../../api/promptStack";
 import { detachPromptPreset, updatePromptPreset } from "../../../api/promptStack";
 import { getPreset } from "../../../api/presets";
@@ -43,6 +44,22 @@ export function PromptStackDrawer({
     // Edit state
     const [editingItem, setEditingItem] = useState<EditingItemState | null>(null);
     const [checkingItem, setCheckingItem] = useState<string | null>(null);
+
+    // Character persona inline edit state
+    const [isEditingPersona, setIsEditingPersona] = useState(false);
+    const [personaDraft, setPersonaDraft] = useState("");
+    const [personaError, setPersonaError] = useState<string | null>(null);
+    const [savingPersona, setSavingPersona] = useState(false);
+
+    useEffect(() => {
+        if (selectedCharacter) {
+            setPersonaDraft(selectedCharacter.persona ?? "");
+        } else {
+            setPersonaDraft("");
+            setIsEditingPersona(false);
+            setPersonaError(null);
+        }
+    }, [selectedCharacter?.id]);
 
     async function handleDetach(id: string) {
         if (!confirm(t("chat.stackDetachConfirm") || "Remove this item from the stack?")) return;
@@ -125,22 +142,105 @@ export function PromptStackDrawer({
                     {selectedCharacter && !promptStackState.loading && (
                         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                             <div className="card" style={{ margin: 0 }}>
-                                <strong>{t("chat.personaTitle")}</strong>
                                 <div
                                     style={{
-                                        fontSize: "0.85rem",
-                                        maxHeight: "6rem",
-                                        overflowY: "auto",
-                                        marginTop: "0.25rem",
-                                        whiteSpace: "pre-wrap",
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
                                     }}
                                 >
-                                    {selectedCharacter.persona || (
-                                        <span style={{ opacity: 0.7 }}>
-                                            {t("chat.personaEmpty")}
-                                        </span>
-                                    )}
+                                    <strong>{t("chat.personaTitle")}</strong>
+                                    <button
+                                        className="icon-button"
+                                        type="button"
+                                        onClick={() => {
+                                            setIsEditingPersona((prev) => !prev);
+                                            setPersonaError(null);
+                                        }}
+                                        title={t("common.edit") || "Edit"}
+                                    >
+                                        ✎
+                                    </button>
                                 </div>
+                                {isEditingPersona ? (
+                                    <>
+                                        <div className="input-group" style={{ marginTop: "0.5rem" }}>
+                                            <label htmlFor="prompt-stack-persona-edit">
+                                                {t("characters.detailPersonaLabel")}
+                                            </label>
+                                            <textarea
+                                                id="prompt-stack-persona-edit"
+                                                rows={6}
+                                                value={personaDraft}
+                                                onChange={(e) => setPersonaDraft(e.target.value)}
+                                            />
+                                        </div>
+                                        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary"
+                                                disabled={savingPersona}
+                                                onClick={async () => {
+                                                    if (!selectedCharacter) return;
+                                                    setSavingPersona(true);
+                                                    setPersonaError(null);
+                                                    try {
+                                                        const payload: UpdateCharacterRequest = {
+                                                            persona: personaDraft,
+                                                        };
+                                                        await updateCharacter(selectedCharacter.id, payload);
+                                                        setIsEditingPersona(false);
+                                                    } catch (err) {
+                                                        setPersonaError(
+                                                            err instanceof ApiError
+                                                                ? err.message
+                                                                : "Failed to update persona",
+                                                        );
+                                                    } finally {
+                                                        setSavingPersona(false);
+                                                    }
+                                                }}
+                                            >
+                                                {savingPersona
+                                                    ? t("characters.detailPersonaSaveButtonSaving")
+                                                    : t("characters.detailPersonaSaveButton")}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn"
+                                                disabled={savingPersona}
+                                                onClick={() => {
+                                                    setIsEditingPersona(false);
+                                                    setPersonaDraft(selectedCharacter.persona ?? "");
+                                                    setPersonaError(null);
+                                                }}
+                                            >
+                                                {t("lorebooks.editEntryCancelButton")}
+                                            </button>
+                                        </div>
+                                        {personaError && (
+                                            <div className="badge badge-error" style={{ marginTop: "0.5rem" }}>
+                                                {t("common.errorPrefix")} {personaError}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div
+                                        style={{
+                                            fontSize: "0.85rem",
+                                            maxHeight: "6rem",
+                                            overflowY: "auto",
+                                            marginTop: "0.25rem",
+                                            whiteSpace: "pre-wrap",
+                                        }}
+                                    >
+                                        {personaDraft || (
+                                            <span style={{ opacity: 0.7 }}>
+                                                {t("chat.personaEmpty")}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <div className="card" style={{ margin: 0 }}>
                                 <strong>{t("chat.stackTitle")}</strong>
