@@ -107,7 +107,9 @@ export function StackCard({
             onReorder={(ids) => void onReorder(ids)}
             onEdit={(item) => {
               if (item.locked) return;
-              setEditingItem(item);
+              setEditingItem((current) =>
+                current && current.id === item.id ? null : item,
+              );
             }}
             onToggle={(id, isEnabled) =>
               void onToggleEnabled(id, isEnabled)

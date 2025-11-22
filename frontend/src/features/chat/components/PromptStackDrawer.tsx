@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Character, UpdateCharacterRequest } from "../../../api/characters";
-import { updateCharacter } from "../../../api/characters";
+import type { Character } from "../../../api/characters";
 import type { PromptPreset } from "../../../api/promptStack";
+import type { Preset } from "../../../api/presets";
 import { detachPromptPreset, updatePromptPreset } from "../../../api/promptStack";
 import { getPreset } from "../../../api/presets";
 import { ApiError } from "../../../api/httpClient";
 import { PresetEditorPanel } from "../../promptStack/PresetEditorPanel";
 import { LorebookEditorPanel } from "../../promptStack/LorebookEditorPanel";
 import { Toggle } from "../../../components/common/Toggle";
+import { PromptStackAttachSection } from "./PromptStackAttachSection";
+import { PromptStackPersonaSection } from "./PromptStackPersonaSection";
+import { usePromptStackPresets } from "../hooks/usePromptStackPresets";
 
 interface LoadState {
     loading: boolean;
@@ -30,6 +33,19 @@ interface EditingItemState {
     type: "preset" | "lorebook";
 }
 
+function getPresetLabel(
+  pp: PromptPreset,
+  presetsById: Map<string, Preset>,
+): string {
+  const preset = presetsById.get(pp.presetId);
+  if (!preset) return pp.presetId;
+  const rawTitle = preset.title || pp.presetId;
+  if (preset.kind === "lorebook") {
+    return rawTitle.replace(/^lorebook:\s*/i, "");
+  }
+  return rawTitle;
+}
+
 export function PromptStackDrawer({
     isOpen,
     onClose,
@@ -40,26 +56,11 @@ export function PromptStackDrawer({
 }: Props) {
     const { t } = useTranslation();
     const [error, setError] = useState<string | null>(null);
+    const { presetsById } = usePromptStackPresets(promptStack);
 
     // Edit state
     const [editingItem, setEditingItem] = useState<EditingItemState | null>(null);
     const [checkingItem, setCheckingItem] = useState<string | null>(null);
-
-    // Character persona inline edit state
-    const [isEditingPersona, setIsEditingPersona] = useState(false);
-    const [personaDraft, setPersonaDraft] = useState("");
-    const [personaError, setPersonaError] = useState<string | null>(null);
-    const [savingPersona, setSavingPersona] = useState(false);
-
-    useEffect(() => {
-        if (selectedCharacter) {
-            setPersonaDraft(selectedCharacter.persona ?? "");
-        } else {
-            setPersonaDraft("");
-            setIsEditingPersona(false);
-            setPersonaError(null);
-        }
-    }, [selectedCharacter?.id]);
 
     async function handleDetach(id: string) {
         if (!confirm(t("chat.stackDetachConfirm") || "Remove this item from the stack?")) return;
@@ -82,6 +83,12 @@ export function PromptStackDrawer({
     }
 
     async function handleEditClick(pp: PromptPreset) {
+        // Toggle off if this item is already being edited
+        if (editingItem?.stackId === pp.id) {
+            setEditingItem(null);
+            return;
+        }
+
         setCheckingItem(pp.id);
         setError(null);
         try {
@@ -141,107 +148,11 @@ export function PromptStackDrawer({
                     )}
                     {selectedCharacter && !promptStackState.loading && (
                         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                            <div className="card" style={{ margin: 0 }}>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <strong>{t("chat.personaTitle")}</strong>
-                                    <button
-                                        className="icon-button"
-                                        type="button"
-                                        onClick={() => {
-                                            setIsEditingPersona((prev) => !prev);
-                                            setPersonaError(null);
-                                        }}
-                                        title={t("common.edit") || "Edit"}
-                                    >
-                                        ✎
-                                    </button>
-                                </div>
-                                {isEditingPersona ? (
-                                    <>
-                                        <div className="input-group" style={{ marginTop: "0.5rem" }}>
-                                            <label htmlFor="prompt-stack-persona-edit">
-                                                {t("characters.detailPersonaLabel")}
-                                            </label>
-                                            <textarea
-                                                id="prompt-stack-persona-edit"
-                                                rows={6}
-                                                value={personaDraft}
-                                                onChange={(e) => setPersonaDraft(e.target.value)}
-                                            />
-                                        </div>
-                                        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-                                            <button
-                                                type="button"
-                                                className="btn btn-primary"
-                                                disabled={savingPersona}
-                                                onClick={async () => {
-                                                    if (!selectedCharacter) return;
-                                                    setSavingPersona(true);
-                                                    setPersonaError(null);
-                                                    try {
-                                                        const payload: UpdateCharacterRequest = {
-                                                            persona: personaDraft,
-                                                        };
-                                                        await updateCharacter(selectedCharacter.id, payload);
-                                                        setIsEditingPersona(false);
-                                                    } catch (err) {
-                                                        setPersonaError(
-                                                            err instanceof ApiError
-                                                                ? err.message
-                                                                : "Failed to update persona",
-                                                        );
-                                                    } finally {
-                                                        setSavingPersona(false);
-                                                    }
-                                                }}
-                                            >
-                                                {savingPersona
-                                                    ? t("characters.detailPersonaSaveButtonSaving")
-                                                    : t("characters.detailPersonaSaveButton")}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="btn"
-                                                disabled={savingPersona}
-                                                onClick={() => {
-                                                    setIsEditingPersona(false);
-                                                    setPersonaDraft(selectedCharacter.persona ?? "");
-                                                    setPersonaError(null);
-                                                }}
-                                            >
-                                                {t("lorebooks.editEntryCancelButton")}
-                                            </button>
-                                        </div>
-                                        {personaError && (
-                                            <div className="badge badge-error" style={{ marginTop: "0.5rem" }}>
-                                                {t("common.errorPrefix")} {personaError}
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div
-                                        style={{
-                                            fontSize: "0.85rem",
-                                            maxHeight: "6rem",
-                                            overflowY: "auto",
-                                            marginTop: "0.25rem",
-                                            whiteSpace: "pre-wrap",
-                                        }}
-                                    >
-                                        {personaDraft || (
-                                            <span style={{ opacity: 0.7 }}>
-                                                {t("chat.personaEmpty")}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                            {selectedCharacter && (
+                                <PromptStackPersonaSection
+                                    character={selectedCharacter}
+                                />
+                            )}
                             <div className="card" style={{ margin: 0 }}>
                                 <strong>{t("chat.stackTitle")}</strong>
                                 {promptStack.length === 0 && (
@@ -255,6 +166,10 @@ export function PromptStackDrawer({
                                         .sort((a, b) => a.sortOrder - b.sortOrder)
                                         .map((pp) => {
                                             const isDisabled = pp.isEnabled === false;
+                                            const label = getPresetLabel(
+                                                pp,
+                                                presetsById,
+                                            );
                                             return (
                                                 <li
                                                     key={pp.id}
@@ -282,7 +197,7 @@ export function PromptStackDrawer({
                                                             <span className="badge">
                                                                 {pp.role.toUpperCase()}
                                                             </span>
-                                                            <span>{pp.presetId}</span>
+                                                            <span>{label}</span>
                                                             {isDisabled && (
                                                                 <span className="badge badge-secondary">
                                                                     {t("chat.stackDisabled")}
@@ -343,6 +258,12 @@ export function PromptStackDrawer({
                                         })}
                                 </ul>
                             </div>
+                            {selectedCharacter && (
+                                <PromptStackAttachSection
+                                    characterId={selectedCharacter.id}
+                                    onAttached={() => onReload()}
+                                />
+                            )}
                         </div>
                     )}
                 </div>

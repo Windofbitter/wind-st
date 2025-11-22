@@ -17,6 +17,8 @@ interface Props {
   userPersonasState: LoadState;
   selectedUserPersonaId: string | null;
   onSelectUserPersona: (id: string | null) => void;
+  onCreateUserPersona: () => void;
+  onEditUserPersona: () => void;
   chats: Chat[];
   chatsState: LoadState;
   selectedChatId: string | null;
@@ -35,6 +37,8 @@ export function ChatSidebar({
   userPersonasState,
   selectedUserPersonaId,
   onSelectUserPersona,
+  onCreateUserPersona,
+  onEditUserPersona,
   chats,
   chatsState,
   selectedChatId,
@@ -100,6 +104,31 @@ export function ChatSidebar({
               {t("common.errorPrefix")} {userPersonasState.error}
             </div>
           )}
+          <div
+            style={{
+              marginTop: "0.5rem",
+              display: "flex",
+              gap: "0.5rem",
+            }}
+          >
+            <button
+              type="button"
+              className="btn"
+              onClick={onEditUserPersona}
+              disabled={!selectedUserPersonaId}
+            >
+              {t("chat.userPersonaEditButton") ||
+                t("common.edit")}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={onCreateUserPersona}
+            >
+              {t("chat.userPersonaCreateButton") ||
+                t("common.add")}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -1,8 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Message } from "../../../api/messages";
 import type { ChatRun } from "../../../api/runs";
 import { ToolResultContent } from "./ToolResultContent";
 import { MarkdownMessage } from "./MarkdownMessage";
+import type { PromptRole } from "../../../api/promptStack";
+import { MessageSavePresetModal } from "./MessageSavePresetModal";
 
 interface MessageListProps {
   messages: Message[];
@@ -10,6 +12,7 @@ interface MessageListProps {
   runs: ChatRun[];
   onRetryMessage: (messageId: string) => void;
   onDeleteMessage: (messageId: string) => void;
+  characterId: string | null;
 }
 
 const ROLE_LABEL: Record<Message["role"], string> = {
@@ -67,6 +70,7 @@ function MessageItem({
   onDelete,
   onRetry,
   showRetry,
+  onSaveAsPreset,
 }: {
   message: Message;
   characterName: string | null;
@@ -74,6 +78,7 @@ function MessageItem({
   onDelete: () => void;
   onRetry?: () => void;
   showRetry?: boolean;
+  onSaveAsPreset?: () => void;
 }) {
   const roleLabel =
     message.role === "assistant"
@@ -123,6 +128,19 @@ function MessageItem({
             justifyContent: "flex-end",
           }}
         >
+          {onSaveAsPreset &&
+            (message.role === "assistant" ||
+              message.role === "user") && (
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Save as preset"
+                onClick={onSaveAsPreset}
+                title="Save this message as preset"
+              >
+                ★
+              </button>
+            )}
           {showRetry && (
             <button
               className="icon-button"
@@ -210,6 +228,7 @@ export function MessageList({
   runs,
   onRetryMessage,
   onDeleteMessage,
+  characterId,
 }: MessageListProps) {
   const toolMeta = useMemo(
     () => extractToolCallMeta(messages),
@@ -231,6 +250,11 @@ export function MessageList({
     | { type: "placeholder"; key: string; run: ChatRun; userMessageId: string }
   > = [];
 
+  const [presetTarget, setPresetTarget] = useState<{
+    message: Message;
+    role: PromptRole;
+  } | null>(null);
+
   for (const msg of messages) {
     items.push({ type: "message", message: msg });
     if (msg.role === "user") {
@@ -248,6 +272,8 @@ export function MessageList({
     }
   }
 
+  const presetModalOpen = presetTarget !== null;
+
   return (
     <>
       {items.map((item) => {
@@ -255,6 +281,12 @@ export function MessageList({
           const isLatestUser =
             item.message.role === "user" &&
             latestUserId === item.message.id;
+          const isUserOrAssistant =
+            item.message.role === "user" ||
+            item.message.role === "assistant";
+          const defaultRole: PromptRole = isUserOrAssistant
+            ? (item.message.role as PromptRole)
+            : "system";
           return (
             <MessageItem
               key={item.message.id}
@@ -268,6 +300,15 @@ export function MessageList({
                   : undefined
               }
               showRetry={isLatestUser}
+              onSaveAsPreset={
+                isUserOrAssistant
+                  ? () =>
+                      setPresetTarget({
+                        message: item.message,
+                        role: defaultRole,
+                      })
+                  : undefined
+              }
             />
           );
         }
@@ -281,6 +322,15 @@ export function MessageList({
           />
         );
       })}
+      {presetTarget && (
+        <MessageSavePresetModal
+          isOpen={presetModalOpen}
+          characterId={characterId}
+          messageContent={presetTarget.message.content}
+          defaultRole={presetTarget.role}
+          onClose={() => setPresetTarget(null)}
+        />
+      )}
     </>
   );
 }

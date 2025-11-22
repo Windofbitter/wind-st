@@ -133,6 +133,14 @@ export function PresetsPage() {
   }
 
   function startEdit(preset: Preset) {
+    // Toggle editor if clicking the same preset again
+    if (editingId === preset.id) {
+      setEditingId(null);
+      setEditForm({});
+      setEditError(null);
+      return;
+    }
+
     setEditingId(preset.id);
     setEditForm({
       title: preset.title,

@@ -165,6 +165,14 @@ export function LorebookDetailPage() {
   }
 
   function startEdit(entry: LorebookEntry) {
+    // Clicking the same entry toggles the editor closed
+    if (editingEntryId === entry.id) {
+      setEditingEntryId(null);
+      setEditEntryForm({});
+      setEntryError(null);
+      return;
+    }
+
     setEditingEntryId(entry.id);
     setEditEntryForm({
       keywords: entry.keywords,

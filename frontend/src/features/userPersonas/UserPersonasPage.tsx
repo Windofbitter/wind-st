@@ -129,6 +129,14 @@ export function UserPersonasPage() {
   }
 
   function startEdit(persona: UserPersona) {
+    // Toggle editor if clicking the same persona again
+    if (editingId === persona.id) {
+      setEditingId(null);
+      setEditForm(emptyForm);
+      setEditError(null);
+      return;
+    }
+
     setEditingId(persona.id);
     setEditForm({
       name: persona.name,

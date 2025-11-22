@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Chat } from "../../api/chats";
+import type { UserPersona } from "../../api/userPersonas";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { ChatMain } from "./components/ChatMain";
 import { ChatConfigPanel } from "./components/ChatConfigPanel";
@@ -7,11 +8,18 @@ import { PromptStackCard } from "./components/PromptStackCard";
 import { PromptPreviewCard } from "./components/PromptPreviewCard";
 import { RenameChatModal } from "./components/RenameChatModal";
 import { PromptStackDrawer } from "./components/PromptStackDrawer";
+import { UserPersonaQuickEditModal } from "./components/UserPersonaQuickEditModal";
 import { useChatController } from "./useChatController";
 
 export function ChatPage() {
   const [renameTarget, setRenameTarget] = useState<Chat | null>(null);
   const [isStackOpen, setIsStackOpen] = useState(false);
+  const [personaModalMode, setPersonaModalMode] = useState<
+    "create" | "edit" | null
+  >(null);
+  const [personaModalPersona, setPersonaModalPersona] =
+    useState<UserPersona | null>(null);
+
   const {
     characters,
     charactersState,
@@ -60,9 +68,13 @@ export function ChatPage() {
     handleSaveChatConfig,
     fetchModelsForConnection,
     refreshPromptStack,
+    reloadUserPersonas,
   } = useChatController();
 
   const renameModalOpen = renameTarget !== null;
+  const selectedUserPersona: UserPersona | null =
+    userPersonas.find((p) => p.id === selectedUserPersonaId) ?? null;
+  const personaModalOpen = personaModalMode !== null;
 
   return (
     <div className="chat-layout">
@@ -75,6 +87,15 @@ export function ChatPage() {
         userPersonasState={userPersonasState}
         selectedUserPersonaId={selectedUserPersonaId}
         onSelectUserPersona={setSelectedUserPersonaId}
+        onCreateUserPersona={() => {
+          setPersonaModalMode("create");
+          setPersonaModalPersona(null);
+        }}
+        onEditUserPersona={() => {
+          if (!selectedUserPersona) return;
+          setPersonaModalMode("edit");
+          setPersonaModalPersona(selectedUserPersona);
+        }}
         chats={chats}
         chatsState={chatsState}
         selectedChatId={selectedChatId}
@@ -124,6 +145,7 @@ export function ChatPage() {
           selectedCharacter={selectedCharacter}
           promptStack={promptStack}
           promptStackState={promptStackState}
+          onOpenDrawer={() => setIsStackOpen(true)}
         />
 
         <PromptPreviewCard
@@ -132,6 +154,7 @@ export function ChatPage() {
           promptPreviewState={promptPreviewState}
         />
       </aside>
+
       <RenameChatModal
         chat={renameTarget}
         isOpen={renameModalOpen}
@@ -146,6 +169,21 @@ export function ChatPage() {
         promptStackState={promptStackState}
         onReload={refreshPromptStack}
       />
+      {personaModalMode && (
+        <UserPersonaQuickEditModal
+          mode={personaModalMode}
+          isOpen={personaModalOpen}
+          persona={personaModalPersona}
+          onClose={() => {
+            setPersonaModalMode(null);
+            setPersonaModalPersona(null);
+          }}
+          onSaved={async (persona) => {
+            await reloadUserPersonas();
+            setSelectedUserPersonaId(persona.id);
+          }}
+        />
+      )}
     </div>
   );
 }

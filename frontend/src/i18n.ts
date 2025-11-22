@@ -112,6 +112,13 @@ const resources = {
         promptPreviewNoMessages: "<no prompt messages>",
         promptPreviewToolsLabel: "Tools",
         promptPreviewNoTools: "<no tools attached>",
+        promptStackHeaderButton: "Prompt settings",
+        userPersonaEditButton: "Edit persona",
+        userPersonaCreateButton: "New persona",
+        promptStackEditButton: "Edit stack",
+        promptStackAttachTitle: "Attach presets and lorebooks",
+        saveMessageAsPresetTitle: "Save message as preset",
+        saveMessageAttachToCharacterLabel: "Attach to this character",
       },
       userPersonas: {
         title: "User Personas",
@@ -287,6 +294,8 @@ const resources = {
         editCancelButton: "Cancel",
         deleteConfirm:
           "Delete this preset? It may be referenced by prompt stacks.",
+        newTitleFallback: "New preset",
+        validationTitleRequired: "Title is required.",
       },
       promptBuilder: {
         quickPersonaTitle: "Quick Persona Editor",
@@ -298,6 +307,7 @@ const resources = {
         paletteEmpty:
           "No presets defined yet. Create them on the Presets page.",
         paletteAddBadge: "Add",
+        paletteAddButton: "Add",
         paletteSectionStaticBlocks: "Static Blocks",
         paletteSectionLorebooks: "Lorebooks",
         paletteSectionHistory: "History",
@@ -552,6 +562,13 @@ const resources = {
         promptPreviewNoMessages: "<暂无提示消息>",
         promptPreviewToolsLabel: "工具",
         promptPreviewNoTools: "<未附加工具>",
+        promptStackHeaderButton: "提示设置",
+        userPersonaEditButton: "编辑人设",
+        userPersonaCreateButton: "新建人设",
+        promptStackEditButton: "编辑提示栈",
+        promptStackAttachTitle: "附加预设和世界书",
+        saveMessageAsPresetTitle: "将消息保存为预设",
+        saveMessageAttachToCharacterLabel: "附加到当前角色",
       },
       userPersonas: {
         title: "用户人设",
@@ -725,6 +742,8 @@ const resources = {
         editSaveButton: "保存更改",
         editCancelButton: "取消",
         deleteConfirm: "删除此预设？它可能被提示栈引用。",
+        newTitleFallback: "新建预设",
+        validationTitleRequired: "标题不能为空",
       },
       promptBuilder: {
         quickPersonaTitle: "快速人设编辑",
@@ -736,6 +755,7 @@ const resources = {
         paletteEmpty:
           "还没有预设。请在“预设”页面创建。",
         paletteAddBadge: "添加",
+        paletteAddButton: "添加",
         paletteSectionStaticBlocks: "静态块",
         paletteSectionLorebooks: "世界书",
         paletteSectionHistory: "历史",

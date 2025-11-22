@@ -27,6 +27,7 @@ export interface CharacterChatState {
   chatsState: LoadState;
   selectedChatId: string | null;
   setSelectedChatId: Dispatch<SetStateAction<string | null>>;
+  reloadUserPersonas: () => Promise<void>;
   selectedCharacter: Character | null;
   activeChat: Chat | null;
   handleCreateChat: () => Promise<void>;
@@ -285,6 +286,7 @@ export function useCharacterChatState({
     chatsState,
     selectedChatId,
     setSelectedChatId,
+    reloadUserPersonas: loadUserPersonas,
     selectedCharacter,
     activeChat,
     handleCreateChat,

@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import type { Character } from "../../../api/characters";
 import type { PromptPreset } from "../../../api/promptStack";
+import type { Preset } from "../../../api/presets";
+import { usePromptStackPresets } from "../hooks/usePromptStackPresets";
 
 interface LoadState {
   loading: boolean;
@@ -11,20 +13,53 @@ interface Props {
   selectedCharacter: Character | null;
   promptStack: PromptPreset[];
   promptStackState: LoadState;
+  onOpenDrawer?: () => void;
+}
+
+function getPresetLabel(
+  pp: PromptPreset,
+  presetsById: Map<string, Preset>,
+): string {
+  const preset = presetsById.get(pp.presetId);
+  if (!preset) return pp.presetId;
+  const rawTitle = preset.title || pp.presetId;
+  if (preset.kind === "lorebook") {
+    return rawTitle.replace(/^lorebook:\s*/i, "");
+  }
+  return rawTitle;
 }
 
 export function PromptStackCard({
   selectedCharacter,
   promptStack,
   promptStackState,
+  onOpenDrawer,
 }: Props) {
   const { t } = useTranslation();
+  const { presetsById } = usePromptStackPresets(promptStack);
 
   return (
     <div className="card">
-      <h3 style={{ marginTop: 0 }}>
-        {t("chat.promptStackTitle")}
-      </h3>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "0.5rem",
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>
+          {t("chat.promptStackTitle")}
+        </h3>
+        <button
+          type="button"
+          className="btn"
+          onClick={onOpenDrawer}
+          disabled={!selectedCharacter || !onOpenDrawer}
+        >
+          {t("chat.promptStackEditButton") || t("common.edit")}
+        </button>
+      </div>
       {promptStackState.error && (
         <div className="badge badge-error">
           Error: {promptStackState.error}
@@ -66,7 +101,9 @@ export function PromptStackCard({
               {promptStack
                 .slice()
                 .sort((a, b) => a.sortOrder - b.sortOrder)
-                .map((pp) => (
+                .map((pp) => {
+                  const label = getPresetLabel(pp, presetsById);
+                  return (
                   <li
                     key={pp.id}
                     style={{
@@ -78,7 +115,7 @@ export function PromptStackCard({
                     }}
                   >
                     <span style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                      <span>{pp.presetId}</span>
+                      <span>{label}</span>
                       {pp.isEnabled === false && (
                         <span className="badge badge-secondary">
                           {t("chat.stackDisabled")}
@@ -89,7 +126,7 @@ export function PromptStackCard({
                       {pp.role.toUpperCase()}
                     </span>
                   </li>
-                ))}
+                );})}
             </ul>
           </div>
         </>

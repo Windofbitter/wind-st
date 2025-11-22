@@ -52,7 +52,14 @@ export function ChatMain({
           borderBottomRightRadius: 0,
         }}
       >
-        <div className="flex-row">
+        <div
+          className="flex-row"
+          style={{
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "0.75rem",
+          }}
+        >
           <div>
             <div style={{ fontWeight: 600 }}>
               {selectedCharacter?.name ??
@@ -63,6 +70,17 @@ export function ChatMain({
                 {activeChat.title}
               </div>
             )}
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className="btn"
+              onClick={onToggleStack}
+              disabled={!selectedCharacter}
+            >
+              {t("chat.promptStackHeaderButton") ||
+                t("chat.promptStackTitle")}
+            </button>
           </div>
         </div>
       </div>
@@ -89,6 +107,7 @@ export function ChatMain({
             runs={runs}
             onRetryMessage={onRetryMessage}
             onDeleteMessage={onDeleteMessage}
+            characterId={selectedCharacter?.id ?? null}
           />
         </div>
         <div className="composer">
@@ -96,7 +115,11 @@ export function ChatMain({
             className="icon-button"
             type="button"
             onClick={onToggleStack}
-            title={t("chat.toggleStack") || "Stack"}
+            title={
+              t("chat.toggleStack") ||
+              t("chat.promptStackTitle") ||
+              "Edit prompt stack"
+            }
             style={{ height: "56px", width: "48px" }}
           >
             <svg
