@@ -388,6 +388,30 @@ export function LorebookDetailPage() {
               rows={4}
             />
           </div>
+          <div className="input-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={entryForm.isEnabled}
+                onChange={(e) =>
+                  setEntryForm({
+                    ...entryForm,
+                    isEnabled: e.target.checked,
+                  })
+                }
+              />{" "}
+              {t("lorebooks.newEntryActiveLabel")}
+            </label>
+            <div
+              style={{
+                fontSize: "0.85rem",
+                opacity: 0.8,
+                marginTop: "0.25rem",
+              }}
+            >
+              {t("lorebooks.newEntryActiveHint")}
+            </div>
+          </div>
           <button
             type="submit"
             className="btn btn-primary"

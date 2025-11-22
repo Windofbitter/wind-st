@@ -5,6 +5,7 @@ import {
   detachPromptPreset,
   getPromptStack,
   reorderPromptPresets,
+  updatePromptPreset,
 } from "../../api/promptStack";
 import type { Preset } from "../../api/presets";
 import { listPresets } from "../../api/presets";
@@ -52,6 +53,7 @@ export interface PromptBuilderData {
   attachLorebook(role: PromptRole): Promise<void>;
   attachMcpTools(role: PromptRole): Promise<void>;
   removePromptPreset(id: string): Promise<void>;
+  setPromptPresetEnabled(id: string, isEnabled: boolean): Promise<void>;
   reorderPromptPresets(ids: string[]): Promise<void>;
 }
 
@@ -280,6 +282,27 @@ export function usePromptBuilderData({
     }
   }
 
+  async function setPromptPresetEnabled(
+    id: string,
+    isEnabled: boolean,
+  ) {
+    setAttachError(null);
+    try {
+      const updated = await updatePromptPreset(id, { isEnabled });
+      setPromptStack((prev) =>
+        prev.map((pp) =>
+          pp.id === id ? { ...pp, isEnabled: updated.isEnabled } : pp,
+        ),
+      );
+    } catch (err) {
+      setAttachError(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to update prompt preset",
+      );
+    }
+  }
+
   async function reorderStack(ids: string[]) {
     setReordering(true);
     setAttachError(null);
@@ -335,6 +358,7 @@ export function usePromptBuilderData({
     attachLorebook,
     attachMcpTools,
     removePromptPreset,
+    setPromptPresetEnabled,
     reorderPromptPresets: reorderStack,
   };
 }

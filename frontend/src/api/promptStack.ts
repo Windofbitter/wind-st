@@ -8,6 +8,7 @@ export interface PromptPreset {
   presetId: string;
   role: PromptRole;
   sortOrder: number;
+  isEnabled: boolean;
 }
 
 export type AttachPromptPresetRequest =
@@ -70,5 +71,17 @@ export async function detachPromptPreset(
   promptPresetId: string,
 ): Promise<void> {
   await unwrap(http.delete<void>(`/prompt-presets/${promptPresetId}`));
+}
+
+export async function updatePromptPreset(
+  promptPresetId: string,
+  payload: { isEnabled: boolean },
+): Promise<PromptPreset> {
+  return unwrap(
+    http.patch<PromptPreset>(
+      `/prompt-presets/${promptPresetId}`,
+      payload,
+    ),
+  );
 }
 

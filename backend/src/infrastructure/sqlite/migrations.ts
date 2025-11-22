@@ -154,6 +154,7 @@ export function runMigrations(db: SqliteDatabase): void {
       preset_id TEXT NOT NULL,
       role TEXT NOT NULL,
       sort_order INTEGER NOT NULL,
+      is_enabled INTEGER NOT NULL DEFAULT 1,
       FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
       FOREIGN KEY (preset_id) REFERENCES presets(id) ON DELETE CASCADE
     );
@@ -312,6 +313,10 @@ export function runMigrations(db: SqliteDatabase): void {
   ensureColumn(db, "llm_connections", "status", "TEXT NOT NULL DEFAULT 'unknown'");
   ensureColumn(db, "llm_connections", "last_tested_at", "TEXT");
   ensureColumn(db, "llm_connections", "models_available", "INTEGER");
+  ensureColumn(db, "prompt_presets", "is_enabled", "INTEGER NOT NULL DEFAULT 1");
+  db.exec(
+    `UPDATE prompt_presets SET is_enabled = 1 WHERE is_enabled IS NULL`,
+  );
 
   ensureColumn(db, "chat_history_configs", "lore_scan_token_limit", "INTEGER NOT NULL DEFAULT 1500");
 

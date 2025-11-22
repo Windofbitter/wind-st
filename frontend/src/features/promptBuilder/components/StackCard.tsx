@@ -16,6 +16,7 @@ interface Props {
   onRemove(id: string): void;
   onReorder(ids: string[]): void;
   onReload(): void | Promise<void>;
+  onToggleEnabled(id: string, isEnabled: boolean): void;
 }
 
 export function StackCard({
@@ -28,6 +29,7 @@ export function StackCard({
   onRemove,
   onReorder,
   onReload,
+  onToggleEnabled,
 }: Props) {
   const { t } = useTranslation();
   const [editingItem, setEditingItem] =
@@ -106,6 +108,9 @@ export function StackCard({
               if (item.locked) return;
               setEditingItem(item);
             }}
+            onToggle={(id, isEnabled) =>
+              void onToggleEnabled(id, isEnabled)
+            }
           />
           {editingItem && (
             <div

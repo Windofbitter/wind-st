@@ -52,6 +52,7 @@ describe("PromptStackService", () => {
       presetId: preset.id,
       role: "system",
       sortOrder: 0,
+      isEnabled: true,
     });
 
     const stack = await service.getPromptStackForCharacter(character.id);
@@ -300,6 +301,37 @@ describe("PromptStackService", () => {
       [pp2.id, 0],
       [pp1.id, 1],
     ]);
+  });
+
+  it("toggles prompt preset enabled state", async () => {
+    const { characterRepo, presetRepo, service, promptPresetRepo } =
+      createService();
+
+    const character = await characterRepo.create({
+      name: "Char",
+      description: "d",
+      persona: "p",
+      avatarPath: "/a.png",
+    });
+
+    const preset = await presetRepo.create({
+      title: "P1",
+      description: "d",
+      kind: "static_text",
+    });
+
+    const pp = await service.attachPresetToCharacter(character.id, {
+      presetId: preset.id,
+      role: "system",
+    });
+
+    expect(pp.isEnabled).toBe(true);
+
+    const updated = await service.setPromptPresetEnabled(pp.id, false);
+    expect(updated?.isEnabled).toBe(false);
+
+    const stack = await promptPresetRepo.listByCharacter(character.id);
+    expect(stack[0]?.isEnabled).toBe(false);
   });
 
 });

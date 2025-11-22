@@ -11,6 +11,14 @@ const CONFIG_PATH = path.resolve(PROJECT_ROOT, "config.json");
 const DEFAULT_DB_PATH = path.resolve(PROJECT_ROOT, "data", "app.db");
 
 function resolveDbPath(): string {
+  const envPath = process.env.SQLITE_PATH;
+  if (envPath && typeof envPath === "string") {
+    if (envPath === ":memory:") return envPath;
+    return path.isAbsolute(envPath)
+      ? envPath
+      : path.resolve(PROJECT_ROOT, envPath);
+  }
+
   let configuredPath: string | undefined;
   try {
     if (fs.existsSync(CONFIG_PATH)) {
@@ -32,10 +40,11 @@ function resolveDbPath(): string {
 
 export function openDatabase(): SqliteDatabase {
   const dbPath = resolveDbPath();
-  const dir = path.dirname(dbPath);
-
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  if (dbPath !== ":memory:") {
+    const dir = path.dirname(dbPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
   }
 
   const db = new Database(dbPath);

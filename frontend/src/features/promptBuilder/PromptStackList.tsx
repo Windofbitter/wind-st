@@ -16,6 +16,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
 import type { PromptRole } from "../../api/promptStack";
 import type { PresetKind } from "../../api/presets";
+import { Toggle } from "../../components/common/Toggle";
 
 export interface PromptStackItemView {
   id: string;
@@ -25,6 +26,7 @@ export interface PromptStackItemView {
   locked?: boolean;
   presetId: string;
   lorebookId?: string;
+  isEnabled: boolean;
 }
 
 interface PromptStackListProps {
@@ -32,6 +34,7 @@ interface PromptStackListProps {
   onReorder(ids: string[]): void;
   onRemove(id: string): void;
   onEdit(item: PromptStackItemView): void;
+  onToggle(id: string, isEnabled: boolean): void;
 }
 
 export function PromptStackList({
@@ -39,6 +42,7 @@ export function PromptStackList({
   onReorder,
   onRemove,
   onEdit,
+  onToggle,
 }: PromptStackListProps) {
   const sensors = useSensors(useSensor(PointerSensor));
   const ids = items.map((item) => item.id);
@@ -81,6 +85,7 @@ export function PromptStackList({
               item={item}
               onRemove={onRemove}
               onEdit={onEdit}
+              onToggle={onToggle}
             />
           ))}
         </div>
@@ -93,12 +98,14 @@ interface SortableStackItemProps {
   item: PromptStackItemView;
   onRemove(id: string): void;
   onEdit(item: PromptStackItemView): void;
+  onToggle(id: string, isEnabled: boolean): void;
 }
 
 function SortableStackItem({
   item,
   onRemove,
   onEdit,
+  onToggle,
 }: SortableStackItemProps) {
   const { t } = useTranslation();
   const {
@@ -110,10 +117,12 @@ function SortableStackItem({
     isDragging,
   } = useSortable({ id: item.id });
 
+  const isDisabled = item.isEnabled === false;
+
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.6 : 1,
+    opacity: isDragging ? 0.6 : isDisabled ? 0.65 : 1,
     cursor: "grab",
     display: "flex",
     alignItems: "center",
@@ -121,7 +130,9 @@ function SortableStackItem({
     padding: "0.5rem 0.75rem",
     borderRadius: 4,
     border: "1px solid var(--border-color)",
-    backgroundColor: "var(--sidebar-bg)",
+    backgroundColor: isDisabled
+      ? "var(--card-bg)"
+      : "var(--sidebar-bg)",
   };
 
   const roleLabel = item.role.toUpperCase();
@@ -159,10 +170,21 @@ function SortableStackItem({
                 {t("promptBuilder.stackLocked")}
               </span>
             )}
+            {isDisabled && (
+              <span className="badge badge-secondary">
+                {t("promptBuilder.stackDisabled")}
+              </span>
+            )}
           </div>
         </div>
       </div>
       <div style={{ display: "flex", gap: "0.5rem" }}>
+        <Toggle
+          checked={item.isEnabled}
+          onChange={(next) => onToggle(item.id, next)}
+          label={t("promptBuilder.stackToggleLabel")}
+          disabled={isDragging}
+        />
         <button
           type="button"
           className="btn"

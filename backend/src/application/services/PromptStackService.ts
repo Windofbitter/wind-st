@@ -97,9 +97,27 @@ export class PromptStackService {
       presetId: preset.id,
       role,
       sortOrder,
+      isEnabled: true,
     };
 
     return this.promptPresetRepo.create(createInput);
+  }
+
+  async setPromptPresetEnabled(
+    promptPresetId: string,
+    isEnabled: boolean,
+  ): Promise<PromptPreset | null> {
+    const promptPreset = await this.promptPresetRepo.getById(
+      promptPresetId,
+    );
+    if (!promptPreset) return null;
+
+    const preset = await this.presetRepo.getById(promptPreset.presetId);
+    if (preset?.kind === "history" && isEnabled === false) {
+      // History rows stay present but can be disabled; allow toggle to align with UI.
+    }
+
+    return this.promptPresetRepo.update(promptPresetId, { isEnabled });
   }
 
   async detachPromptPreset(promptPresetId: string): Promise<void> {

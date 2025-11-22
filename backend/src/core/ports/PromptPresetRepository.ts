@@ -5,11 +5,13 @@ export interface CreatePromptPresetInput {
   presetId: string;
   role: PromptRole;
   sortOrder: number;
+  isEnabled: boolean;
 }
 
 export interface UpdatePromptPresetInput {
   role?: PromptRole;
   sortOrder?: number;
+  isEnabled?: boolean;
 }
 
 export interface PromptPresetRepository {

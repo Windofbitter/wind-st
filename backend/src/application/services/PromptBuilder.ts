@@ -73,12 +73,24 @@ export class DefaultPromptBuilder implements PromptBuilder {
     const sortedStack = [...stack].sort(
       (a, b) => a.sortOrder - b.sortOrder,
     );
+    const enabledStack = sortedStack.filter((pp) => pp.isEnabled);
+    const hasHistoryPreset = sortedStack.some((pp) => {
+      const preset = presetsById.get(pp.presetId);
+      return preset?.kind === "history";
+    });
+    const hasEnabledMcpPreset = enabledStack.some((pp) => {
+      const preset = presetsById.get(pp.presetId);
+      return preset?.kind === "mcp_tools";
+    });
+    const hasAnyMcpPreset = sortedStack.some((pp) => {
+      const preset = presetsById.get(pp.presetId);
+      return preset?.kind === "mcp_tools";
+    });
     const messages: LLMChatMessage[] = [];
     this.appendPersona(messages, character.persona, templateContext);
     this.appendUserPersonaPrompt(messages, userPersona, templateContext);
     let historyAdded = false;
-    let includeTools = false;
-    for (const item of sortedStack) {
+    for (const item of enabledStack) {
       const preset = presetsById.get(item.presetId);
       if (!preset) continue;
       if (preset.kind === "static_text") {
@@ -111,22 +123,18 @@ export class DefaultPromptBuilder implements PromptBuilder {
         }
         continue;
       }
-      if (preset.kind === "mcp_tools") {
-        includeTools = true;
-      }
     }
 
-    if (!historyAdded) {
+    if (!historyAdded && !hasHistoryPreset) {
       await this.appendHistory(messages, historyConfig, history);
     }
 
-    const tools =
-      includeTools || !sortedStack.some((pp) => {
-        const preset = presetsById.get(pp.presetId);
-        return preset?.kind === "mcp_tools";
-      })
-        ? await this.buildTools(character.id)
-        : [];
+    const shouldIncludeTools = hasAnyMcpPreset
+      ? hasEnabledMcpPreset
+      : true;
+    const tools = shouldIncludeTools
+      ? await this.buildTools(character.id)
+      : [];
     return { messages, tools };
   }
   private appendPersona(

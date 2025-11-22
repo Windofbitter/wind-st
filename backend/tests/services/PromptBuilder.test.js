@@ -159,6 +159,10 @@ async function createEnvironment() {
 
   const characterService = new CharacterService(characterRepo);
   const llmConnectionService = new LLMConnectionService(llmConnectionRepo);
+  const userPersonaService = new UserPersonaService(
+    userPersonaRepo,
+    chatRepo,
+  );
   const chatService = new ChatService(
     chatRepo,
     chatConfigRepo,
@@ -169,15 +173,13 @@ async function createEnvironment() {
     characterRepo,
     presetRepo,
     promptPresetRepo,
+    lorebookRepo,
+    characterLorebookRepo,
   );
   const presetService = new PresetService(presetRepo);
   const lorebookService = new LorebookService(
     lorebookRepo,
     lorebookEntryRepo,
-  );
-  const userPersonaService = new UserPersonaService(
-    userPersonaRepo,
-    chatRepo,
   );
   const defaultPersona = await userPersonaService.create({
     name: "You",
@@ -695,6 +697,57 @@ describe("DefaultPromptBuilder", () => {
         serverId: server1.id,
         serverName: server1.name,
       },
+    ]);
+  });
+
+  it("omits disabled stack items from the prompt", async () => {
+    const {
+      characterService,
+      chatService,
+      defaultPersonaId,
+      promptStackService,
+      presetService,
+      promptBuilder,
+    } = await createEnvironment();
+
+    const character = await characterService.createCharacter({
+      name: "Test",
+      description: "desc",
+      persona: "Persona",
+      avatarPath: "",
+      creatorNotes: null,
+    });
+
+    const { chat } = await chatService.createChat({
+      characterId: character.id,
+      userPersonaId: defaultPersonaId,
+      title: "Chat",
+    });
+
+    const preset = await presetService.createPreset({
+      title: "Block",
+      description: "",
+      kind: "static_text",
+      content: "Enabled block",
+      builtIn: false,
+    });
+
+    const stackItem = await promptStackService.attachPresetToCharacter(
+      character.id,
+      {
+        presetId: preset.id,
+        role: "system",
+      },
+    );
+
+    await promptStackService.setPromptPresetEnabled(
+      stackItem.id,
+      false,
+    );
+
+    const result = await promptBuilder.buildPromptForChat(chat.id);
+    expect(result.messages.map((m) => m.content)).toEqual([
+      "Persona",
     ]);
   });
 });

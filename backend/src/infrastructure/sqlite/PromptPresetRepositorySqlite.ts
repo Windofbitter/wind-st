@@ -14,6 +14,7 @@ function mapRowToPromptPreset(row: any): PromptPreset {
     presetId: row.preset_id,
     role: row.role as PromptRole,
     sortOrder: row.sort_order,
+    isEnabled: row.is_enabled === 1,
   };
 }
 
@@ -30,9 +31,10 @@ export class PromptPresetRepositorySqlite implements PromptPresetRepository {
         character_id,
         preset_id,
         role,
-        sort_order
+        sort_order,
+        is_enabled
       )
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?)
     `.trim(),
     );
 
@@ -42,6 +44,7 @@ export class PromptPresetRepositorySqlite implements PromptPresetRepository {
       data.presetId,
       data.role,
       data.sortOrder,
+      data.isEnabled ? 1 : 0,
     );
 
     return {
@@ -50,6 +53,7 @@ export class PromptPresetRepositorySqlite implements PromptPresetRepository {
       presetId: data.presetId,
       role: data.role,
       sortOrder: data.sortOrder,
+      isEnabled: data.isEnabled,
     };
   }
 
@@ -61,7 +65,8 @@ export class PromptPresetRepositorySqlite implements PromptPresetRepository {
         character_id,
         preset_id,
         role,
-        sort_order
+        sort_order,
+        is_enabled
       FROM prompt_presets
       WHERE id = ?
     `.trim(),
@@ -80,7 +85,8 @@ export class PromptPresetRepositorySqlite implements PromptPresetRepository {
         character_id,
         preset_id,
         role,
-        sort_order
+        sort_order,
+        is_enabled
       FROM prompt_presets
       WHERE character_id = ?
       ORDER BY sort_order ASC
@@ -105,6 +111,10 @@ export class PromptPresetRepositorySqlite implements PromptPresetRepository {
     if (patch.sortOrder !== undefined) {
       sets.push("sort_order = ?");
       params.push(patch.sortOrder);
+    }
+    if (patch.isEnabled !== undefined) {
+      sets.push("is_enabled = ?");
+      params.push(patch.isEnabled ? 1 : 0);
     }
 
     if (sets.length === 0) {

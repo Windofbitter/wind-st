@@ -633,6 +633,7 @@ export class FakePromptPresetRepository implements PromptPresetRepository {
       presetId: data.presetId,
       role: data.role,
       sortOrder: data.sortOrder,
+      isEnabled: data.isEnabled,
     };
     this.items.set(id, preset);
     return preset;
@@ -659,6 +660,10 @@ export class FakePromptPresetRepository implements PromptPresetRepository {
       ...patch,
       sortOrder:
         patch.sortOrder !== undefined ? patch.sortOrder : existing.sortOrder,
+      isEnabled:
+        patch.isEnabled !== undefined
+          ? patch.isEnabled
+          : existing.isEnabled,
     };
     this.items.set(id, updated);
     return updated;

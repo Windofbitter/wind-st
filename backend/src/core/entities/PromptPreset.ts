@@ -6,5 +6,6 @@ export interface PromptPreset {
   presetId: string;
   role: PromptRole;
   sortOrder: number;
+  isEnabled: boolean;
 }
 

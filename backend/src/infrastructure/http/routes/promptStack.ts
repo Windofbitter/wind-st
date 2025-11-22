@@ -15,6 +15,10 @@ interface ReorderBody {
   ids: string[];
 }
 
+interface UpdatePromptPresetBody {
+  isEnabled: boolean;
+}
+
 function ensureAttachPresetPayload(body: unknown): AttachPromptPresetInput {
   if (!body || typeof body !== "object") {
     throw new AppError(
@@ -102,6 +106,23 @@ function ensureReorderPayload(body: unknown): ReorderBody {
   return { ids: value.ids };
 }
 
+function ensureUpdatePayload(body: unknown): UpdatePromptPresetBody {
+  if (!body || typeof body !== "object") {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Invalid prompt preset update payload: expected object",
+    );
+  }
+  const value = body as Partial<UpdatePromptPresetBody>;
+  if (typeof value.isEnabled !== "boolean") {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Invalid prompt preset update payload: isEnabled must be boolean",
+    );
+  }
+  return { isEnabled: value.isEnabled };
+}
+
 export function registerPromptStackRoutes(app: FastifyInstance): void {
   app.get("/characters/:characterId/prompt-stack", async (request) => {
     const { characterId } = request.params as { characterId: string };
@@ -135,5 +156,19 @@ export function registerPromptStackRoutes(app: FastifyInstance): void {
     const { id } = request.params as { id: string };
     await app.promptStackService.detachPromptPreset(id);
     void reply.status(204).send();
+  });
+
+  app.patch("/prompt-presets/:id", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { isEnabled } = ensureUpdatePayload(request.body);
+    const updated = await app.promptStackService.setPromptPresetEnabled(
+      id,
+      isEnabled,
+    );
+    if (!updated) {
+      void reply.status(404).send();
+      return;
+    }
+    return updated;
   });
 }

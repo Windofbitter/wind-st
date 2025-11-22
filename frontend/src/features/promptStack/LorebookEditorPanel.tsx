@@ -86,6 +86,23 @@ export function LorebookEditorPanel({
     }
   }
 
+  async function handleToggleEntry(id: string, enabled: boolean) {
+    try {
+      await updateLorebookEntry(id, { isEnabled: enabled });
+      setEntries((prev) =>
+        prev.map((e) =>
+          e.id === id ? { ...e, isEnabled: enabled } : e,
+        ),
+      );
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to update entry",
+      );
+    }
+  }
+
   async function handleSaveMeta() {
     if (!lorebookId) return;
     setSaving(true);
@@ -317,83 +334,90 @@ export function LorebookEditorPanel({
                   gap: "0.5rem",
                 }}
               >
-                {entries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="card"
-                    style={{
-                      padding: "0.75rem",
-                      margin: 0,
-                      display: "flex",
-                      justifyContent:
-                        "space-between",
-                      alignItems: "flex-start",
-                      gap: "0.5rem",
-                    }}
-                  >
+                {entries.map((entry) => {
+                  const disabled = entry.isEnabled === false;
+                  return (
                     <div
+                      key={entry.id}
+                      className="card"
                       style={{
-                        flex: 1,
-                        minWidth: 0,
-                        cursor: "pointer",
+                        padding: "0.75rem",
+                        margin: 0,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "0.75rem",
+                        opacity: disabled ? 0.7 : 1,
                       }}
-                      onClick={() =>
-                        startEdit(entry)
-                      }
                     >
                       <div
                         style={{
-                          fontWeight: 600,
-                          fontSize: "0.9rem",
-                          marginBottom:
-                            "0.25rem",
+                          flex: 1,
+                          minWidth: 0,
+                          cursor: "pointer",
                         }}
+                        onClick={() => startEdit(entry)}
                       >
-                        {entry.keywords.join(
-                          ", ",
-                        ) || (
-                            <span
-                              style={{
-                                opacity: 0.5,
-                              }}
-                            >
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "0.9rem",
+                            marginBottom: "0.25rem",
+                            display: "flex",
+                            gap: "0.4rem",
+                            alignItems: "center",
+                          }}
+                        >
+                          {entry.keywords.join(", ") || (
+                            <span style={{ opacity: 0.5 }}>
                               (No keywords)
                             </span>
                           )}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.8rem",
+                            opacity: 0.7,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {entry.content}
+                        </div>
                       </div>
                       <div
                         style={{
-                          fontSize: "0.8rem",
-                          opacity: 0.7,
-                          whiteSpace:
-                            "nowrap",
-                          overflow: "hidden",
-                          textOverflow:
-                            "ellipsis",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
                         }}
                       >
-                        {entry.content}
+                        <Toggle
+                          checked={entry.isEnabled}
+                          onChange={(checked) =>
+                            void handleToggleEntry(entry.id, checked)
+                          }
+                          label=""
+                        />
+                        <button
+                          type="button"
+                          className="icon-button"
+                          style={{
+                            width: "24px",
+                            height: "24px",
+                            color: "var(--error-text)",
+                          }}
+                          onClick={() =>
+                            void handleDeleteEntry(entry.id)
+                          }
+                        >
+                          🗑
+                        </button>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="icon-button"
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        color:
-                          "var(--error-text)",
-                      }}
-                      onClick={() =>
-                        void handleDeleteEntry(
-                          entry.id,
-                        )
-                      }
-                    >
-                      🗑
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
                 {entries.length === 0 && (
                   <div
                     style={{
@@ -461,7 +485,7 @@ export function LorebookEditorPanel({
               </div>
               <div className="input-group">
                 <Toggle
-                  checked={entryForm.isEnabled ?? false}
+                  checked={entryForm.isEnabled}
                   onChange={(checked) =>
                     setEntryForm({
                       ...entryForm,
@@ -469,9 +493,19 @@ export function LorebookEditorPanel({
                     })
                   }
                   label={
-                    t("lorebooks.editEntryEnabledLabel") || "Enabled"
+                    t("lorebooks.newEntryActiveLabel") || "Active"
                   }
                 />
+                <div
+                  style={{
+                    fontSize: "0.85rem",
+                    opacity: 0.8,
+                    marginTop: "0.25rem",
+                  }}
+                >
+                  {t("lorebooks.newEntryActiveHint") ||
+                    "Only active entries are used."}
+                </div>
               </div>
 
               <div
@@ -512,4 +546,3 @@ export function LorebookEditorPanel({
     </div>
   );
 }
-

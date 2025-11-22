@@ -92,6 +92,8 @@ const resources = {
         stackTitle: "Stack",
         stackEmpty:
           "No prompt presets attached. Edit via Characters → Prompt Builder.",
+        stackToggleLabel: "Active",
+        stackDisabled: "Disabled",
         createChatPromptTitle: "Chat title",
         createChatPromptDefault: "New Chat",
         deleteChatConfirm:
@@ -211,6 +213,7 @@ const resources = {
           "Global is an organizational tag for filtering; it does not change behavior.",
         detailSaveButtonSaving: "Saving…",
         detailSaveButton: "Save Lorebook",
+        editTitle: "Edit lorebook",
         newEntryTitle: "New Entry",
         newEntryKeywordsLabel: "Keywords (comma-separated)",
         newEntryKeywordsPlaceholder:
@@ -315,6 +318,8 @@ const resources = {
           "No presets in stack yet. Click a preset on the left to attach it.",
         stackRemoveButton: "Remove",
         stackLocked: "Locked",
+        stackToggleLabel: "Active",
+        stackDisabled: "Disabled",
         previewTitle: "Prompt Preview",
         previewSystemPersonaLabel: "System / Persona:",
         previewStackLabel: "Stack:",
@@ -528,6 +533,8 @@ const resources = {
         stackTitle: "栈",
         stackEmpty:
           "尚未关联提示预设。可通过“角色 → 提示构建器”编辑。",
+        stackToggleLabel: "启用",
+        stackDisabled: "已禁用",
         createChatPromptTitle: "会话标题",
         createChatPromptDefault: "新会话",
         deleteChatConfirm: "删除此会话？该操作不可撤销。",
@@ -645,6 +652,7 @@ const resources = {
           "“全局”只是用于筛选的标签，不会改变行为。",
         detailSaveButtonSaving: "正在保存…",
         detailSaveButton: "保存世界书",
+        editTitle: "编辑世界书",
         newEntryTitle: "新建条目",
         newEntryKeywordsLabel: "关键字（逗号分隔）",
         newEntryKeywordsPlaceholder:
@@ -748,6 +756,8 @@ const resources = {
           "栈中还没有预设。在左侧点击预设以添加。",
         stackRemoveButton: "移除",
         stackLocked: "已锁定",
+        stackToggleLabel: "启用",
+        stackDisabled: "已禁用",
         previewTitle: "提示预览",
         previewSystemPersonaLabel: "系统 / 人设：",
         previewStackLabel: "栈：",

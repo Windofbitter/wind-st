@@ -74,6 +74,7 @@ export function PromptBuilderTab({
           kind,
           locked: kind === "history",
           presetId: pp.presetId,
+          isEnabled: pp.isEnabled !== false,
           lorebookId: lorebookId ?? undefined,
         };
       });
@@ -176,6 +177,9 @@ export function PromptBuilderTab({
             void data.reorderPromptPresets(ids)
           }
           onReload={() => void data.reloadAll()}
+          onToggleEnabled={(id, enabled) =>
+            void data.setPromptPresetEnabled(id, enabled)
+          }
         />
       </div>
 
@@ -217,14 +221,12 @@ export function PromptBuilderTab({
             {t("promptBuilder.previewStackLabel")}
           </strong>
           {"\n"}
-          {stackItems.length === 0
+          {stackItems.filter((item) => item.isEnabled).length === 0
             ? t("promptBuilder.previewNoPresets")
             : stackItems
-                .map(
-                  (item, index) =>
-                    `${index + 1}. [${item.role.toUpperCase()}] ${
-                      item.title
-                    }`,
+                .filter((item) => item.isEnabled)
+                .map((item, index) =>
+                  `${index + 1}. [${item.role.toUpperCase()}] ${item.title}`,
                 )
                 .join("\n")}
         </div>

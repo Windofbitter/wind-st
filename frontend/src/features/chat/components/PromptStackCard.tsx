@@ -77,7 +77,14 @@ export function PromptStackCard({
                       borderBottom: "1px solid var(--border-color)",
                     }}
                   >
-                    <span>{pp.presetId}</span>
+                    <span style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+                      <span>{pp.presetId}</span>
+                      {pp.isEnabled === false && (
+                        <span className="badge badge-secondary">
+                          {t("chat.stackDisabled")}
+                        </span>
+                      )}
+                    </span>
                     <span className="badge">
                       {pp.role.toUpperCase()}
                     </span>
