@@ -19,30 +19,39 @@ function mapRow(row: any): UserPersona {
 }
 
 export class UserPersonaRepositorySqlite implements UserPersonaRepository {
-  constructor(private readonly db: SqliteDatabase) {}
+  constructor(private readonly db: SqliteDatabase) { }
 
   async create(data: CreateUserPersonaInput): Promise<UserPersona> {
     const id = crypto.randomUUID();
-    const stmt = this.db.prepare(
-      `
-      INSERT INTO user_personas (
-        id,
-        name,
-        description,
-        prompt,
-        is_default
-      )
-      VALUES (?, ?, ?, ?, ?)
-    `.trim(),
-    );
 
-    stmt.run(
-      id,
-      data.name,
-      data.description ?? null,
-      data.prompt ?? null,
-      data.isDefault ? 1 : 0,
-    );
+    const doCreate = () => {
+      if (data.isDefault) {
+        this.db.prepare("UPDATE user_personas SET is_default = 0").run();
+      }
+
+      const stmt = this.db.prepare(
+        `
+        INSERT INTO user_personas (
+          id,
+          name,
+          description,
+          prompt,
+          is_default
+        )
+        VALUES (?, ?, ?, ?, ?)
+      `.trim(),
+      );
+
+      stmt.run(
+        id,
+        data.name,
+        data.description ?? null,
+        data.prompt ?? null,
+        data.isDefault ? 1 : 0,
+      );
+    };
+
+    this.db.transaction(doCreate)();
 
     return {
       id,
@@ -122,9 +131,16 @@ export class UserPersonaRepositorySqlite implements UserPersonaRepository {
       WHERE id = ?
     `.trim();
 
-    const stmt = this.db.prepare(sql);
-    const result = stmt.run(...params, id);
-    if (result.changes === 0) return null;
+    const doUpdate = () => {
+      if (patch.isDefault) {
+        this.db.prepare("UPDATE user_personas SET is_default = 0").run();
+      }
+      const stmt = this.db.prepare(sql);
+      stmt.run(...params, id);
+    };
+
+    this.db.transaction(doUpdate)();
+
     return this.getById(id);
   }
 

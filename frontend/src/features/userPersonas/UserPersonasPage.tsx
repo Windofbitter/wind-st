@@ -8,6 +8,7 @@ import {
   type UserPersona,
 } from "../../api/userPersonas";
 import { ApiError } from "../../api/httpClient";
+import { Toggle } from "../../components/common/Toggle";
 
 interface LoadState {
   loading: boolean;
@@ -163,17 +164,13 @@ export function UserPersonasPage() {
             />
           </div>
           <div className="input-group" style={{ flexDirection: "row", alignItems: "center", gap: "0.35rem" }}>
-            <input
-              id="persona-default"
-              type="checkbox"
+            <Toggle
               checked={form.isDefault}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, isDefault: e.target.checked }))
+              onChange={(checked) =>
+                setForm((f) => ({ ...f, isDefault: checked }))
               }
+              label={t("userPersonas.isDefaultLabel")}
             />
-            <label htmlFor="persona-default">
-              {t("userPersonas.isDefaultLabel")}
-            </label>
           </div>
           <button
             type="submit"
@@ -218,9 +215,6 @@ export function UserPersonasPage() {
                 <td>
                   <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
                     <span>{persona.name}</span>
-                    {persona.isDefault && (
-                      <span className="badge">{t("userPersonas.defaultTag")}</span>
-                    )}
                   </div>
                 </td>
                 <td>{persona.description ?? ""}</td>
@@ -230,16 +224,16 @@ export function UserPersonasPage() {
                   </div>
                 </td>
                 <td>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    {!persona.isDefault && (
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => void handleSetDefault(persona.id)}
-                      >
-                        {t("userPersonas.setDefaultButton")}
-                      </button>
-                    )}
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <Toggle
+                      checked={persona.isDefault}
+                      onChange={() => {
+                        if (!persona.isDefault) {
+                          void handleSetDefault(persona.id);
+                        }
+                      }}
+                      label={persona.isDefault ? t("userPersonas.defaultTag") : t("userPersonas.setDefaultButton")}
+                    />
                     <button
                       type="button"
                       className="btn btn-danger"
