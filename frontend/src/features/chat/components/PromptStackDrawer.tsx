@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Character } from "../../../api/characters";
 import type { PromptPreset } from "../../../api/promptStack";
@@ -8,6 +8,7 @@ import { ApiError } from "../../../api/httpClient";
 import { PresetEditorPanel } from "../../promptStack/PresetEditorPanel";
 import { LorebookEditorPanel } from "../../promptStack/LorebookEditorPanel";
 import { Toggle } from "../../../components/common/Toggle";
+import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 
 interface LoadState {
     loading: boolean;
@@ -33,10 +34,17 @@ export function PromptStackDrawer({
 }: Props) {
     const { t } = useTranslation();
     const [error, setError] = useState<string | null>(null);
+    const { bottomRef, scrollToBottom } = useScrollToBottom();
 
     // Edit state
     const [editingItem, setEditingItem] = useState<{ id: string; type: "preset" | "lorebook" } | null>(null);
     const [checkingItem, setCheckingItem] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (editingItem) {
+            scrollToBottom();
+        }
+    }, [editingItem]);
 
     async function handleDetach(id: string) {
         if (!confirm(t("chat.stackDetachConfirm") || "Remove this item from the stack?")) return;
@@ -241,6 +249,7 @@ export function PromptStackDrawer({
                             )}
                         </div>
                     )}
+                    <div ref={bottomRef} />
                 </div>
             </div>
         </>
