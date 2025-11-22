@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Character } from "../../../api/characters";
 import type { PromptPreset } from "../../../api/promptStack";
@@ -8,7 +8,6 @@ import { ApiError } from "../../../api/httpClient";
 import { PresetEditorPanel } from "../../promptStack/PresetEditorPanel";
 import { LorebookEditorPanel } from "../../promptStack/LorebookEditorPanel";
 import { Toggle } from "../../../components/common/Toggle";
-import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 
 interface LoadState {
     loading: boolean;
@@ -24,6 +23,12 @@ interface Props {
     onReload: () => Promise<void>;
 }
 
+interface EditingItemState {
+    stackId: string;
+    targetId: string;
+    type: "preset" | "lorebook";
+}
+
 export function PromptStackDrawer({
     isOpen,
     onClose,
@@ -34,17 +39,10 @@ export function PromptStackDrawer({
 }: Props) {
     const { t } = useTranslation();
     const [error, setError] = useState<string | null>(null);
-    const { bottomRef, scrollToBottom } = useScrollToBottom();
 
     // Edit state
-    const [editingItem, setEditingItem] = useState<{ id: string; type: "preset" | "lorebook" } | null>(null);
+    const [editingItem, setEditingItem] = useState<EditingItemState | null>(null);
     const [checkingItem, setCheckingItem] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (editingItem) {
-            scrollToBottom();
-        }
-    }, [editingItem]);
 
     async function handleDetach(id: string) {
         if (!confirm(t("chat.stackDetachConfirm") || "Remove this item from the stack?")) return;
@@ -73,23 +71,15 @@ export function PromptStackDrawer({
             // Try to fetch as preset first to check kind
             const preset = await getPreset(pp.presetId);
             if (preset.kind === "lorebook") {
-                // If it's a lorebook preset, we need the lorebook ID.
-                // Assuming the presetId might be the lorebookId or we can find it.
-                // If the backend wraps lorebooks in presets, we need to know how to get the lorebook ID.
-                // For now, let's try to use presetId as lorebookId if kind is lorebook.
-                // Or check if config has it.
                 const lbId = (preset.config as any)?.lorebookId || pp.presetId;
-                setEditingItem({ id: lbId, type: "lorebook" });
+                setEditingItem({ stackId: pp.id, targetId: lbId, type: "lorebook" });
             } else {
-                setEditingItem({ id: pp.presetId, type: "preset" });
+                setEditingItem({ stackId: pp.id, targetId: pp.presetId, type: "preset" });
             }
         } catch (err) {
-            // If getPreset fails, maybe it's a raw lorebook attached directly?
-            // Try to assume it's a lorebook if we can't find a preset?
-            // Or just show error.
             console.error("Failed to resolve preset kind", err);
             // Fallback: try to open as preset if we can't determine
-            setEditingItem({ id: pp.presetId, type: "preset" });
+            setEditingItem({ stackId: pp.id, targetId: pp.presetId, type: "preset" });
         } finally {
             setCheckingItem(null);
         }
@@ -170,86 +160,91 @@ export function PromptStackDrawer({
                                                     key={pp.id}
                                                     style={{
                                                         display: "flex",
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center",
-                                                        fontSize: "0.9rem",
-                                                        padding: "0.5rem",
-                                                        borderBottom: "1px solid var(--glass-border)",
+                                                        flexDirection: "column",
+                                                        marginBottom: "0.25rem",
+                                                        borderRadius: "4px",
                                                         backgroundColor: isDisabled
                                                             ? "rgba(0,0,0,0.05)"
                                                             : "rgba(0,0,0,0.1)",
-                                                        marginBottom: "0.25rem",
-                                                        borderRadius: "4px",
-                                                        opacity: isDisabled ? 0.7 : 1,
                                                     }}
                                                 >
-                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                                        <span className="badge">
-                                                            {pp.role.toUpperCase()}
-                                                        </span>
-                                                        <span>{pp.presetId}</span>
-                                                        {isDisabled && (
-                                                            <span className="badge badge-secondary">
-                                                                {t("chat.stackDisabled")}
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            justifyContent: "space-between",
+                                                            alignItems: "center",
+                                                            fontSize: "0.9rem",
+                                                            padding: "0.5rem",
+                                                            opacity: isDisabled ? 0.7 : 1,
+                                                        }}
+                                                    >
+                                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                            <span className="badge">
+                                                                {pp.role.toUpperCase()}
                                                             </span>
-                                                        )}
+                                                            <span>{pp.presetId}</span>
+                                                            {isDisabled && (
+                                                                <span className="badge badge-secondary">
+                                                                    {t("chat.stackDisabled")}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+                                                            <Toggle
+                                                                checked={pp.isEnabled !== false}
+                                                                onChange={(next) => void handleToggleEnabled(pp.id, next)}
+                                                                label={t("chat.stackToggleLabel")}
+                                                            />
+                                                            <button
+                                                                className="icon-button"
+                                                                style={{ width: "28px", height: "28px", fontSize: "0.9rem" }}
+                                                                onClick={() => void handleEditClick(pp)}
+                                                                disabled={checkingItem === pp.id}
+                                                                title={t("common.edit") || "Edit"}
+                                                            >
+                                                                {checkingItem === pp.id ? "..." : "✎"}
+                                                            </button>
+                                                            <button
+                                                                className="icon-button"
+                                                                style={{ width: "28px", height: "28px", fontSize: "0.9rem", color: "var(--error-text)" }}
+                                                                onClick={() => void handleDetach(pp.id)}
+                                                                title={t("common.remove") || "Remove"}
+                                                            >
+                                                                🗑
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                                                        <Toggle
-                                                            checked={pp.isEnabled !== false}
-                                                            onChange={(next) => void handleToggleEnabled(pp.id, next)}
-                                                            label={t("chat.stackToggleLabel")}
-                                                        />
-                                                        <button
-                                                            className="icon-button"
-                                                            style={{ width: "28px", height: "28px", fontSize: "0.9rem" }}
-                                                            onClick={() => void handleEditClick(pp)}
-                                                            disabled={checkingItem === pp.id}
-                                                            title={t("common.edit") || "Edit"}
-                                                        >
-                                                            {checkingItem === pp.id ? "..." : "✎"}
-                                                        </button>
-                                                        <button
-                                                            className="icon-button"
-                                                            style={{ width: "28px", height: "28px", fontSize: "0.9rem", color: "var(--error-text)" }}
-                                                            onClick={() => void handleDetach(pp.id)}
-                                                            title={t("common.remove") || "Remove"}
-                                                        >
-                                                            🗑
-                                                        </button>
-                                                    </div>
+                                                    {editingItem?.stackId === pp.id && (
+                                                        <div className="prompt-stack-inline-editor" style={{ padding: "0.5rem", borderTop: "1px solid var(--glass-border)" }}>
+                                                            {editingItem.type === "preset" && (
+                                                                <PresetEditorPanel
+                                                                    presetId={editingItem.targetId}
+                                                                    onSaved={() => {
+                                                                        setEditingItem(null);
+                                                                        void onReload();
+                                                                    }}
+                                                                    onCancel={() => setEditingItem(null)}
+                                                                />
+                                                            )}
+                                                            {editingItem.type === "lorebook" && (
+                                                                <LorebookEditorPanel
+                                                                    lorebookId={editingItem.targetId}
+                                                                    onSaved={() => {
+                                                                        setEditingItem(null);
+                                                                        void onReload();
+                                                                    }}
+                                                                    onCancel={() => setEditingItem(null)}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </li>
                                             );
                                         })}
                                 </ul>
                             </div>
-
-                            {editingItem && (
-                                <div className="card" style={{ margin: 0 }}>
-                                    {editingItem.type === "preset" ? (
-                                        <PresetEditorPanel
-                                            presetId={editingItem.id}
-                                            onSaved={() => {
-                                                setEditingItem(null);
-                                                void onReload();
-                                            }}
-                                            onCancel={() => setEditingItem(null)}
-                                        />
-                                    ) : (
-                                        <LorebookEditorPanel
-                                            lorebookId={editingItem.id}
-                                            onSaved={() => {
-                                                setEditingItem(null);
-                                                void onReload();
-                                            }}
-                                            onCancel={() => setEditingItem(null)}
-                                        />
-                                    )}
-                                </div>
-                            )}
                         </div>
                     )}
-                    <div ref={bottomRef} />
                 </div>
             </div>
         </>

@@ -485,7 +485,7 @@ export function LorebookEditorPanel({
               </div>
               <div className="input-group">
                 <Toggle
-                  checked={entryForm.isEnabled}
+                  checked={entryForm.isEnabled ?? true}
                   onChange={(checked) =>
                     setEntryForm({
                       ...entryForm,

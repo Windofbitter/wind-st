@@ -20,20 +20,24 @@ interface LorebookEntriesTableProps {
   entries: LorebookEntry[];
   loading: boolean;
   error: string | null;
+  editingId: string | null;
   onReorder(ids: string[]): void;
   onToggleEnabled(entryId: string, enabled: boolean): void;
   onEdit(entry: LorebookEntry): void;
   onDelete(entryId: string): void;
+  renderEditor(entry: LorebookEntry): React.ReactNode;
 }
 
 export function LorebookEntriesTable({
   entries,
   loading,
   error,
+  editingId,
   onReorder,
   onToggleEnabled,
   onEdit,
   onDelete,
+  renderEditor,
 }: LorebookEntriesTableProps) {
   const { t } = useTranslation();
   const sensors = useSensors(useSensor(PointerSensor));
@@ -104,10 +108,12 @@ export function LorebookEntriesTable({
                   index={index}
                   isFirst={index === 0}
                   isLast={index === entries.length - 1}
+                  isEditing={editingId === entry.id}
                   onMove={moveEntry}
                   onToggleEnabled={onToggleEnabled}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  editor={editingId === entry.id ? renderEditor(entry) : null}
                 />
               ))}
               {entries.length === 0 && !loading && (
@@ -132,10 +138,12 @@ interface SortableEntryRowProps {
   index: number;
   isFirst: boolean;
   isLast: boolean;
+  isEditing: boolean;
   onMove(entryId: string, delta: -1 | 1): void;
   onToggleEnabled(entryId: string, enabled: boolean): void;
   onEdit(entry: LorebookEntry): void;
   onDelete(entryId: string): void;
+  editor: React.ReactNode;
 }
 
 function SortableEntryRow({
@@ -143,10 +151,12 @@ function SortableEntryRow({
   index,
   isFirst,
   isLast,
+  isEditing,
   onMove,
   onToggleEnabled,
   onEdit,
   onDelete,
+  editor,
 }: SortableEntryRowProps) {
   const { t } = useTranslation();
   const {
@@ -165,109 +175,118 @@ function SortableEntryRow({
   };
 
   return (
-    <tr ref={setNodeRef} style={style}>
-      <td>
-        {entry.keywords.map((k) => (
-          <span
-            key={k}
-            className="badge"
-            style={{ marginRight: "0.25rem" }}
-          >
-            {k}
-          </span>
-        ))}
-      </td>
-      <td>
-        {entry.content.split("\n")[0] ?? ""}
-        {entry.content.includes("\n") ? "…" : ""}
-      </td>
-      <td>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.25rem",
-          }}
-        >
-          <button
-            type="button"
-            className="btn"
-            title={t("lorebooks.entriesReorderHandleTitle")}
-            {...attributes}
-            {...listeners}
-            style={{
-              cursor: "grab",
-              padding: "0.15rem 0.4rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <span style={{ fontSize: "1.1rem" }}>⋮⋮</span>
-          </button>
-          <span>#{index + 1}</span>
+    <>
+      <tr ref={setNodeRef} style={style}>
+        <td>
+          {entry.keywords.map((k) => (
+            <span
+              key={k}
+              className="badge"
+              style={{ marginRight: "0.25rem" }}
+            >
+              {k}
+            </span>
+          ))}
+        </td>
+        <td>
+          {entry.content.split("\n")[0] ?? ""}
+          {entry.content.includes("\n") ? "…" : ""}
+        </td>
+        <td>
           <div
             style={{
               display: "flex",
+              alignItems: "center",
               gap: "0.25rem",
-              marginLeft: "0.5rem",
             }}
           >
             <button
               type="button"
               className="btn"
-              disabled={isFirst}
-              title={t("lorebooks.entriesMoveUpTitle")}
-              onClick={() => onMove(entry.id, -1)}
+              title={t("lorebooks.entriesReorderHandleTitle")}
+              {...attributes}
+              {...listeners}
+              style={{
+                cursor: "grab",
+                padding: "0.15rem 0.4rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              ↑
+              <span style={{ fontSize: "1.1rem" }}>⋮⋮</span>
+            </button>
+            <span>#{index + 1}</span>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.25rem",
+                marginLeft: "0.5rem",
+              }}
+            >
+              <button
+                type="button"
+                className="btn"
+                disabled={isFirst}
+                title={t("lorebooks.entriesMoveUpTitle")}
+                onClick={() => onMove(entry.id, -1)}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                className="btn"
+                disabled={isLast}
+                title={t("lorebooks.entriesMoveDownTitle")}
+                onClick={() => onMove(entry.id, +1)}
+              >
+                ↓
+              </button>
+            </div>
+          </div>
+        </td>
+        <td>
+          <label>
+            <input
+              type="checkbox"
+              checked={entry.isEnabled}
+              onChange={(e) =>
+                onToggleEnabled(entry.id, e.target.checked)
+              }
+            />
+          </label>
+        </td>
+        <td>
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+            }}
+          >
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => onEdit(entry)}
+            >
+              {t("lorebooks.entriesEditButton")}
             </button>
             <button
               type="button"
-              className="btn"
-              disabled={isLast}
-              title={t("lorebooks.entriesMoveDownTitle")}
-              onClick={() => onMove(entry.id, +1)}
+              className="btn btn-danger"
+              onClick={() => onDelete(entry.id)}
             >
-              ↓
+              {t("lorebooks.entriesDeleteButton")}
             </button>
           </div>
-        </div>
-      </td>
-      <td>
-        <label>
-          <input
-            type="checkbox"
-            checked={entry.isEnabled}
-            onChange={(e) =>
-              onToggleEnabled(entry.id, e.target.checked)
-            }
-          />
-        </label>
-      </td>
-      <td>
-        <div
-          style={{
-            display: "flex",
-            gap: "0.5rem",
-          }}
-        >
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => onEdit(entry)}
-          >
-            {t("lorebooks.entriesEditButton")}
-          </button>
-          <button
-            type="button"
-            className="btn btn-danger"
-            onClick={() => onDelete(entry.id)}
-          >
-            {t("lorebooks.entriesDeleteButton")}
-          </button>
-        </div>
-      </td>
-    </tr>
+        </td>
+      </tr>
+      {isEditing && (
+        <tr>
+          <td colSpan={5} style={{ padding: 0 }}>
+            {editor}
+          </td>
+        </tr>
+      )}
+    </>
   );
 }

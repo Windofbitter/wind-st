@@ -14,6 +14,7 @@ import {
 } from "../../api/presets";
 import { ApiError } from "../../api/httpClient";
 import { useScrollToBottom } from "../../hooks/useScrollToBottom";
+import { PresetEditForm } from "./components/PresetEditForm";
 
 interface LoadState {
   loading: boolean;
@@ -60,12 +61,6 @@ export function PresetsPage() {
     void loadPresets();
   }, [filterKind, filterBuiltIn, titleSearch]);
 
-  useEffect(() => {
-    if (editingId) {
-      scrollToBottom();
-    }
-  }, [editingId]);
-
   async function loadPresets() {
     setState({ loading: true, error: null });
     try {
@@ -97,8 +92,7 @@ export function PresetsPage() {
     setState({ loading: false, error: null });
   }
 
-  async function handleCreatePreset(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreatePreset() {
     if (!createForm.title.trim()) return;
 
     setCreating(true);
@@ -240,98 +234,15 @@ export function PresetsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>
-          {t("presets.newTitle")}
-        </h3>
-        <form onSubmit={handleCreatePreset}>
-          <div className="flex-row">
-            <div className="input-group" style={{ flex: 1 }}>
-              <label htmlFor="preset-title">
-                {t("presets.newFormTitleLabel")}
-              </label>
-              <input
-                id="preset-title"
-                type="text"
-                value={createForm.title}
-                onChange={(e) =>
-                  setCreateForm({
-                    ...createForm,
-                    title: e.target.value,
-                  })
-                }
-                required
-              />
-            </div>
-            <div className="input-group" style={{ width: 220 }}>
-              <label htmlFor="preset-kind-new">
-                {t("presets.newFormKindLabel")}
-              </label>
-              <select
-                id="preset-kind-new"
-                value={createForm.kind}
-                onChange={(e) =>
-                  setCreateForm({
-                    ...createForm,
-                    kind: e.target.value as PresetKind,
-                  })
-                }
-              >
-                <option value="static_text">
-                  {t("presets.filtersKindStaticText")}
-                </option>
-              </select>
-            </div>
-          </div>
-          <div className="input-group">
-            <label htmlFor="preset-description">
-              {t("presets.newFormDescriptionLabel")}
-            </label>
-            <textarea
-              id="preset-description"
-              value={createForm.description}
-              onChange={(e) =>
-                setCreateForm({
-                  ...createForm,
-                  description: e.target.value,
-                })
-              }
-            />
-          </div>
-          {createForm.kind === "static_text" && (
-            <div className="input-group">
-              <label htmlFor="preset-content">
-                {t("presets.newFormContentLabel")}
-              </label>
-              <textarea
-                id="preset-content"
-                value={createForm.content ?? ""}
-                onChange={(e) =>
-                  setCreateForm({
-                    ...createForm,
-                    content: e.target.value,
-                  })
-                }
-              />
-            </div>
-          )}
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={creating}
-          >
-            {creating
-              ? t("presets.newCreateButtonCreating")
-              : t("presets.newCreateButton")}
-          </button>
-          {createError && (
-            <div
-              className="badge badge-error"
-              style={{ marginTop: "0.5rem" }}
-            >
-              {t("common.errorPrefix")} {createError}
-            </div>
-          )}
-        </form>
+        <PresetEditForm
+          form={createForm}
+          onChange={setCreateForm}
+          onSave={() => void handleCreatePreset()}
+          onCancel={() => { }}
+          saving={creating}
+          error={createError}
+          isEditing={false}
+        />
       </div>
 
       <div className="card">
@@ -358,41 +269,61 @@ export function PresetsPage() {
           </thead>
           <tbody>
             {filteredPresets.map((preset) => (
-              <tr key={preset.id}>
-                <td>{preset.title}</td>
-                <td>{preset.kind}</td>
-                <td>{preset.description}</td>
-                <td>
-                  {preset.builtIn
-                    ? t("presets.listBuiltInYes")
-                    : t("presets.listBuiltInNo")}
-                </td>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => startEdit(preset)}
+              <>
+                <tr key={preset.id}>
+                  <td>{preset.title}</td>
+                  <td>{preset.kind}</td>
+                  <td>{preset.description}</td>
+                  <td>
+                    {preset.builtIn
+                      ? t("presets.listBuiltInYes")
+                      : t("presets.listBuiltInNo")}
+                  </td>
+                  <td>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                      }}
                     >
-                      {t("presets.listEditButton")}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={() =>
-                        void handleDeletePreset(preset.id)
-                      }
-                    >
-                      {t("presets.listDeleteButton")}
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => startEdit(preset)}
+                      >
+                        {t("presets.listEditButton")}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        onClick={() =>
+                          void handleDeletePreset(preset.id)
+                        }
+                      >
+                        {t("presets.listDeleteButton")}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {editingId === preset.id && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: 0 }}>
+                      <PresetEditForm
+                        form={editForm}
+                        onChange={setEditForm}
+                        onSave={() => void saveEdit()}
+                        onCancel={() => {
+                          setEditingId(null);
+                          setEditForm({});
+                        }}
+                        saving={savingEdit}
+                        error={editError}
+                        isEditing={true}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </>
             ))}
             {filteredPresets.length === 0 && !state.loading && (
               <tr>
@@ -405,92 +336,6 @@ export function PresetsPage() {
             )}
           </tbody>
         </table>
-
-        {editingId && (
-          <div
-            className="card"
-            style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
-          >
-            <h4 style={{ marginTop: 0 }}>
-              {t("presets.editTitle")}
-            </h4>
-            <div className="input-group">
-              <label htmlFor="edit-title">
-                {t("presets.editFormTitleLabel")}
-              </label>
-              <input
-                id="edit-title"
-                type="text"
-                value={editForm.title ?? ""}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    title: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="edit-description">
-                {t("presets.editFormDescriptionLabel")}
-              </label>
-              <textarea
-                id="edit-description"
-                value={editForm.description ?? ""}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    description: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="edit-content">
-                {t("presets.editFormContentLabel")}
-              </label>
-              <textarea
-                id="edit-content"
-                value={editForm.content ?? ""}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    content: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={savingEdit}
-              onClick={() => void saveEdit()}
-            >
-              {savingEdit
-                ? t("presets.editSaveButtonSaving")
-                : t("presets.editSaveButton")}
-            </button>
-            <button
-              type="button"
-              className="btn"
-              style={{ marginLeft: "0.5rem" }}
-              onClick={() => {
-                setEditingId(null);
-                setEditForm({});
-              }}
-            >
-              {t("presets.editCancelButton")}
-            </button>
-            {editError && (
-              <div
-                className="badge badge-error"
-                style={{ marginTop: "0.5rem" }}
-              >
-                {t("common.errorPrefix")} {editError}
-              </div>
-            )}
-          </div>
-        )}
       </div>
       <div ref={bottomRef} />
     </div>

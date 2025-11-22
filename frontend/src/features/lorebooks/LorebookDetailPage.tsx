@@ -18,7 +18,8 @@ import {
 } from "../../api/lorebooks";
 import { ApiError } from "../../api/httpClient";
 import { LorebookEntriesTable } from "./LorebookEntriesTable";
-import { useScrollToBottom } from "../../hooks/useScrollToBottom";
+import { LorebookEntryForm } from "./components/LorebookEntryForm";
+import { LorebookMetaCard } from "./components/LorebookMetaCard";
 
 interface LoadState {
   loading: boolean;
@@ -35,7 +36,6 @@ const emptyEntryForm: CreateLorebookEntryRequest = {
 export function LorebookDetailPage() {
   const { lorebookId } = useParams<{ lorebookId: string }>();
   const { t } = useTranslation();
-  const { bottomRef, scrollToBottom } = useScrollToBottom();
 
   const [lorebook, setLorebook] = useState<Lorebook | null>(null);
   const [lorebookState, setLorebookState] = useState<LoadState>({
@@ -69,12 +69,6 @@ export function LorebookDetailPage() {
     void loadLorebook(lorebookId);
     void loadEntries(lorebookId);
   }, [lorebookId]);
-
-  useEffect(() => {
-    if (editingEntryId) {
-      scrollToBottom();
-    }
-  }, [editingEntryId]);
 
   async function loadLorebook(id: string) {
     setLorebookState({ loading: true, error: null });
@@ -135,8 +129,7 @@ export function LorebookDetailPage() {
     }
   }
 
-  async function createEntry(e: React.FormEvent) {
-    e.preventDefault();
+  async function createEntry() {
     if (!lorebookId) return;
     if (!entryForm.content.trim()) return;
     setCreatingEntry(true);
@@ -160,7 +153,6 @@ export function LorebookDetailPage() {
       await createLorebookEntry(lorebookId, payload);
       setEntryForm(emptyEntryForm);
       await loadEntries(lorebookId);
-      scrollToBottom();
     } catch (err) {
       setEntryError(
         err instanceof ApiError
@@ -291,258 +283,54 @@ export function LorebookDetailPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>
-          {t("lorebooks.detailTitle")}
-        </h3>
-        {lorebookState.loading && (
-          <div>{t("lorebooks.detailLoadingLorebook")}</div>
-        )}
-        {lorebookState.error && (
-          <div className="badge badge-error">
-            {t("common.errorPrefix")} {lorebookState.error}
-          </div>
-        )}
-        {lorebook && (
-          <>
-            <div className="input-group">
-              <label htmlFor="lb-name">
-                {t("lorebooks.detailNameLabel")}
-              </label>
-              <input
-                id="lb-name"
-                type="text"
-                value={metaDraft.name ?? ""}
-                onChange={(e) =>
-                  setMetaDraft({
-                    ...metaDraft,
-                    name: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="lb-description">
-                {t("lorebooks.detailDescriptionLabel")}
-              </label>
-              <textarea
-                id="lb-description"
-                value={metaDraft.description ?? ""}
-                onChange={(e) =>
-                  setMetaDraft({
-                    ...metaDraft,
-                    description: e.target.value,
-                  })
-                }
-              />
-            </div>
-            {/* Scope removed; lorebooks are attached via prompt stack */}
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={savingMeta}
-              onClick={() => void saveMeta()}
-            >
-              {savingMeta
-                ? t("lorebooks.detailSaveButtonSaving")
-                : t("lorebooks.detailSaveButton")}
-            </button>
-          </>
-        )}
-      </div>
+      <LorebookMetaCard
+        lorebook={lorebook}
+        metaDraft={metaDraft}
+        loading={lorebookState.loading}
+        error={lorebookState.error}
+        saving={savingMeta}
+        onChange={setMetaDraft}
+        onSave={() => void saveMeta()}
+      />
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>
-          {t("lorebooks.newEntryTitle")}
-        </h3>
-        <form onSubmit={createEntry}>
-          <div className="input-group">
-            <label htmlFor="entry-keywords">
-              {t("lorebooks.newEntryKeywordsLabel")}
-            </label>
-            <input
-              id="entry-keywords"
-              type="text"
-              placeholder={t(
-                "lorebooks.newEntryKeywordsPlaceholder",
-              )}
-              value={entryForm.keywords.join(", ")}
-              onChange={(e) =>
-                setEntryForm({
-                  ...entryForm,
-                  keywords: e.target.value
-                    .split(",")
-                    .map((k) => k.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
-            <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
-              {t("lorebooks.newEntryKeywordsHint")}
-            </div>
-          </div>
-          <div className="input-group">
-            <label htmlFor="entry-content">
-              {t("lorebooks.newEntryContentLabel")}
-            </label>
-            <textarea
-              id="entry-content"
-              value={entryForm.content}
-              onChange={(e) =>
-                setEntryForm({
-                  ...entryForm,
-                  content: e.target.value,
-                })
-              }
-              rows={4}
-            />
-          </div>
-          <div className="input-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={entryForm.isEnabled}
-                onChange={(e) =>
-                  setEntryForm({
-                    ...entryForm,
-                    isEnabled: e.target.checked,
-                  })
-                }
-              />{" "}
-              {t("lorebooks.newEntryActiveLabel")}
-            </label>
-            <div
-              style={{
-                fontSize: "0.85rem",
-                opacity: 0.8,
-                marginTop: "0.25rem",
-              }}
-            >
-              {t("lorebooks.newEntryActiveHint")}
-            </div>
-          </div>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={creatingEntry}
-          >
-            {creatingEntry
-              ? t("lorebooks.newEntryCreateButtonCreating")
-              : t("lorebooks.newEntryCreateButton")}
-          </button>
-          {entryError && (
-            <div
-              className="badge badge-error"
-              style={{ marginTop: "0.5rem" }}
-            >
-              {t("common.errorPrefix")} {entryError}
-            </div>
-          )}
-        </form>
+        <LorebookEntryForm
+          form={entryForm}
+          onChange={setEntryForm}
+          onSave={() => void createEntry()}
+          onCancel={() => { }}
+          saving={creatingEntry}
+          error={entryError}
+          isEditing={false}
+        />
       </div>
 
       <LorebookEntriesTable
         entries={entries}
         loading={entriesState.loading}
         error={entriesState.error}
+        editingId={editingEntryId}
         onReorder={(ids) => void reorderEntriesByIds(ids)}
         onToggleEnabled={(id, enabled) =>
           void toggleEntryEnabled(id, enabled)
         }
         onEdit={startEdit}
         onDelete={(id) => void deleteEntry(id)}
-      />
-
-      {editingEntryId && (
-        <div
-          className="card"
-          style={{ marginTop: "1rem", backgroundColor: "#1a1a1a" }}
-        >
-          <h4 style={{ marginTop: 0 }}>
-            {t("lorebooks.editEntryTitle")}
-          </h4>
-          <div className="input-group">
-            <label htmlFor="edit-keywords">
-              {t("lorebooks.editEntryKeywordsLabel")}
-            </label>
-            <input
-              id="edit-keywords"
-              type="text"
-              value={(editEntryForm.keywords ?? []).join(", ")}
-              onChange={(e) =>
-                setEditEntryForm({
-                  ...editEntryForm,
-                  keywords: e.target.value
-                    .split(",")
-                    .map((k) => k.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="edit-content">
-              {t("lorebooks.editEntryContentLabel")}
-            </label>
-            <textarea
-              id="edit-content"
-              rows={4}
-              value={editEntryForm.content ?? ""}
-              onChange={(e) =>
-                setEditEntryForm({
-                  ...editEntryForm,
-                  content: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="input-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={editEntryForm.isEnabled ?? true}
-                onChange={(e) =>
-                  setEditEntryForm({
-                    ...editEntryForm,
-                    isEnabled: e.target.checked,
-                  })
-                }
-              />{" "}
-              {t("lorebooks.editEntryEnabledLabel")}
-            </label>
-          </div>
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={savingEntry}
-            onClick={() => void saveEntryEdit()}
-          >
-            {savingEntry
-              ? t("lorebooks.editEntrySaveButtonSaving")
-              : t("lorebooks.editEntrySaveButton")}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            style={{ marginLeft: "0.5rem" }}
-            onClick={() => {
+        renderEditor={() => (
+          <LorebookEntryForm
+            form={editEntryForm}
+            onChange={setEditEntryForm}
+            onSave={() => void saveEntryEdit()}
+            onCancel={() => {
               setEditingEntryId(null);
               setEditEntryForm({});
             }}
-          >
-            {t("lorebooks.editEntryCancelButton")}
-          </button>
-          {entryError && (
-            <div
-              className="badge badge-error"
-              style={{ marginTop: "0.5rem" }}
-            >
-              {t("common.errorPrefix")} {entryError}
-            </div>
-          )}
-        </div>
-      )}
-      <div ref={bottomRef} />
+            saving={savingEntry}
+            error={entryError}
+            isEditing={true}
+          />
+        )}
+      />
     </div>
   );
 }

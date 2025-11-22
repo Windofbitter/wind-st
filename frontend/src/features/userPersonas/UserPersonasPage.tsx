@@ -10,6 +10,7 @@ import {
 import { ApiError } from "../../api/httpClient";
 import { Toggle } from "../../components/common/Toggle";
 import { useScrollToBottom } from "../../hooks/useScrollToBottom";
+import { UserPersonaEditForm } from "./components/UserPersonaEditForm";
 
 interface LoadState {
   loading: boolean;
@@ -42,6 +43,11 @@ export function UserPersonasPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<CreateFormState>(emptyForm);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
   useEffect(() => {
     void loadPersonas();
   }, []);
@@ -64,8 +70,7 @@ export function UserPersonasPage() {
     setState({ loading: false, error: null });
   }
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreate() {
     if (!form.name.trim()) return;
 
     setCreating(true);
@@ -123,76 +128,54 @@ export function UserPersonasPage() {
     }
   }
 
+  function startEdit(persona: UserPersona) {
+    setEditingId(persona.id);
+    setEditForm({
+      name: persona.name,
+      description: persona.description ?? "",
+      prompt: persona.prompt ?? "",
+      isDefault: persona.isDefault,
+    });
+    setEditError(null);
+  }
+
+  async function saveEdit() {
+    if (!editingId) return;
+    setSavingEdit(true);
+    setEditError(null);
+    try {
+      await updateUserPersona(editingId, {
+        name: editForm.name.trim(),
+        description: editForm.description.trim() || null,
+        prompt: editForm.prompt.trim() || null,
+        isDefault: editForm.isDefault,
+      });
+      setEditingId(null);
+      setEditForm(emptyForm);
+      await loadPersonas();
+    } catch (err) {
+      setEditError(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to update persona",
+      );
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>{t("userPersonas.newTitle")}</h3>
-        <form onSubmit={handleCreate}>
-          <div className="input-group">
-            <label htmlFor="persona-name">
-              {t("userPersonas.nameLabel")}
-            </label>
-            <input
-              id="persona-name"
-              type="text"
-              value={form.name}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, name: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="persona-description">
-              {t("userPersonas.descriptionLabel")}
-            </label>
-            <textarea
-              id="persona-description"
-              value={form.description}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, description: e.target.value }))
-              }
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="persona-prompt">
-              {t("userPersonas.promptLabel")}
-            </label>
-            <textarea
-              id="persona-prompt"
-              value={form.prompt}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, prompt: e.target.value }))
-              }
-            />
-          </div>
-          <div className="input-group" style={{ flexDirection: "row", alignItems: "center", gap: "0.35rem" }}>
-            <Toggle
-              checked={form.isDefault}
-              onChange={(checked) =>
-                setForm((f) => ({ ...f, isDefault: checked }))
-              }
-              label={t("userPersonas.isDefaultLabel")}
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={creating}
-          >
-            {creating
-              ? t("userPersonas.createButtonCreating")
-              : t("userPersonas.createButton")}
-          </button>
-          {createError && (
-            <div
-              className="badge badge-error"
-              style={{ marginTop: "0.5rem" }}
-            >
-              {t("common.errorPrefix")} {createError}
-            </div>
-          )}
-        </form>
+        <UserPersonaEditForm
+          form={form}
+          onChange={setForm}
+          onSave={() => void handleCreate()}
+          onCancel={() => { }}
+          saving={creating}
+          error={createError}
+          isEditing={false}
+        />
       </div>
 
       <div className="card">
@@ -214,39 +197,66 @@ export function UserPersonasPage() {
           </thead>
           <tbody>
             {personas.map((persona) => (
-              <tr key={persona.id}>
-                <td>
-                  <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                    <span>{persona.name}</span>
-                  </div>
-                </td>
-                <td>{persona.description ?? ""}</td>
-                <td>
-                  <div style={{ maxWidth: 320, whiteSpace: "pre-wrap" }}>
-                    {persona.prompt ?? ""}
-                  </div>
-                </td>
-                <td>
-                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                    <Toggle
-                      checked={persona.isDefault}
-                      onChange={() => {
-                        if (!persona.isDefault) {
-                          void handleSetDefault(persona.id);
-                        }
-                      }}
-                      label={persona.isDefault ? t("userPersonas.defaultTag") : t("userPersonas.setDefaultButton")}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={() => void handleDelete(persona.id)}
-                    >
-                      {t("userPersonas.deleteButton")}
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              <>
+                <tr key={persona.id}>
+                  <td>
+                    <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+                      <span>{persona.name}</span>
+                    </div>
+                  </td>
+                  <td>{persona.description ?? ""}</td>
+                  <td>
+                    <div style={{ maxWidth: 320, whiteSpace: "pre-wrap" }}>
+                      {persona.prompt ?? ""}
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <Toggle
+                        checked={persona.isDefault}
+                        onChange={() => {
+                          if (!persona.isDefault) {
+                            void handleSetDefault(persona.id);
+                          }
+                        }}
+                        label={persona.isDefault ? t("userPersonas.defaultTag") : t("userPersonas.setDefaultButton")}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => startEdit(persona)}
+                      >
+                        {t("userPersonas.editButton")}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        onClick={() => void handleDelete(persona.id)}
+                      >
+                        {t("userPersonas.deleteButton")}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {editingId === persona.id && (
+                  <tr>
+                    <td colSpan={4} style={{ padding: 0 }}>
+                      <UserPersonaEditForm
+                        form={editForm}
+                        onChange={setEditForm}
+                        onSave={() => void saveEdit()}
+                        onCancel={() => {
+                          setEditingId(null);
+                          setEditForm(emptyForm);
+                        }}
+                        saving={savingEdit}
+                        error={editError}
+                        isEditing={true}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </>
             ))}
             {personas.length === 0 && !state.loading && (
               <tr>
