@@ -7,6 +7,8 @@ import { listPresets } from "../../../api/presets";
 import type { Lorebook } from "../../../api/lorebooks";
 import { listLorebooks } from "../../../api/lorebooks";
 import { ApiError } from "../../../api/httpClient";
+import { PromptStackQuickCreatePreset } from "./PromptStackQuickCreatePreset";
+import { PromptStackQuickCreateLorebook } from "./PromptStackQuickCreateLorebook";
 
 interface LoadState {
   loading: boolean;
@@ -44,6 +46,9 @@ export function PromptStackAttachSection({
   const [attachError, setAttachError] = useState<string | null>(null);
   const [attachingPreset, setAttachingPreset] = useState(false);
   const [attachingLorebook, setAttachingLorebook] = useState(false);
+
+  const [showCreatePreset, setShowCreatePreset] = useState(false);
+  const [showCreateLorebook, setShowCreateLorebook] = useState(false);
 
   useEffect(() => {
     void loadPresets();
@@ -104,6 +109,7 @@ export function PromptStackAttachSection({
         role,
       });
       await onAttached();
+      await loadPresets();
     } catch (err) {
       setAttachError(
         err instanceof ApiError
@@ -126,6 +132,7 @@ export function PromptStackAttachSection({
         role,
       });
       await onAttached();
+      await loadLorebooks();
     } catch (err) {
       setAttachError(
         err instanceof ApiError
@@ -202,16 +209,43 @@ export function PromptStackAttachSection({
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                className="btn"
-                style={{ marginTop: "0.35rem" }}
-                onClick={() => void handleAttachPreset()}
-                disabled={attachingPreset}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.5rem",
+                  marginTop: "0.35rem",
+                }}
               >
-                {t("promptBuilder.paletteAddButton") ||
-                  t("common.add")}
-              </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => void handleAttachPreset()}
+                  disabled={attachingPreset}
+                >
+                  {t("promptBuilder.paletteAddButton") ||
+                    t("common.add")}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() =>
+                    setShowCreatePreset((prev) => !prev)
+                  }
+                >
+                  {t("presets.newTitle")}
+                </button>
+              </div>
+              {showCreatePreset && (
+                <PromptStackQuickCreatePreset
+                  characterId={characterId}
+                  role={role}
+                  onAttached={async () => {
+                    await onAttached();
+                    await loadPresets();
+                  }}
+                  onClose={() => setShowCreatePreset(false)}
+                />
+              )}
             </>
           ) : (
             !presetsState.loading && (
@@ -249,16 +283,43 @@ export function PromptStackAttachSection({
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                className="btn"
-                style={{ marginTop: "0.35rem" }}
-                onClick={() => void handleAttachLorebook()}
-                disabled={attachingLorebook}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.5rem",
+                  marginTop: "0.35rem",
+                }}
               >
-                {t("promptBuilder.paletteAddButton") ||
-                  t("common.add")}
-              </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => void handleAttachLorebook()}
+                  disabled={attachingLorebook}
+                >
+                  {t("promptBuilder.paletteAddButton") ||
+                    t("common.add")}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() =>
+                    setShowCreateLorebook((prev) => !prev)
+                  }
+                >
+                  {t("lorebooks.listNewTitle")}
+                </button>
+              </div>
+              {showCreateLorebook && (
+                <PromptStackQuickCreateLorebook
+                  characterId={characterId}
+                  role={role}
+                  onAttached={async () => {
+                    await onAttached();
+                    await loadLorebooks();
+                  }}
+                  onClose={() => setShowCreateLorebook(false)}
+                />
+              )}
             </>
           ) : (
             !lorebooksState.loading && (
@@ -281,4 +342,3 @@ export function PromptStackAttachSection({
     </div>
   );
 }
-

@@ -351,9 +351,16 @@ export function useChatConfigState({
     handleHistoryConfigChange,
     handleSaveChatConfig,
     loadPromptPreview,
-    refreshPromptStack: () =>
-      selectedCharacterId
-        ? loadPromptStack(selectedCharacterId)
-        : Promise.resolve(),
+    refreshPromptStack: () => {
+      if (!selectedCharacterId) return Promise.resolve();
+      const loadStackPromise = loadPromptStack(selectedCharacterId);
+      const loadPreviewPromise =
+        activeChat?.id
+          ? loadPromptPreview(activeChat.id)
+          : Promise.resolve();
+      return Promise.all([loadStackPromise, loadPreviewPromise]).then(
+        () => undefined,
+      );
+    },
   };
 }
